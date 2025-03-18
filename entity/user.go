@@ -9,11 +9,11 @@ import (
 
 type User struct {
 	ID       uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	Name     string `json:"name" binding:"required"`
-	Password string `json:"password" binding:"required"`
-	Email    string `json:"email" binding:"required"`
+	Name     string    `json:"name" binding:"required"`
+	Password string    `json:"password" binding:"required"`
+	Email    string    `json:"email" binding:"required"`
 	Role     string    `json:"role" binding:"required"`
-	NoId     string `json:"noid" binding:"required"`
+	Noid     string    `json:"noid" binding:"required"`
 
 	Timestamp
 }

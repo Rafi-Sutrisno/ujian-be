@@ -7,11 +7,150 @@
     "noid": "5025211167"
   },
   {
+    "name": "admin2",
+    "email": "admin2345@gmail.com",
+    "password": "admin2345",
+    "role": "admin",
+    "noid": "5025211168"
+  },
+  {
     "name": "user1",
-    "telp_number": "08123456789",
-    "email": "user1234@gmail.com",
-    "password": "user1234",
+    "email": "user1@gmail.com",
+    "password": "user1pass",
     "role": "user",
-    "noid": "5025211166"
+    "noid": "5025211169"
+  },
+  {
+    "name": "user2",
+    "email": "user2@gmail.com",
+    "password": "user2pass",
+    "role": "user",
+    "noid": "5025211170"
+  },
+  {
+    "name": "user3",
+    "email": "user3@gmail.com",
+    "password": "user3pass",
+    "role": "user",
+    "noid": "5025211171"
+  },
+  {
+    "name": "user4",
+    "email": "user4@gmail.com",
+    "password": "user4pass",
+    "role": "user",
+    "noid": "5025211172"
+  },
+  {
+    "name": "user5",
+    "email": "user5@gmail.com",
+    "password": "user5pass",
+    "role": "user",
+    "noid": "5025211173"
+  },
+  {
+    "name": "user6",
+    "email": "user6@gmail.com",
+    "password": "user6pass",
+    "role": "user",
+    "noid": "5025211174"
+  },
+  {
+    "name": "user7",
+    "email": "user7@gmail.com",
+    "password": "user7pass",
+    "role": "user",
+    "noid": "5025211175"
+  },
+  {
+    "name": "user8",
+    "email": "user8@gmail.com",
+    "password": "user8pass",
+    "role": "user",
+    "noid": "5025211176"
+  },
+  {
+    "name": "user9",
+    "email": "user9@gmail.com",
+    "password": "user9pass",
+    "role": "user",
+    "noid": "5025211177"
+  },
+  {
+    "name": "user10",
+    "email": "user10@gmail.com",
+    "password": "user10pass",
+    "role": "user",
+    "noid": "5025211178"
+  },
+  {
+    "name": "user11",
+    "email": "user11@gmail.com",
+    "password": "user11pass",
+    "role": "user",
+    "noid": "5025211179"
+  },
+  {
+    "name": "user12",
+    "email": "user12@gmail.com",
+    "password": "user12pass",
+    "role": "user",
+    "noid": "5025211180"
+  },
+  {
+    "name": "user13",
+    "email": "user13@gmail.com",
+    "password": "user13pass",
+    "role": "user",
+    "noid": "5025211181"
+  },
+  {
+    "name": "user14",
+    "email": "user14@gmail.com",
+    "password": "user14pass",
+    "role": "user",
+    "noid": "5025211182"
+  },
+  {
+    "name": "user15",
+    "email": "user15@gmail.com",
+    "password": "user15pass",
+    "role": "user",
+    "noid": "5025211183"
+  },
+  {
+    "name": "user16",
+    "email": "user16@gmail.com",
+    "password": "user16pass",
+    "role": "user",
+    "noid": "5025211184"
+  },
+  {
+    "name": "user17",
+    "email": "user17@gmail.com",
+    "password": "user17pass",
+    "role": "user",
+    "noid": "5025211185"
+  },
+  {
+    "name": "user18",
+    "email": "user18@gmail.com",
+    "password": "user18pass",
+    "role": "user",
+    "noid": "5025211186"
+  },
+  {
+    "name": "user19",
+    "email": "user19@gmail.com",
+    "password": "user19pass",
+    "role": "user",
+    "noid": "5025211187"
+  },
+  {
+    "name": "user20",
+    "email": "user20@gmail.com",
+    "password": "user20pass",
+    "role": "user",
+    "noid": "5025211188"
   }
 ]

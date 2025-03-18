@@ -2,6 +2,7 @@ package dto
 
 import (
 	"errors"
+	"mime/multipart"
 
 	"mods/entity"
 )
@@ -40,11 +41,14 @@ var (
 	ErrGetUserById            = errors.New("failed to get user by id")
 	ErrGetUserByEmail         = errors.New("failed to get user by email")
 	ErrEmailAlreadyExists     = errors.New("email already exist")
+	ErrNoidAlreadyExists      = errors.New("NRP already exist")
 	ErrUpdateUser             = errors.New("failed to update user")
 	ErrUserNotAdmin           = errors.New("user not admin")
 	ErrUserNotFound           = errors.New("user not found")
 	ErrEmailNotFound          = errors.New("email not found")
+	ErrNRPNotFound            = errors.New("NRP not found")
 	ErrDeleteUser             = errors.New("failed to delete user")
+	ErrDeniedAccess           = errors.New("denied access")
 	ErrPasswordNotMatch       = errors.New("password not match")
 	ErrEmailOrPassword        = errors.New("wrong email or password")
 	ErrAccountNotVerified     = errors.New("account not verified")
@@ -58,17 +62,38 @@ type (
 		Name       string `json:"name" binding:"required"`
 		Password   string `json:"password" binding:"required"`
 		Email      string `json:"email" binding:"required"`
-		NoId       string `json:"noid" binding:"required"`
+		Noid       string `json:"noid" binding:"required"`
 	}
 
 	UserResponse struct {
 		ID         string `json:"id"`
 		Name       string `json:"name" `
-		Password   string `json:"password" `
 		Email      string `json:"email" `
-		Role       int    `json:"role" `
-		NoId       string `json:"noid" `
+		Role       string `json:"role" `
+		Noid       string `json:"noid" `
 	}
+
+	UserYAMLUploadRequest struct {
+		File *multipart.FileHeader `form:"yaml_file" binding:"required"`
+	}
+
+	 UserYAML struct {
+		Name       string `yaml:"name"`
+		Email      string `yaml:"email"`
+		Noid 	   string `yaml:"noid"`
+		Password   string `yaml:"password"`  
+	}
+	
+	 UserYAMLList struct {
+		Users []UserYAML `yaml:"users"`
+	}
+
+	FailedUserResponse struct {
+		Noid   string `json:"noid"`
+		Email  string `json:"email"`
+		Reason string `json:"reason"`
+	}
+	
 
 	UserPaginationResponse struct {
 		Data []UserResponse `json:"data"`
@@ -82,17 +107,16 @@ type (
 
 	UserUpdateRequest struct {
 		Name       string `json:"name" form:"name"`
-		TelpNumber string `json:"telp_number" form:"telp_number"`
 		Email      string `json:"email" form:"email"`
+		Noid       string `json:"noid" form:"noid"`
 	}
 
 	UserUpdateResponse struct {
 		ID         string `json:"id"`
 		Name       string `json:"name"`
-		TelpNumber string `json:"telp_number"`
 		Role       string `json:"role"`
 		Email      string `json:"email"`
-		IsVerified bool   `json:"is_verified"`
+		Noid       string `json:"noid" `
 	}
 
 	SendVerificationEmailRequest struct {
@@ -109,7 +133,7 @@ type (
 	}
 
 	UserLoginRequest struct {
-		NoId     string `json:"noid" form:"noid" binding:"required"`
+		Noid     string `json:"noid" form:"noid" binding:"required"`
 		Password string `json:"password" form:"password" binding:"required"`
 	}
 

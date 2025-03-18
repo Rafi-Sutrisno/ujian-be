@@ -11,17 +11,21 @@ import (
 func Routes(router *gin.Engine, UserController controller.UserController, jwtService service.JWTService) {
 	userPublic := router.Group("/api/user")
 	{
-		// public can access
-		
 		userPublic.GET("", UserController.GetAllUser)
 		userPublic.POST("/login", UserController.LoginUser)
-
 	}
 	userPrivate := router.Group("/api/user").Use(middleware.Authenticate(jwtService))
 	{
-		userPrivate.POST("/add", UserController.AddUser)
-		// userPrivate.GET("/me", userController.Me)
-		
+		userPrivate.GET("/me", UserController.Me)
+		userPrivate.PATCH("/update", UserController.UpdateMe)
+	}
+	userPrivateAdmin := router.Group("/api/user").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
+	{
+		userPrivateAdmin.GET("/all", UserController.GetAllUser)
+		userPrivateAdmin.POST("/add", UserController.Register)
+		userPrivateAdmin.PATCH("/update/:id", UserController.Update)
+		userPrivateAdmin.DELETE("/delete/:id", UserController.Delete)
+		userPrivateAdmin.POST("/add/upload-yaml", UserController.RegisterYAML)
 	}
 
 }
