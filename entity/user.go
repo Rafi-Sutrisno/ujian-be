@@ -15,6 +15,8 @@ type User struct {
 	Role     string    `json:"role" binding:"required"`
 	Noid     string    `json:"noid" binding:"required"`
 
+	UserExams []UserExam `gorm:"foreignKey:UserID" json:"user_exams"`
+
 	Timestamp
 }
 

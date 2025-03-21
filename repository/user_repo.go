@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"mods/dto"
 	"mods/entity"
@@ -113,7 +112,7 @@ func (ur *userRepository) GetUserById(ctx context.Context, tx *gorm.DB, userId s
 	if err := tx.WithContext(ctx).Where("id = ?", userId).Take(&user).Error; err != nil {
 		return entity.User{}, err
 	}
-	fmt.Println("ini user repo", user)
+
 
 	return user, nil
 }

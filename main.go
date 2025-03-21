@@ -39,19 +39,27 @@ func main() {
 		// Implementation Dependency Injection
 		// Repository
 		userRepository repository.UserRepository = repository.NewUserRepository(db)
+		examRepository repository.ExamRepository = repository.NewExamRepository(db)
+		userExamRepository repository.UserExamRepository = repository.NewUserExamRepository(db)
 
 		// Service
 		userService service.UserService = service.NewUserService(userRepository, jwtService)
+		examService service.ExamService = service.NewExamService(examRepository)
+		userExamService service.UserExamService = service.NewUserExamService(userExamRepository)
 
 		// Controller
 		userController controller.UserController = controller.NewUserController(userService)
+		examController controller.ExamController = controller.NewExamController(examService)
+		userExamController controller.UserExamController = controller.NewUserExamController(userExamService)
 	)
 
 	server := gin.Default()
 	server.Use(middleware.CORSMiddleware())
 
 	// routes
-	routes.Routes(server, userController, jwtService)
+	routes.UserRoutes(server, userController, jwtService)
+	routes.ExamRoutes(server, examController, jwtService)
+	routes.UserExamRoutes(server, userExamController, jwtService)
 
 	server.Static("/assets", "./assets")
 	port := os.Getenv("GOLANG_PORT")

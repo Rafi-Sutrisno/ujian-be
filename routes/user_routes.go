@@ -8,7 +8,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-func Routes(router *gin.Engine, UserController controller.UserController, jwtService service.JWTService) {
+func UserRoutes(router *gin.Engine, UserController controller.UserController, jwtService service.JWTService) {
 	userPublic := router.Group("/api/user")
 	{
 		userPublic.GET("", UserController.GetAllUser)
