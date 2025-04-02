@@ -11,7 +11,7 @@ import (
 )
 
 type JWTService interface {
-	GenerateToken(userId string, name string) string
+	GenerateToken(userId string, role uint) string
 	ValidateToken(token string) (*jwt.Token, error)
 	GetUserIDByToken(token string) (string, error)
 	GetRoleByToken(token string) (string, error)
@@ -19,7 +19,7 @@ type JWTService interface {
 
 type jwtCustomClaim struct {
 	ID   string `json:"id"`
-	Role string `json:"role"`
+	Role uint   `json:"role_id"`
 	jwt.RegisteredClaims
 }
 
@@ -43,7 +43,7 @@ func getSecretKey() string {
 	return secretKey
 }
 
-func (j *jwtService) GenerateToken(userId string, role string) string {
+func (j *jwtService) GenerateToken(userId string, role uint) string {
 	claims := jwtCustomClaim{
 		userId,
 		role,

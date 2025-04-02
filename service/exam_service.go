@@ -11,6 +11,7 @@ import (
 type (
 	examService struct {
 		examRepository repository.ExamRepository
+		userExamService UserExamService
 	}
 
 	ExamService interface {
@@ -23,39 +24,56 @@ type (
 	}
 )
 
-func NewExamService(er repository.ExamRepository) ExamService {
+func NewExamService(er repository.ExamRepository, userExamService UserExamService) ExamService {
 	return &examService{
 		examRepository: er,
+		userExamService: userExamService,
 	}
 }
 
-func (es * examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest, userId string) (dto.ExamResponse, error){
+func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest, userId string) (dto.ExamResponse, error) {
+	// 1. Create Exam entity
 	exam := entity.Exam{
-		Name: 			req.Name,
-		ShortName: 		req.ShortName,
-		IsPublished: 	req.IsPublished,
-		StartTime: 		req.StartTime,
-		Duration: 		req.Duration,
-		CreatedBy: 		userId,
+		Name:        req.Name,
+		ShortName:   req.ShortName,
+		IsPublished: req.IsPublished,
+		StartTime:   req.StartTime,
+		Duration:    req.Duration,
+		CreatedBy:   userId,
 	}
 
+	// 2. Save Exam to DB
 	examCreate, err := es.examRepository.CreateExam(ctx, nil, exam)
-
 	if err != nil {
 		return dto.ExamResponse{}, dto.ErrCreateExam
 	}
 
+	// 3. Prepare UserExamCreateRequest DTO
+	userExamReq := dto.UserExamCreateRequest{
+		UserID: userId,
+		ExamID: examCreate.ID.String(),
+		Role:   "judge",
+	}
+
+	// 4. Create UserExam via service
+	_, err = es.userExamService.CreateUserExam(ctx, userExamReq)
+	if err != nil {
+		return dto.ExamResponse{}, dto.ErrCreateExam
+	}
+
+	// 5. Return successful response
 	return dto.ExamResponse{
-		ID: 			examCreate.ID.String(),
-		Name: 			examCreate.Name,
-		ShortName: 		examCreate.ShortName,
-		IsPublished: 	examCreate.IsPublished,
-		StartTime: 		examCreate.StartTime,
-		Duration: 		examCreate.Duration,
-		EndTime: 		examCreate.EndTime,
-		CreatedBy: 		examCreate.CreatedBy,
+		ID:          examCreate.ID.String(),
+		Name:        examCreate.Name,
+		ShortName:   examCreate.ShortName,
+		IsPublished: examCreate.IsPublished,
+		StartTime:   examCreate.StartTime,
+		Duration:    examCreate.Duration,
+		EndTime:     examCreate.EndTime,
+		CreatedBy:   examCreate.CreatedBy,
 	}, nil
 }
+
 
 func (us *examService) GetAllExamWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ExamPaginationResponse, error) {
 	dataWithPaginate, err := us.examRepository.GetAllExamWithPagination(ctx, nil, req)

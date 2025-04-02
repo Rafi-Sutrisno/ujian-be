@@ -44,8 +44,8 @@ func main() {
 
 		// Service
 		userService service.UserService = service.NewUserService(userRepository, jwtService)
-		examService service.ExamService = service.NewExamService(examRepository)
 		userExamService service.UserExamService = service.NewUserExamService(userExamRepository)
+		examService service.ExamService = service.NewExamService(examRepository, userExamService)
 
 		// Controller
 		userController controller.UserController = controller.NewUserController(userService)

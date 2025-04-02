@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"mods/constants"
 	"mods/dto"
 	"mods/entity"
 	"mods/repository"
@@ -51,7 +50,7 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 	user := entity.User{
 		Name:       req.Name,
 		Noid:       req.Noid,
-		Role:       constants.ENUM_ROLE_USER,
+		RoleID:     0,
 		Email:      req.Email,
 		Password:   req.Password,
 	}
@@ -65,7 +64,7 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 		ID:         userReg.ID.String(),
 		Name:       userReg.Name,
 		Noid: 		userReg.Noid,
-		Role:       userReg.Role,
+		RoleID:       userReg.RoleID,
 		Email:      userReg.Email,
 	}, nil
 }
@@ -83,7 +82,7 @@ func (us *userService) GetAllUserWithPagination(ctx context.Context, req dto.Pag
 			ID:         user.ID.String(),
 			Name:       user.Name,
 			Email:      user.Email,
-			Role:       user.Role,
+			RoleID:       user.RoleID,
 			Noid:       user.Noid,
 		}
 
@@ -113,11 +112,11 @@ func (us *userService) Verify(ctx context.Context, loginDTO dto.UserLoginRequest
 		return dto.UserLoginResponse{}, dto.ErrPasswordNotMatch
 	}
 
-	token := us.jwtService.GenerateToken(check.ID.String(), check.Role)
+	token := us.jwtService.GenerateToken(check.ID.String(), check.RoleID)
 
 	return dto.UserLoginResponse{
 		Token: token,
-		Role:  check.Role,
+		RoleID:  check.RoleID,
 	}, nil
 }
 
@@ -131,7 +130,7 @@ func (us *userService) GetUserById(ctx context.Context, userId string) (dto.User
 		ID:         user.ID.String(),
 		Name:       user.Name,
 		Noid:       user.Noid,
-		Role:       user.Role,
+		RoleID:       user.RoleID,
 		Email:      user.Email,
 
 	}, nil
@@ -143,14 +142,14 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 		return dto.UserUpdateResponse{}, dto.ErrUserNotFound
 	}
 
-	if(user.Role != "user"){
+	if(user.RoleID != 0){
 		return dto.UserUpdateResponse{}, dto.ErrDeniedAccess
 	}
 
 	data := entity.User{
 		ID:         user.ID,
 		Name:       req.Name,
-		Role:       user.Role,
+		RoleID:       user.RoleID,
 		Email:      req.Email,
 		Noid:       req.Noid,
 	}
@@ -164,7 +163,7 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 		ID:         userUpdate.ID.String(),
 		Name:       userUpdate.Name,
 		Noid:       userUpdate.Noid,
-		Role:       userUpdate.Role,
+		RoleID:       userUpdate.RoleID,
 		Email:      userUpdate.Email,
 	}, nil
 }
@@ -178,7 +177,7 @@ func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateRequest, 
 	data := entity.User{
 		ID:         user.ID,
 		Name:       req.Name,
-		Role:       user.Role,
+		RoleID:       user.RoleID,
 		Email:      req.Email,
 		Noid:       req.Noid,
 	}
@@ -192,7 +191,7 @@ func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateRequest, 
 		ID:         userUpdate.ID.String(),
 		Name:       userUpdate.Name,
 		Noid:       userUpdate.Noid,
-		Role:       userUpdate.Role,
+		RoleID:       userUpdate.RoleID,
 		Email:      userUpdate.Email,
 	}, nil
 }
@@ -203,7 +202,7 @@ func (us *userService) Delete(ctx context.Context, userId string) error {
 		return dto.ErrUserNotFound
 	}
 
-	if(user.Role != "user"){
+	if(user.RoleID != 0){
 		return dto.ErrDeniedAccess
 	}
 
@@ -270,7 +269,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 		req := entity.User{
 			Name:     user.Name,
 			Noid:     user.Noid,
-			Role:     constants.ENUM_ROLE_USER,
+			RoleID:   0,
 			Email:    user.Email,
 			Password: user.Password,
 		}
@@ -280,7 +279,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 			ID:    userReg.ID.String(),
 			Name:  userReg.Name,
 			Noid:  userReg.Noid,
-			Role:  userReg.Role,
+			RoleID:  userReg.RoleID,
 			Email: userReg.Email,
 		}
 

@@ -14,6 +14,7 @@ type (
 
 	UserExamService interface {
 		CreateUserExam(ctx context.Context, req dto.UserExamCreateRequest) (dto.UserExamResponse, error)
+		GetByExamId(ctx context.Context,  examId string) ([]dto.UserExamResponse, error)
 	}
 )
 
@@ -42,4 +43,23 @@ func (es * userExamService) CreateUserExam(ctx context.Context, req dto.UserExam
 		ExamID: 		userExamCreate.ExamID,
 		Role: 			userExamCreate.Role,
 	}, nil
+}
+
+func (us *userExamService) GetByExamId(ctx context.Context, examId string) ([]dto.UserExamResponse, error) {
+	userExams, err := us.userExamRepository.GetByExamId(ctx, nil, examId)
+	if err != nil {
+		return nil, err
+	}
+
+	var responses []dto.UserExamResponse
+	for _, ue := range userExams {
+		responses = append(responses, dto.UserExamResponse{
+			ID:     ue.ID.String(),
+			UserID: ue.UserID,
+			ExamID: ue.ExamID,
+			Role:   ue.Role,
+		})
+	}
+
+	return responses, nil
 }

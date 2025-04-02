@@ -16,6 +16,7 @@ type (
 
 	UserExamController interface {
 		CreateUserExam(ctx *gin.Context)
+		GetByExamId(ctx *gin.Context)
 	}
 )
 
@@ -43,4 +44,18 @@ func (ec *userExamController)CreateUserExam(ctx *gin.Context){
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_EXAM, createdExam)
 	ctx.JSON(http.StatusCreated, res)
+}
+
+func (c *userExamController) GetByExamId(ctx *gin.Context) {
+	examId := ctx.Param("exam_id")
+
+	result, err := c.userExamService.GetByExamId(ctx.Request.Context(), examId)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_EXAM, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_EXAM, result)
+	ctx.JSON(http.StatusOK, res)
 }

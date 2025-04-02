@@ -3,9 +3,9 @@ package entity
 import "github.com/google/uuid"
 
 type UserExam struct {
-	ID     uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
-	UserID string `gorm:"type:uuid;not null" json:"user_id"`
-	ExamID string `gorm:"type:uuid;not null" json:"exam_id"`
+	ID     uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
+	UserID string    `gorm:"type:uuid;not null" json:"user_id"`
+	ExamID string    `gorm:"type:uuid;not null" json:"exam_id"`
 	Role   string    `json:"role"`
 
 	// Relationships

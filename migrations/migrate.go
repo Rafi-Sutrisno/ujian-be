@@ -7,8 +7,15 @@ import (
 )
 
 func Migrate(db *gorm.DB) error {
+	db.Migrator().DropTable(&entity.UserRole{}, &entity.UserClassRole{})
+
 	if err := db.AutoMigrate(
-		&entity.User{}, &entity.Exam{}, &entity.UserExam{},
+		&entity.UserRole{},    
+		&entity.UserClassRole{}, 
+		&entity.Class{},
+		&entity.Exam{},            
+		&entity.User{},         
+		&entity.UserClass{},    
 	); err != nil {
 		return err
 	}

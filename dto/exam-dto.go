@@ -50,6 +50,7 @@ var (
 type (
 	// untuk create
 	ExamCreateRequest struct {
+		ClassID     string    `json:"class_id" binding:"required"`
 		Name        string    `json:"name" binding:"required"`
 		ShortName   string    `json:"short_name" binding:"required"`
 		IsPublished bool      `json:"is_published"`
@@ -61,6 +62,7 @@ type (
 
 	ExamResponse struct {
 		ID          string        `json:"id"`
+		ClassID     string        `json:"class_id"`
 		Name        string        `json:"name"`
 		ShortName   string        `json:"short_name"`
 		IsPublished bool          `json:"is_published"`
@@ -83,6 +85,7 @@ type (
 
 	ExamUpdateResponse struct {
 		ID          string        `json:"id"`
+		ClassID     string        `json:"class_id"`
 		Name        string        `json:"name"`
 		ShortName   string        `json:"short_name"`
 		IsPublished bool          `json:"is_published"`

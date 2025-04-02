@@ -8,14 +8,15 @@ import (
 )
 
 type User struct {
-	ID       uuid.UUID `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+	ID       uuid.UUID `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
 	Name     string    `json:"name" binding:"required"`
 	Password string    `json:"password" binding:"required"`
 	Email    string    `json:"email" binding:"required"`
-	Role     string    `json:"role" binding:"required"`
+	RoleID   uint      `gorm:"not null" json:"role_id"`
 	Noid     string    `json:"noid" binding:"required"`
 
-	UserExams []UserExam `gorm:"foreignKey:UserID" json:"user_exams"`
+	UserClass []UserClass `gorm:"foreignKey:UserID" json:"user_class"`
+	Role      UserRole    `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"role"`
 
 	Timestamp
 }

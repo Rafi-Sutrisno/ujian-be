@@ -18,6 +18,7 @@ func UserExamRoutes(router *gin.Engine, UserExamController controller.UserExamCo
 	userExamPrivateAdmin := router.Group("/api/exam/user").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
 		userExamPrivateAdmin.POST("/add", UserExamController.CreateUserExam)
+		userExamPrivateAdmin.GET("/:exam_id", UserExamController.GetByExamId)
 	}
 
 }

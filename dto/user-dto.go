@@ -69,7 +69,7 @@ type (
 		ID         string `json:"id"`
 		Name       string `json:"name" `
 		Email      string `json:"email" `
-		Role       string `json:"role" `
+		RoleID       uint `json:"role_id" `
 		Noid       string `json:"noid" `
 	}
 
@@ -114,7 +114,7 @@ type (
 	UserUpdateResponse struct {
 		ID         string `json:"id"`
 		Name       string `json:"name"`
-		Role       string `json:"role"`
+		RoleID       uint `json:"role_id"`
 		Email      string `json:"email"`
 		Noid       string `json:"noid" `
 	}
@@ -139,7 +139,7 @@ type (
 
 	UserLoginResponse struct {
 		Token string `json:"token"`
-		Role  string `json:"role"`
+		RoleID  uint `json:"role_id"`
 	}
 
 	UpdateStatusIsVerifiedRequest struct {

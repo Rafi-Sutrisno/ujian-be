@@ -8,7 +8,8 @@ import (
 )
 
 type Exam struct {
-    ID          uuid.UUID     `gorm:"type:uuid;primary_key;default:uuid_generate_v4()" json:"id"`
+    ID          uuid.UUID     `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
+    ClassID     uuid.UUID     `gorm:"type:uuid;not null" json:"class_id"`
     Name        string        `json:"name"`
     ShortName   string        `json:"short_name"`
 	IsPublished bool          `json:"is_published"`
@@ -19,8 +20,7 @@ type Exam struct {
     
 	Timestamp
 
-    // Relationships
-    UserExams []UserExam `gorm:"foreignKey:ExamID" json:"user_exams"`
+    Class     Class      `gorm:"foreignKey:ClassID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"class"`
     Problems  []Problem  `gorm:"foreignKey:ExamID" json:"problems"`
 }
 
