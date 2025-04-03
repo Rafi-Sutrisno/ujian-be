@@ -15,8 +15,9 @@ type User struct {
 	RoleID   uint      `gorm:"not null" json:"role_id"`
 	Noid     string    `json:"noid" binding:"required"`
 
-	UserClass []UserClass `gorm:"foreignKey:UserID" json:"user_class"`
-	Role      UserRole    `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"role"`
+	UserClass   []UserClass   `gorm:"foreignKey:UserID" json:"user_class"`
+	Submission  []Submission  `gorm:"foreignKey:UserID" json:"submission"`
+	Role        UserRole      `gorm:"foreignKey:RoleID;constraint:OnUpdate:CASCADE,OnDelete:SET NULL" json:"role"`
 
 	Timestamp
 }
