@@ -54,11 +54,11 @@ func (cs *classService) GetAllWithPagination(ctx context.Context, req dto.Pagina
 	}
 
 	var datas []dto.ClassResponse
-	for _, exam := range dataWithPaginate.Classes {
+	for _, class := range dataWithPaginate.Classes {
 		data := dto.ClassResponse{
-			ID:          exam.ID.String(),
-			Name:        exam.Name,
-			ShortName:   exam.ShortName,
+			ID:          class.ID.String(),
+			Name:        class.Name,
+			ShortName:   class.ShortName,
 		}
 
 		datas = append(datas, data)

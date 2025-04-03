@@ -9,6 +9,7 @@ import (
 
 type (
 	UserClassRepository interface {
+		GetById(ctx context.Context, tx *gorm.DB, Id string) (entity.UserClass, error)
 		GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.UserClass, error)
 		GetByClassID(ctx context.Context, tx *gorm.DB, classID string) ([]entity.UserClass, error)
 		Create(ctx context.Context, tx *gorm.DB, userClass entity.UserClass) (entity.UserClass, error)
@@ -25,6 +26,19 @@ func NewUserClassRepository(db *gorm.DB) UserClassRepository {
 	return &userClassRepository{
 		db: db,
 	}
+}
+
+func (ucr *userClassRepository) GetById(ctx context.Context, tx *gorm.DB, Id string) (entity.UserClass, error) {
+	if tx == nil {
+		tx = ucr.db
+	}
+
+	var userClass entity.UserClass
+	if err := tx.WithContext(ctx).Where("id = ?", Id).First(&userClass).Error; err != nil {
+		return entity.UserClass{}, err
+	}
+
+	return userClass, nil
 }
 
 func (ucr *userClassRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.UserClass, error) {
