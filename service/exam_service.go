@@ -11,7 +11,6 @@ import (
 type (
 	examService struct {
 		examRepository repository.ExamRepository
-		userExamService UserExamService
 	}
 
 	ExamService interface {
@@ -24,10 +23,9 @@ type (
 	}
 )
 
-func NewExamService(er repository.ExamRepository, userExamService UserExamService) ExamService {
+func NewExamService(er repository.ExamRepository) ExamService {
 	return &examService{
 		examRepository: er,
-		userExamService: userExamService,
 	}
 }
 
@@ -44,19 +42,6 @@ func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest
 
 	// 2. Save Exam to DB
 	examCreate, err := es.examRepository.CreateExam(ctx, nil, exam)
-	if err != nil {
-		return dto.ExamResponse{}, dto.ErrCreateExam
-	}
-
-	// 3. Prepare UserExamCreateRequest DTO
-	userExamReq := dto.UserExamCreateRequest{
-		UserID: userId,
-		ExamID: examCreate.ID.String(),
-		Role:   "judge",
-	}
-
-	// 4. Create UserExam via service
-	_, err = es.userExamService.CreateUserExam(ctx, userExamReq)
 	if err != nil {
 		return dto.ExamResponse{}, dto.ErrCreateExam
 	}
