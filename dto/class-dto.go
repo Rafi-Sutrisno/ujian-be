@@ -20,7 +20,7 @@ const (
 	MESSAGE_FAILED_DELETE_CLASS             = "failed delete class"
 
 	// Success
-	MESSAGE_SUCCESS_CREATE_CLASS           = "success create class"
+	MESSAGE_SUCCESS_CREATE_CLASS             = "success create class"
 	MESSAGE_SUCCESS_GET_LIST_CLASS           = "success get list class"
 	MESSAGE_SUCCESS_GET_CLASS                = "success get class"
 	MESSAGE_SUCCESS_UPDATE_CLASS             = "success update class"

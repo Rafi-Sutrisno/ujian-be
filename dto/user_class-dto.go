@@ -31,6 +31,8 @@ const (
 var (
 	ErrCreateUserClass             = errors.New("failed to create user class")
 	ErrGetAllUserClass             = errors.New("failed to get all user class")
+	ErrGetAllUserClassByUserId     = errors.New("failed to get all user class by user id")
+	ErrGetAllUserClassByClassId    = errors.New("failed to get all user class by class id")
 	ErrGetUserClassById            = errors.New("failed to get user class by id")
 	ErrGetUserClassByEmail         = errors.New("failed to get user class by email")
 

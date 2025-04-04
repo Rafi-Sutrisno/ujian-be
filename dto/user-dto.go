@@ -69,7 +69,7 @@ type (
 		ID         string `json:"id"`
 		Name       string `json:"name" `
 		Email      string `json:"email" `
-		RoleID       uint `json:"role_id" `
+		RoleID     uint `json:"role_id" `
 		Noid       string `json:"noid" `
 	}
 
