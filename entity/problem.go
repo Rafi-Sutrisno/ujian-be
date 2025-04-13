@@ -12,7 +12,6 @@ type Problem struct {
 	Constraints   string    `json:"constraints"`
 	SampleInput   string    `json:"sample_input"`
 	SampleOutput  string    `json:"sample_output"`
-	CreatedBy     string    `json:"created_by"`
 
     Timestamp
 

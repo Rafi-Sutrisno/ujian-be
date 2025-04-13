@@ -9,7 +9,6 @@ type TestCase struct {
 	ProblemID       string    `gorm:"type:uuid;not null" json:"problem_id"`
 	InputData       string    `json:"input_data"`
 	ExpectedOutput  string    `json:"expected_output"`
-	CreatedBy       string    `json:"created_by"`
 
     Timestamp
 
