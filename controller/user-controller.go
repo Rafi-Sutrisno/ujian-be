@@ -23,6 +23,7 @@ type UserController interface {
 	// regist login
 	Register(ctx *gin.Context)
 	GetAllUser(ctx *gin.Context)
+	GetAllUserPaginate(ctx *gin.Context)
 	Update(ctx *gin.Context)
 	Delete(ctx *gin.Context)
 	LoginUser(ctx *gin.Context)
@@ -75,6 +76,17 @@ func (uc *userController) Register(ctx *gin.Context) {
 }
 
 func (uc *userController) GetAllUser(ctx *gin.Context) {
+	results, err := uc.userService.GetAllUsers(ctx.Request.Context())
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_USER, results)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (uc *userController) GetAllUserPaginate(ctx *gin.Context) {
 	var req dto.PaginationRequest
 	if err := ctx.ShouldBind(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
