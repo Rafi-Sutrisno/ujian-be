@@ -13,10 +13,11 @@ func UserClassRoutes(router *gin.Engine, UserClassController controller.UserClas
 	userClassPrivate := router.Group("/api/user_class").Use(middleware.Authenticate(jwtService))
 	{
 		userClassPrivate.GET("/me", UserClassController.GetByToken)
-		userClassPrivate.GET("/:user_id", UserClassController.GetByUserID)
-		userClassPrivate.GET("/:class_id", UserClassController.GetByClassID)
-		userClassPrivate.GET("/create", UserClassController.Create)
-		userClassPrivate.PATCH("/delete/:id", UserClassController.Delete)
+		userClassPrivate.GET("/user/:user_id", UserClassController.GetByUserID)
+		userClassPrivate.GET("/class/:class_id", UserClassController.GetByClassID)
+		userClassPrivate.POST("/create", UserClassController.Create)
+		userClassPrivate.POST("/create_many", UserClassController.CreateMany)
+		userClassPrivate.DELETE("/delete/:id", UserClassController.Delete)
 	}
 	// examPrivateAdmin := router.Group("/api/class").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	// {
