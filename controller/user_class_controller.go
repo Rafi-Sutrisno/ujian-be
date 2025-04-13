@@ -32,7 +32,7 @@ func NewUserClassController(ucs service.UserClassService) UserClassController {
 
 func (ucc *userClassController) GetByToken(ctx *gin.Context) {
 	// userID := ctx.Param("user_id")
-	userID := ctx.MustGet("user_id").(string)
+	userID := ctx.MustGet("requester_id").(string)
 	result, err := ucc.userClassService.GetByUserID(ctx.Request.Context(), userID)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
