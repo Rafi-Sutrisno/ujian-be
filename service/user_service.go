@@ -23,6 +23,7 @@ type userService struct {
 type UserService interface {
 	// functional
 	Register(ctx context.Context, req dto.UserCreateRequest) (dto.UserResponse, error)
+	GetAllUsers(ctx context.Context) ([]dto.UserResponse, error)
 	GetAllUserWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.UserPaginationResponse, error)
 	Verify(ctx context.Context, loginDTO dto.UserLoginRequest) (dto.UserLoginResponse, error)
 	Update(ctx context.Context, req dto.UserUpdateRequest, userId string) (dto.UserUpdateResponse, error)
@@ -50,7 +51,7 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 	user := entity.User{
 		Name:       req.Name,
 		Noid:       req.Noid,
-		RoleID:     0,
+		RoleID:     uint(req.RoleId),
 		Email:      req.Email,
 		Password:   req.Password,
 	}
@@ -66,9 +67,30 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 		Noid: 		userReg.Noid,
 		RoleID:       userReg.RoleID,
 		Email:      userReg.Email,
+		CreatedAt:  userReg.CreatedAt.String(),
 	}, nil
 }
 
+func (us *userService) GetAllUsers(ctx context.Context) ([]dto.UserResponse, error) {
+	Users, err := us.userRepository.GetAllUsers(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var responses []dto.UserResponse
+	for _, User := range Users {
+		responses = append(responses, dto.UserResponse{
+			ID:            	User.ID.String(),
+			Name: 			User.Name,
+			Email: 			User.Email,
+			RoleID: 		User.RoleID,
+			Noid: 			User.Noid,
+			CreatedAt:      User.CreatedAt.String(),
+		})
+	}
+
+	return responses, nil
+}
 
 func (us *userService) GetAllUserWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.UserPaginationResponse, error) {
 	dataWithPaginate, err := us.userRepository.GetAllUserWithPagination(ctx, nil, req)
