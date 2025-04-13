@@ -63,14 +63,16 @@ type (
 		Password   string `json:"password" binding:"required"`
 		Email      string `json:"email" binding:"required"`
 		Noid       string `json:"noid" binding:"required"`
+		RoleId     int `json:"role_id" binding:"required"`
 	}
 
 	UserResponse struct {
-		ID         string `json:"id"`
-		Name       string `json:"name" `
-		Email      string `json:"email" `
-		RoleID     uint `json:"role_id" `
-		Noid       string `json:"noid" `
+		ID        string `json:"id"`
+		Name      string `json:"name"`
+		Email     string `json:"email"`
+		RoleID    uint   `json:"role_id"`
+		Noid      string `json:"noid"`
+		CreatedAt string `json:"created_at"`
 	}
 
 	UserYAMLUploadRequest struct {
