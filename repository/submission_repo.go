@@ -14,8 +14,6 @@ type SubmissionRepository interface {
 	GetByProblemID(ctx context.Context, tx *gorm.DB, problemID string) ([]entity.Submission, error)
 	GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Submission, error)
 	Create(ctx context.Context, tx *gorm.DB, submission entity.Submission) (entity.Submission, error)
-	Update(ctx context.Context, tx *gorm.DB, submission entity.Submission) (entity.Submission, error)
-	Delete(ctx context.Context, tx *gorm.DB, id string) error
 }
 
 type submissionRepository struct {
@@ -103,28 +101,4 @@ func (r *submissionRepository) Create(ctx context.Context, tx *gorm.DB, submissi
 	}
 
 	return submission, nil
-}
-
-func (r *submissionRepository) Update(ctx context.Context, tx *gorm.DB, submission entity.Submission) (entity.Submission, error) {
-	if tx == nil {
-		tx = r.db
-	}
-
-	if err := tx.WithContext(ctx).Save(&submission).Error; err != nil {
-		return entity.Submission{}, err
-	}
-
-	return submission, nil
-}
-
-func (r *submissionRepository) Delete(ctx context.Context, tx *gorm.DB, id string) error {
-	if tx == nil {
-		tx = r.db
-	}
-
-	if err := tx.WithContext(ctx).Delete(&entity.Submission{}, "id = ?", id).Error; err != nil {
-		return err
-	}
-
-	return nil
 }
