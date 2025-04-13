@@ -97,8 +97,15 @@ func (cs *classService) Update(ctx context.Context, req dto.ClassUpdateRequest, 
 
 	data := entity.Class{
 		ID:         class.ID,
-		Name:       req.Name,
-		ShortName:  req.ShortName,
+		Name:       class.Name,
+		ShortName:  class.ShortName,
+	}
+
+	if req.Name != "" {
+		data.Name = req.Name
+	}
+	if req.ShortName != "" {
+		data.ShortName = req.ShortName
 	}
 
 	classUpdate, err := cs.classRepository.Update(ctx, nil, data)

@@ -30,7 +30,7 @@ func NewUserClassService(repo repository.UserClassRepository) UserClassService {
 func (ucs *userClassService) GetByUserID(ctx context.Context, userID string) ([]dto.UserClassResponse, error) {
 	userClasses, err := ucs.repo.GetByUserID(ctx, nil, userID)
 	if err != nil {
-		return nil, dto.ErrGetAllUserClass
+		return nil, dto.ErrGetAllUserClassByUserId
 	}
 
 	var responses []dto.UserClassResponse
@@ -49,7 +49,7 @@ func (ucs *userClassService) GetByUserID(ctx context.Context, userID string) ([]
 func (ucs *userClassService) GetByClassID(ctx context.Context, classID string) ([]dto.UserClassResponse, error) {
 	userClasses, err := ucs.repo.GetByClassID(ctx, nil, classID)
 	if err != nil {
-		return nil, dto.ErrGetAllUserClass
+		return nil, dto.ErrGetAllUserClassByClassId
 	}
 
 	var responses []dto.UserClassResponse
