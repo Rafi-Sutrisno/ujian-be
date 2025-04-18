@@ -45,13 +45,18 @@ var (
 type (
 	ClassCreateRequest struct {
 		Name       string `json:"name" binding:"required"`
+		Year        string        `json:"year" binding:"required"`
+		Class        string       `json:"class" binding:"required"`
 		ShortName  string `json:"short_name" binding:"required"`
 	}
 
 	ClassResponse struct {
 		ID         string `json:"id"`
 		Name       string `json:"name" `
+		Year        string        `json:"year" `
+		Class        string       `json:"class" `
 		ShortName  string `json:"short_name"`
+		CreatedAt string `json:"created_at"`
 	}
 
 	ClassYAMLUploadRequest struct {
@@ -87,12 +92,16 @@ type (
 
 	ClassUpdateRequest struct {
 		Name       string `json:"name" form:"name"`
+		Year        string        `json:"year" form:"year"`
+		Class        string       `json:"class" form:"class"`
 		ShortName      string `json:"short_name" form:"short_name"`
 	}
 
 	ClassUpdateResponse struct {
 		ID         string `json:"id"`
 		Name       string `json:"name"`
+		Year        string        `json:"year" `
+		Class        string       `json:"class" `
 		ShortName      string `json:"short_name"`
 	}
 )

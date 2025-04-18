@@ -48,14 +48,14 @@ type (
 	UserClassCreateRequest struct {
 		UserID  string `json:"user_id" binding:"required"`
 		ClassID string `json:"class_id" binding:"required"`
-		RoleID  uint `json:"role_id" binding:"required"`
+	
 	}
 
 	UserClassResponse struct {
 		ID      string `json:"id"`
 		UserID  string `json:"user_id" `
 		ClassID string `json:"class_id" `
-		RoleID  uint `json:"role_id" `
+		User    *UserResponse `json:"user"`
 	}
 
 	UserClassYAMLUploadRequest struct {

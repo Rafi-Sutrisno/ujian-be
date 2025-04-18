@@ -164,9 +164,9 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 		return dto.UserUpdateResponse{}, dto.ErrUserNotFound
 	}
 
-	if(user.RoleID != 0){
-		return dto.UserUpdateResponse{}, dto.ErrDeniedAccess
-	}
+	// if(user.RoleID != 0){
+	// 	return dto.UserUpdateResponse{}, dto.ErrDeniedAccess
+	// }
 
 	data := entity.User{
 		ID:         user.ID,
@@ -224,9 +224,9 @@ func (us *userService) Delete(ctx context.Context, userId string) error {
 		return dto.ErrUserNotFound
 	}
 
-	if(user.RoleID != 0){
-		return dto.ErrDeniedAccess
-	}
+	// if(user.RoleID != 0){
+	// 	return dto.ErrDeniedAccess
+	// }
 
 	err = us.userRepository.DeleteUser(ctx, nil, user.ID.String())
 	if err != nil {

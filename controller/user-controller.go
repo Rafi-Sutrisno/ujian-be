@@ -40,7 +40,8 @@ func NewUserController(us service.UserService) UserController {
 }
 
 func (c *userController) Me(ctx *gin.Context) {
-	userId := ctx.MustGet("requester_id").(string)
+	// userId := ctx.MustGet("requester_id").(string)
+	userId := ctx.Param("id")
 	fmt.Println("ini userId controller:", userId)
 
 	result, err := c.userService.GetUserById(ctx.Request.Context(), userId)

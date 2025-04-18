@@ -30,6 +30,7 @@ func UserRoutes(router *gin.Engine, UserController controller.UserController, jw
 	userPublic := router.Group("/api/user")
 	{
 		userPublic.GET("/all/paginate", UserController.GetAllUserPaginate)
+		userPublic.GET("/:id", UserController.Me)
 		userPublic.GET("/all", UserController.GetAllUser)
 		userPublic.POST("/login", UserController.LoginUser)
 		userPublic.POST("/add", UserController.Register)

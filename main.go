@@ -51,7 +51,7 @@ func main() {
 		// Service
 		userService        service.UserService        = service.NewUserService(userRepository, jwtService)
 		classService       service.ClassService       = service.NewClassService(classRepository)
-		userClassService   service.UserClassService   = service.NewUserClassService(userClassRepository)
+		userClassService   service.UserClassService   = service.NewUserClassService(userClassRepository, userRepository)
 		// userExamService    service.UserExamService    = service.NewUserExamService(userExamRepository)
 		examService        service.ExamService        = service.NewExamService(examRepository)
 		examLangService    service.ExamLangService    = service.NewExamLangService(examLangRepository)

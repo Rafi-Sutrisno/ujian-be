@@ -2,7 +2,6 @@ package routes
 
 import (
 	"mods/controller"
-	"mods/middleware"
 	"mods/service"
 
 	"github.com/gin-gonic/gin"
@@ -10,15 +9,27 @@ import (
 
 func UserClassRoutes(router *gin.Engine, UserClassController controller.UserClassController, jwtService service.JWTService) {
 
-	userClassPrivate := router.Group("/api/user_class").Use(middleware.Authenticate(jwtService))
+	// userClassPrivate := router.Group("/api/user_class").Use(middleware.Authenticate(jwtService))
+	// {
+	// 	userClassPrivate.GET("/me", UserClassController.GetByToken)
+	// 	userClassPrivate.GET("/user/:user_id", UserClassController.GetByUserID)
+	// 	userClassPrivate.GET("/class/:class_id", UserClassController.GetByClassID)
+	// 	userClassPrivate.POST("/create", UserClassController.Create)
+	// 	userClassPrivate.POST("/create_many", UserClassController.CreateMany)
+	// 	userClassPrivate.DELETE("/delete/:id", UserClassController.Delete)
+	// }
+
+	userClassPublic := router.Group("/api/user_class")
 	{
-		userClassPrivate.GET("/me", UserClassController.GetByToken)
-		userClassPrivate.GET("/user/:user_id", UserClassController.GetByUserID)
-		userClassPrivate.GET("/class/:class_id", UserClassController.GetByClassID)
-		userClassPrivate.POST("/create", UserClassController.Create)
-		userClassPrivate.POST("/create_many", UserClassController.CreateMany)
-		userClassPrivate.DELETE("/delete/:id", UserClassController.Delete)
+		// userClassPublic.GET("/me", UserClassController.GetByToken)
+		userClassPublic.GET("/user/:user_id", UserClassController.GetByUserID)
+		userClassPublic.GET("/class/:class_id", UserClassController.GetByClassID)
+		userClassPublic.GET("/class/unassigned/:class_id", UserClassController.GetUnassigned)
+		userClassPublic.POST("/create", UserClassController.Create)
+		userClassPublic.POST("/create_many", UserClassController.CreateMany)
+		userClassPublic.DELETE("/delete/:id", UserClassController.Delete)
 	}
+
 	// examPrivateAdmin := router.Group("/api/class").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	// {
 	// 	examPrivateAdmin.POST("/add", ClassController.CreateExam)

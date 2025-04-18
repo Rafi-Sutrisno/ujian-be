@@ -18,6 +18,7 @@ type (
 	ClassController interface {
 		
 		GetById(ctx *gin.Context)
+		GetAll(ctx *gin.Context)
 		GetAllWithPagination(ctx *gin.Context)
 		Create(ctx *gin.Context)
 		Update(ctx *gin.Context)
@@ -89,6 +90,17 @@ func (cc *classController) GetAllWithPagination(ctx *gin.Context) {
 	}
 
 	ctx.JSON(http.StatusOK, resp)
+}
+
+func (cc *classController) GetAll(ctx *gin.Context) {
+	results, err := cc.classService.GetAll(ctx.Request.Context())
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_CLASS, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_CLASS, results)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (cc *classController) Update(ctx *gin.Context) {

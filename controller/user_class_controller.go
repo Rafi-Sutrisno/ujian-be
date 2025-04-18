@@ -18,6 +18,7 @@ type (
 		GetByToken(ctx *gin.Context)
 		GetByUserID(ctx *gin.Context)
 		GetByClassID(ctx *gin.Context)
+		GetUnassigned(ctx *gin.Context)
 		Create(ctx *gin.Context)
 		CreateMany(ctx *gin.Context)
 		Delete(ctx *gin.Context)
@@ -59,6 +60,18 @@ func (ucc *userClassController) GetByUserID(ctx *gin.Context) {
 func (ucc *userClassController) GetByClassID(ctx *gin.Context) {
 	classID := ctx.Param("class_id")
 	result, err := ucc.userClassService.GetByClassID(ctx.Request.Context(), classID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_USER_CLASS, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (ucc *userClassController) GetUnassigned(ctx *gin.Context) {
+	classID := ctx.Param("class_id")
+	result, err := ucc.userClassService.GetUnassignedUsersByClassID(ctx.Request.Context(), classID)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)

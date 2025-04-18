@@ -7,11 +7,20 @@ import (
 )
 
 func Migrate(db *gorm.DB) error {
-	db.Migrator().DropTable(&entity.UserRole{}, &entity.UserClassRole{})
+	db.Migrator().DropTable(
+		&entity.UserRole{},
+		&entity.Class{},
+		&entity.Exam{},
+		&entity.Problem{},  
+		&entity.TestCase{},            
+		&entity.User{},         
+		&entity.UserClass{}, 
+		&entity.Submission{}, 
+		&entity.Language{},    
+		&entity.ExamLang{}, )
 
 	if err := db.AutoMigrate(
 		&entity.UserRole{},    
-		&entity.UserClassRole{}, 
 		&entity.Class{},
 		&entity.Exam{},
 		&entity.Problem{},  

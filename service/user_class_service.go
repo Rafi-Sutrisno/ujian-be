@@ -10,20 +10,23 @@ import (
 type (
 	userClassService struct {
 		repo repository.UserClassRepository
+		UserRepo repository.UserRepository
 	}
 
 	UserClassService interface {
 		GetByUserID(ctx context.Context, userID string) ([]dto.UserClassResponse, error)
 		GetByClassID(ctx context.Context, classID string) ([]dto.UserClassResponse, error)
+		GetUnassignedUsersByClassID(ctx context.Context, classID string) ([]dto.UserResponse, error)
 		Create(ctx context.Context, req dto.UserClassCreateRequest) (dto.UserClassResponse, error)
 		CreateMany(ctx context.Context, reqs []dto.UserClassCreateRequest) error
 		Delete(ctx context.Context, id string) error
 	}
 )
 
-func NewUserClassService(repo repository.UserClassRepository) UserClassService {
+func NewUserClassService(repo repository.UserClassRepository, UserRepo repository.UserRepository) UserClassService {
 	return &userClassService{
 		repo: repo,
+		UserRepo:  UserRepo,
 	}
 }
 
@@ -39,7 +42,7 @@ func (ucs *userClassService) GetByUserID(ctx context.Context, userID string) ([]
 			ID:        uc.ID.String(),
 			UserID:    uc.UserID,
 			ClassID:   uc.ClassID,
-			RoleID:    uc.RoleID,
+			
 		})
 	}
 
@@ -54,22 +57,63 @@ func (ucs *userClassService) GetByClassID(ctx context.Context, classID string) (
 
 	var responses []dto.UserClassResponse
 	for _, uc := range userClasses {
+		user := &dto.UserResponse{
+			Name:       uc.User.Name,
+			Noid: 		uc.User.Noid,
+			RoleID:     uc.User.RoleID,
+			Email:      uc.User.Email,
+		}
+
 		responses = append(responses, dto.UserClassResponse{
 			ID:        uc.ID.String(),
 			UserID:    uc.UserID,
 			ClassID:   uc.ClassID,
-			RoleID:    uc.RoleID,
+			User:      user,
 		})
 	}
 
 	return responses, nil
 }
 
+func (ucs *userClassService) GetUnassignedUsersByClassID(ctx context.Context, classID string) ([]dto.UserResponse, error) {
+	allStudents, err := ucs.UserRepo.GetAllStudents(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	assignedUserClasses, err := ucs.repo.GetByClassID(ctx, nil, classID)
+	if err != nil {
+		return nil, err
+	}
+
+	assignedMap := make(map[string]bool)
+	for _, uc := range assignedUserClasses {
+		assignedMap[uc.UserID] = true
+	}
+
+	var unassignedUsers []dto.UserResponse
+	for _, student := range allStudents {
+		if !assignedMap[student.ID.String()] {
+			unassignedUsers = append(unassignedUsers, dto.UserResponse{
+				ID:    student.ID.String(),
+				Name:  student.Name,
+				Noid: 		student.Noid,
+				RoleID:       student.RoleID,
+				Email: student.Email,
+				
+			})
+		}
+	}
+
+	return unassignedUsers, nil
+}
+
+
 func (ucs *userClassService) Create(ctx context.Context, req dto.UserClassCreateRequest) (dto.UserClassResponse, error) {
 	userClass := entity.UserClass{
 		UserID:    req.UserID,
 		ClassID:   req.ClassID,
-		RoleID:    req.RoleID,
+		
 	}
 
 	createdUserClass, err := ucs.repo.Create(ctx, nil, userClass)
@@ -81,7 +125,7 @@ func (ucs *userClassService) Create(ctx context.Context, req dto.UserClassCreate
 		ID:        createdUserClass.ID.String(),
 		UserID:    createdUserClass.UserID,
 		ClassID:   createdUserClass.ClassID,
-		RoleID:    createdUserClass.RoleID,
+		
 	}, nil
 }
 
@@ -91,7 +135,7 @@ func (ucs *userClassService) CreateMany(ctx context.Context, reqs []dto.UserClas
 		userClasses = append(userClasses, entity.UserClass{
 			UserID:    req.UserID,
 			ClassID:   req.ClassID,
-			RoleID:    req.RoleID,
+			
 		})
 	}
 

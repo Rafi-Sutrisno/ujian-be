@@ -60,7 +60,7 @@ func (ucr *userClassRepository) GetByClassID(ctx context.Context, tx *gorm.DB, c
 	}
 
 	var userClasses []entity.UserClass
-	if err := tx.WithContext(ctx).Where("class_id = ?", classID).Find(&userClasses).Error; err != nil {
+	if err := tx.WithContext(ctx).Preload("User").Where("class_id = ?", classID).Find(&userClasses).Error; err != nil {
 		return nil, err
 	}
 

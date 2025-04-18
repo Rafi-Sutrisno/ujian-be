@@ -13,6 +13,7 @@ type (
 	UserRepository interface {
 		RegisterUser(ctx context.Context, tx *gorm.DB,  user entity.User) (entity.User, error)
 		GetAllUsers(ctx context.Context, tx *gorm.DB) ([]entity.User, error)
+		GetAllStudents(ctx context.Context, tx *gorm.DB) ([]entity.User, error)
 		GetAllUserWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllUserRepositoryResponse, error)
 		CheckNoId(ctx context.Context,tx *gorm.DB, NoId string) (entity.User, bool, error)
 		GetUserById(ctx context.Context, tx *gorm.DB, userId string) (entity.User, error)
@@ -51,6 +52,19 @@ func (ur *userRepository) GetAllUsers(ctx context.Context, tx *gorm.DB) ([]entit
 
 	var users []entity.User
 	if err := tx.WithContext(ctx).Find(&users).Error; err != nil {
+		return nil, err
+	}
+
+	return users, nil
+}
+
+func (ur *userRepository) GetAllStudents(ctx context.Context, tx *gorm.DB) ([]entity.User, error) {
+	if tx == nil {
+		tx = ur.db
+	}
+
+	var users []entity.User
+	if err := tx.WithContext(ctx).Where("role_id = ?", 2).Find(&users).Error; err != nil {
 		return nil, err
 	}
 

@@ -13,6 +13,7 @@ type (
 	ClassRepository interface {
 		GetById(ctx context.Context, tx *gorm.DB, classId string) (entity.Class, error)
 		GetAllWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllClassRepositoryResponse, error)
+		GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Class, error)
 		Create(ctx context.Context, tx *gorm.DB, class entity.Class) (entity.Class, error)
 		Update(ctx context.Context, tx *gorm.DB, class entity.Class) (entity.Class, error)
 		Delete(ctx context.Context, tx *gorm.DB, classId string) error
@@ -40,6 +41,19 @@ func (cr *classRepository) GetById(ctx context.Context, tx *gorm.DB, classId str
 	}
 
 	return class, nil
+}
+
+func (cr *classRepository) GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Class, error) {
+	if tx == nil {
+		tx = cr.db
+	}
+
+	var classes []entity.Class
+	if err := tx.WithContext(ctx).Find(&classes).Error; err != nil {
+		return nil, err
+	}
+
+	return classes, nil
 }
 
 func (cr *classRepository) GetAllWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllClassRepositoryResponse, error) {

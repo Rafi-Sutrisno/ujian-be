@@ -14,6 +14,7 @@ type (
 
 	ClassService interface {
 		GetById(ctx context.Context, classId string) (dto.ClassResponse, error)
+		GetAll(ctx context.Context) ([]dto.ClassResponse, error)
 		GetAllWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ClassPaginationResponse, error)
 		Create(ctx context.Context, req dto.ClassCreateRequest) (dto.ClassResponse, error)
 		Update(ctx context.Context, req dto.ClassUpdateRequest, classId string) (dto.ClassUpdateResponse, error)
@@ -30,8 +31,10 @@ func NewClassService(cr repository.ClassRepository) ClassService {
 
 func (cs *classService) Create(ctx context.Context, req dto.ClassCreateRequest) (dto.ClassResponse, error) {
 	class := entity.Class{
-		Name:        req.Name,
-		ShortName:   req.ShortName,
+		Name:        	req.Name,
+		Year: 			req.Year,
+		Class: 			req.Class,
+		ShortName:   	req.ShortName,
 	}
 
 	classCreate, err := cs.classRepository.Create(ctx, nil, class)
@@ -42,10 +45,33 @@ func (cs *classService) Create(ctx context.Context, req dto.ClassCreateRequest) 
 	return dto.ClassResponse{
 		ID:          classCreate.ID.String(),
 		Name:        classCreate.Name,
+		Year: 		 classCreate.Year,
+		Class: 		 classCreate.Class,
 		ShortName:   classCreate.ShortName,
+		CreatedAt:   classCreate.CreatedAt.String(),
 	}, nil
 }
 
+func (cs *classService) GetAll(ctx context.Context) ([]dto.ClassResponse, error) {
+	Classes, err := cs.classRepository.GetAll(ctx, nil)
+	if err != nil {
+		return nil, err
+	}
+
+	var responses []dto.ClassResponse
+	for _, Class := range Classes {
+		responses = append(responses, dto.ClassResponse{
+			ID:            	Class.ID.String(),
+			Name:        Class.Name,
+			Year: 		 Class.Year,
+			Class: 		 Class.Class,
+			ShortName:   Class.ShortName,
+			CreatedAt:   Class.CreatedAt.String(),
+		})
+	}
+
+	return responses, nil
+}
 
 func (cs *classService) GetAllWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ClassPaginationResponse, error) {
 	dataWithPaginate, err := cs.classRepository.GetAllWithPagination(ctx, nil, req)
@@ -58,7 +84,10 @@ func (cs *classService) GetAllWithPagination(ctx context.Context, req dto.Pagina
 		data := dto.ClassResponse{
 			ID:          class.ID.String(),
 			Name:        class.Name,
+			Year: 		 class.Year,
+			Class: 		 class.Class,
 			ShortName:   class.ShortName,
+			CreatedAt:   class.CreatedAt.String(),
 		}
 
 		datas = append(datas, data)
@@ -85,7 +114,10 @@ func (cs *classService) GetById(ctx context.Context, classId string) (dto.ClassR
 	return dto.ClassResponse{
 		ID:         	class.ID.String(),
 		Name:       	class.Name,
+		Year: 		 class.Year,
+		Class: 		 class.Class,
 		ShortName:  	class.ShortName,
+		CreatedAt:   class.CreatedAt.String(),
 	}, nil
 }
 
@@ -98,6 +130,8 @@ func (cs *classService) Update(ctx context.Context, req dto.ClassUpdateRequest, 
 	data := entity.Class{
 		ID:         class.ID,
 		Name:       class.Name,
+		Year: 		 class.Year,
+		Class: 		 class.Class,
 		ShortName:  class.ShortName,
 	}
 
@@ -106,6 +140,12 @@ func (cs *classService) Update(ctx context.Context, req dto.ClassUpdateRequest, 
 	}
 	if req.ShortName != "" {
 		data.ShortName = req.ShortName
+	}
+	if req.Year != "" {
+		data.Year = req.Year
+	}
+	if req.Class != "" {
+		data.Class = req.Class
 	}
 
 	classUpdate, err := cs.classRepository.Update(ctx, nil, data)
@@ -116,6 +156,8 @@ func (cs *classService) Update(ctx context.Context, req dto.ClassUpdateRequest, 
 	return dto.ClassUpdateResponse{
 		ID:         	classUpdate.ID.String(),
 		Name:       	classUpdate.Name,
+		Year: 		 classUpdate.Year,
+		Class: 		 classUpdate.Class,
 		ShortName:  	classUpdate.ShortName,
 	}, nil
 }
