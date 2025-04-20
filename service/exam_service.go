@@ -14,9 +14,10 @@ type (
 	}
 
 	ExamService interface {
-		CreateExam(ctx context.Context, req dto.ExamCreateRequest, userId string) (dto.ExamResponse, error)
+		CreateExam(ctx context.Context, req dto.ExamCreateRequest) (dto.ExamResponse, error)
 		GetAllExamWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ExamPaginationResponse, error)
 		GetExamById(ctx context.Context, examId string) (dto.ExamResponse, error)
+		GetByClassID(ctx context.Context, classID string) ([]dto.ExamResponse, error)
 		Update(ctx context.Context, req dto.ExamUpdateRequest, examId string) (dto.ExamUpdateResponse, error)
 		Delete(ctx context.Context, examId string) error
 		
@@ -29,36 +30,62 @@ func NewExamService(er repository.ExamRepository) ExamService {
 	}
 }
 
-func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest, userId string) (dto.ExamResponse, error) {
+func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest) (dto.ExamResponse, error) {
 	// 1. Create Exam entity
 	exam := entity.Exam{
+		ClassID:     req.ClassID,
 		Name:        req.Name,
 		ShortName:   req.ShortName,
 		IsPublished: req.IsPublished,
 		StartTime:   req.StartTime,
 		Duration:    req.Duration,
-		CreatedBy:   userId,
+		
 	}
 
 	// 2. Save Exam to DB
 	examCreate, err := es.examRepository.CreateExam(ctx, nil, exam)
 	if err != nil {
-		return dto.ExamResponse{}, dto.ErrCreateExam
+		return dto.ExamResponse{}, err
 	}
 
 	// 5. Return successful response
 	return dto.ExamResponse{
 		ID:          examCreate.ID.String(),
+		ClassID:     examCreate.ClassID,
 		Name:        examCreate.Name,
 		ShortName:   examCreate.ShortName,
 		IsPublished: examCreate.IsPublished,
 		StartTime:   examCreate.StartTime,
-		Duration:    examCreate.Duration,
+		Duration:    examCreate.Duration.String(),
 		EndTime:     examCreate.EndTime,
-		CreatedBy:   examCreate.CreatedBy,
 	}, nil
 }
 
+func (es *examService) GetByClassID(ctx context.Context, classID string) ([]dto.ExamResponse, error) {
+	exams, err := es.examRepository.GetByClassID(ctx, nil, classID)
+	if err != nil {
+		return nil, dto.ErrGetAllExamsByClassId
+	}
+
+	var responses []dto.ExamResponse
+	for _, exam := range exams {
+		
+
+		responses = append(responses, dto.ExamResponse{
+			ID:        exam.ID.String(),
+			ClassID:   exam.ClassID,
+			Name:  exam.Name,
+			ShortName: exam.ShortName,
+			IsPublished: exam.IsPublished,
+			StartTime: exam.StartTime,
+			Duration: exam.Duration.String(),
+			EndTime: exam.EndTime,
+
+		})
+	}
+
+	return responses, nil
+}
 
 func (us *examService) GetAllExamWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ExamPaginationResponse, error) {
 	dataWithPaginate, err := us.examRepository.GetAllExamWithPagination(ctx, nil, req)
@@ -74,9 +101,9 @@ func (us *examService) GetAllExamWithPagination(ctx context.Context, req dto.Pag
 			ShortName:   exam.ShortName,
 			IsPublished: exam.IsPublished,
 			StartTime:   exam.StartTime,
-			Duration:    exam.Duration,
+			Duration:    exam.Duration.String(),
 			EndTime:     exam.EndTime,
-			CreatedBy:   exam.CreatedBy,
+			
 		}
 
 		datas = append(datas, data)
@@ -102,13 +129,14 @@ func (us *examService) GetExamById(ctx context.Context, examId string) (dto.Exam
 
 	return dto.ExamResponse{
 		ID:         	exam.ID.String(),
+		ClassID: exam.ClassID,
 		Name:       	exam.Name,
 		ShortName:  	exam.ShortName,
 		IsPublished: 	exam.IsPublished,
 		StartTime:   	exam.StartTime,
-		Duration: 		exam.Duration,
+		Duration: 		exam.Duration.String(),
 		EndTime: 		exam.EndTime,
-		CreatedBy: 		exam.CreatedBy,
+		
 	}, nil
 }
 
@@ -120,6 +148,7 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 
 	data := entity.Exam{
 		ID:         exam.ID,
+		ClassID: 	exam.ClassID,
 		Name:       req.Name,
 		ShortName:  req.ShortName,
 		IsPublished: req.IsPublished,
@@ -135,13 +164,14 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 
 	return dto.ExamUpdateResponse{
 		ID:         	examUpdate.ID.String(),
+		ClassID:  		examUpdate.ClassID,	
 		Name:       	examUpdate.Name,
 		ShortName:  	examUpdate.ShortName,
 		IsPublished: 	examUpdate.IsPublished,
 		StartTime: 		examUpdate.StartTime,
 		Duration: 		examUpdate.Duration,
 		EndTime: 		examUpdate.EndTime,
-		CreatedBy: 		examUpdate.CreatedBy,
+		
 	}, nil
 }
 
