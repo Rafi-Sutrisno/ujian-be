@@ -19,6 +19,7 @@ type (
 	ExamController interface {
 		CreateExam(ctx *gin.Context)
 		GetExamById(ctx *gin.Context)
+		GetByClassID(ctx *gin.Context)
 		GetAllExam(ctx *gin.Context)
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
@@ -55,8 +56,7 @@ func (ec *examController)CreateExam(ctx *gin.Context){
 		return
 	}
 
-	userId := ctx.MustGet("requester_id").(string)
-	createdExam, err := ec.examService.CreateExam(ctx.Request.Context(), examReq, userId)
+	createdExam, err := ec.examService.CreateExam(ctx.Request.Context(), examReq)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_EXAM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -65,6 +65,18 @@ func (ec *examController)CreateExam(ctx *gin.Context){
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_EXAM, createdExam)
 	ctx.JSON(http.StatusCreated, res)
+}
+
+func (c *examController) GetByClassID(ctx *gin.Context) {
+	classID := ctx.Param("class_id")
+	result, err := c.examService.GetByClassID(ctx.Request.Context(), classID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_EXAM, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_EXAM, result)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (c *examController) GetExamById(ctx *gin.Context) {
@@ -123,6 +135,13 @@ func (uc *examController) Update(ctx *gin.Context) {
 			return
 		}
 		req.Duration = parsedDuration
+	}
+	now := time.Now()
+	fmt.Println("Server Time:", now.Format(time.RFC3339), "Timezone:", now.Location())
+	if req.StartTime.Before(now) || req.StartTime.Equal(now) {
+		res := utils.BuildResponseFailed("invalid start time", "start time must be after current time", nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
 	}
 
 	examId := ctx.Param("exam_id")

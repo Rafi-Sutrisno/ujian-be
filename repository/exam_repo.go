@@ -14,6 +14,7 @@ type (
 	ExamRepository interface {
 		CreateExam(ctx context.Context, tx *gorm.DB, exam entity.Exam) (entity.Exam, error)
 		GetExamById(ctx context.Context, tx *gorm.DB, examId string) (entity.Exam, error)
+		GetByClassID(ctx context.Context, tx *gorm.DB, classID string) ([]entity.Exam, error)
 		GetAllExamWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllExamRepositoryResponse, error)
 		UpdateExam(ctx context.Context, tx *gorm.DB, exam entity.Exam) (entity.Exam, error)
 		DeleteExam(ctx context.Context, tx *gorm.DB, examId string) error
@@ -55,6 +56,19 @@ func (ur *examRepository) GetExamById(ctx context.Context, tx *gorm.DB, examId s
 	}
 
 	return exam, nil
+}
+
+func (ur *examRepository) GetByClassID(ctx context.Context, tx *gorm.DB, classID string) ([]entity.Exam, error) {
+	if tx == nil {
+		tx = ur.db
+	}
+
+	var exams []entity.Exam
+	if err := tx.WithContext(ctx).Where("class_id = ?", classID).Find(&exams).Error; err != nil {
+		return nil, err
+	}
+
+	return exams, nil
 }
 
 func (ur *examRepository) GetAllExamWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllExamRepositoryResponse, error) {

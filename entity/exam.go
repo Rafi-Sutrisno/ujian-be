@@ -9,14 +9,13 @@ import (
 
 type Exam struct {
     ID          uuid.UUID     `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
-    ClassID     uuid.UUID     `gorm:"type:uuid;not null" json:"class_id"`
+    ClassID     string        `gorm:"type:uuid;not null" json:"class_id"`
     Name        string        `json:"name"`
     ShortName   string        `json:"short_name"`
 	IsPublished bool          `json:"is_published"`
     StartTime   time.Time     `json:"start_time"`           
     Duration    time.Duration `json:"duration"`             
-	EndTime     time.Time     `json:"end_time"`           
-    CreatedBy   string        `json:"created_by"`           
+	EndTime     time.Time     `json:"end_time"`                      
     
 	Timestamp
 

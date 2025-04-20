@@ -36,7 +36,7 @@ var (
 	ErrGetExamById            = errors.New("failed to get exam by id")
 	ErrShortNameAlreadyExists     = errors.New("email already exist")
 	ErrUpdateExam             = errors.New("failed to update exam")
-
+    ErrGetAllExamsByClassId    = errors.New("failed to get all exams by class id")
 	ErrExamNotFound           = errors.New("exam not found")
 
 	ErrDeleteExam             = errors.New("failed to delete exam")
@@ -67,9 +67,9 @@ type (
 		ShortName   string        `json:"short_name"`
 		IsPublished bool          `json:"is_published"`
 		StartTime   time.Time     `json:"start_time"`           
-		Duration    time.Duration `json:"duration"`             
+		Duration    string `json:"duration"`             
 		EndTime     time.Time     `json:"end_time"`           
-		CreatedBy   string        `json:"created_by"` 
+		
 	}
 
 
@@ -92,7 +92,7 @@ type (
 		StartTime   time.Time     `json:"start_time"`           
 		Duration    time.Duration `json:"duration"`             
 		EndTime     time.Time     `json:"end_time"`           
-		CreatedBy   string        `json:"created_by"` 
+	
 	}
 
 	// untuk get
