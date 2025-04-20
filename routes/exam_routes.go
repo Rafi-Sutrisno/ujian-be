@@ -2,7 +2,6 @@ package routes
 
 import (
 	"mods/controller"
-	"mods/middleware"
 	"mods/service"
 
 	"github.com/gin-gonic/gin"
@@ -10,14 +9,22 @@ import (
 
 func ExamRoutes(router *gin.Engine, ExamController controller.ExamController, jwtService service.JWTService) {
 
-	examPrivate := router.Group("/api/exam").Use(middleware.Authenticate(jwtService))
+	// examPublic := router.Group("/api/exam").Use(middleware.Authenticate(jwtService))
+	// {
+	// 	examPublic.GET("/:exam_id", ExamController.GetExamById)
+	// 	examPublic.PATCH("/update/:exam_id", ExamController.Update)
+	// 	examPublic.POST("/add", ExamController.CreateExam)
+	// 	examPublic.GET("/all", ExamController.GetAllExam)
+	// 	examPublic.DELETE("/delete/:exam_id", ExamController.Delete)
+	// }
+	examPublic := router.Group("/api/exam")
 	{
-		examPrivate.GET("/byuser/:id", ExamController.CreateExam)
-		examPrivate.GET("/:exam_id", ExamController.GetExamById)
-		examPrivate.PATCH("/update/:exam_id", ExamController.Update)
-		examPrivate.POST("/add", ExamController.CreateExam)
-		examPrivate.GET("/all", ExamController.GetAllExam)
-		examPrivate.DELETE("/delete/:exam_id", ExamController.Delete)
+		examPublic.GET("/:exam_id", ExamController.GetExamById)
+		examPublic.GET("/byclass/:class_id", ExamController.GetByClassID)
+		examPublic.PATCH("/:exam_id", ExamController.Update)
+		examPublic.POST("/create", ExamController.CreateExam)
+		examPublic.GET("/all", ExamController.GetAllExam)
+		examPublic.DELETE("/:exam_id", ExamController.Delete)
 	}
 	// examPrivateAdmin := router.Group("/api/exam").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	// {
