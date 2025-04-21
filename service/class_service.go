@@ -15,6 +15,7 @@ type (
 	ClassService interface {
 		GetById(ctx context.Context, classId string) (dto.ClassResponse, error)
 		GetAll(ctx context.Context) ([]dto.ClassResponse, error)
+		GetByUserID(ctx context.Context, userID string) ([]dto.ClassResponse, error)
 		GetAllWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ClassPaginationResponse, error)
 		Create(ctx context.Context, req dto.ClassCreateRequest) (dto.ClassResponse, error)
 		Update(ctx context.Context, req dto.ClassUpdateRequest, classId string) (dto.ClassUpdateResponse, error)
@@ -120,6 +121,28 @@ func (cs *classService) GetById(ctx context.Context, classId string) (dto.ClassR
 		CreatedAt:   class.CreatedAt.String(),
 	}, nil
 }
+
+func (cs *classService) GetByUserID(ctx context.Context, userID string) ([]dto.ClassResponse, error) {
+	classes, err := cs.classRepository.GetByUserID(ctx, nil, userID)
+	if err != nil {
+		return nil, err 
+	}
+
+	var responses []dto.ClassResponse
+	for _, class := range classes {
+		responses = append(responses, dto.ClassResponse{
+			ID:         class.ID.String(),
+			Name:       class.Name,
+			Year:       class.Year,
+			Class:      class.Class,
+			ShortName:  class.ShortName,
+			CreatedAt:  class.CreatedAt.String(),
+		})
+	}
+
+	return responses, nil
+}
+
 
 func (cs *classService) Update(ctx context.Context, req dto.ClassUpdateRequest, classId string) (dto.ClassUpdateResponse, error) {
 	class, err := cs.classRepository.GetById(ctx, nil, classId)

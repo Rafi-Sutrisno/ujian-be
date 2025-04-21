@@ -24,6 +24,7 @@ func ClassRoutes(router *gin.Engine, ClassController controller.ClassController,
 		classPublic.GET("/:class_id", ClassController.GetById)
 		classPublic.GET("/all/paginate", ClassController.GetAllWithPagination)
 		classPublic.GET("/all", ClassController.GetAll)
+		classPublic.GET("/user/:user_id", ClassController.GetByUserID) // ganti ke by token
 		classPublic.PATCH("/update/:class_id", ClassController.Update)
 		classPublic.DELETE("/delete/:class_id", ClassController.Delete)
 	}

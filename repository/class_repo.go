@@ -13,10 +13,13 @@ type (
 	ClassRepository interface {
 		GetById(ctx context.Context, tx *gorm.DB, classId string) (entity.Class, error)
 		GetAllWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllClassRepositoryResponse, error)
+		GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.Class, error)
+
 		GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Class, error)
 		Create(ctx context.Context, tx *gorm.DB, class entity.Class) (entity.Class, error)
 		Update(ctx context.Context, tx *gorm.DB, class entity.Class) (entity.Class, error)
 		Delete(ctx context.Context, tx *gorm.DB, classId string) error
+		
 	}
 
 	classRepository struct {
@@ -99,6 +102,28 @@ func (cr *classRepository) GetAllWithPagination(ctx context.Context, tx *gorm.DB
 		},
 	}, nil
 }
+
+func (cr *classRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.Class, error) {
+	if tx == nil {
+		tx = cr.db
+	}
+
+	var classes []entity.Class
+
+	err := tx.WithContext(ctx).
+		Table("classes").
+		Joins("JOIN user_classes ON user_classes.class_id = classes.id").
+		Where("user_classes.user_id = ?", userID).
+		Find(&classes).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return classes, nil
+}
+
+
 
 func (cr *classRepository) Create(ctx context.Context, tx *gorm.DB, class entity.Class) (entity.Class, error) {
 	if tx == nil {

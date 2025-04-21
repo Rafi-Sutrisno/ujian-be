@@ -18,6 +18,7 @@ type (
 	ClassController interface {
 		
 		GetById(ctx *gin.Context)
+		GetByUserID(ctx *gin.Context)
 		GetAll(ctx *gin.Context)
 		GetAllWithPagination(ctx *gin.Context)
 		Create(ctx *gin.Context)
@@ -66,6 +67,22 @@ func (cc *classController) GetById(ctx *gin.Context) {
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_CLASS, result)
 	ctx.JSON(http.StatusOK, res)
 }
+
+func (cc *classController) GetByUserID(ctx *gin.Context) {
+	userID := ctx.Param("user_id")
+	// fmt.Println("user id di controller:", userID)
+
+	result, err := cc.classService.GetByUserID(ctx.Request.Context(), userID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_CLASS, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_CLASS, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
 
 func (cc *classController) GetAllWithPagination(ctx *gin.Context) {
 	var req dto.PaginationRequest
