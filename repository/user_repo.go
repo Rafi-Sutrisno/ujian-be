@@ -124,7 +124,8 @@ func (ur *userRepository) CheckNoId(ctx context.Context, tx *gorm.DB, NoId strin
 	}
 
 	var user entity.User
-	if err := tx.WithContext(ctx).Where("noid = ?", NoId).Take(&user).Error; err != nil {
+	if err := tx.WithContext(ctx).
+	Preload("Role").Where("noid = ?", NoId).Take(&user).Error; err != nil {
 		return entity.User{}, false, err
 	}
 
