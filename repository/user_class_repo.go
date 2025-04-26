@@ -15,6 +15,7 @@ type (
 		Create(ctx context.Context, tx *gorm.DB, userClass entity.UserClass) (entity.UserClass, error)
 		CreateMany(ctx context.Context, tx *gorm.DB, userClasses []entity.UserClass) error
 		Delete(ctx context.Context, tx *gorm.DB, id string) error
+		IsUserInClass(ctx context.Context, tx *gorm.DB, userID, classID string) (bool, error)
 	}
 
 	userClassRepository struct {
@@ -102,3 +103,21 @@ func (ucr *userClassRepository) Delete(ctx context.Context, tx *gorm.DB, id stri
 
 	return nil
 }
+
+func (ucr *userClassRepository) IsUserInClass(ctx context.Context, tx *gorm.DB, userID, classID string) (bool, error) {
+	if tx == nil {
+		tx = ucr.db
+	}
+
+	var count int64
+	err := tx.WithContext(ctx).Model(&entity.UserClass{}).
+		Where("user_id = ? AND class_id = ?", userID, classID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
