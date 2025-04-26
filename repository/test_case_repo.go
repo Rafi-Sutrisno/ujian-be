@@ -100,3 +100,46 @@ func (r *testCaseRepository) Delete(ctx context.Context, tx *gorm.DB, id string)
 
 	return nil
 }
+
+func (pr *testCaseRepository)  CheckUserInTestCaseClass(ctx context.Context, tx *gorm.DB, userID, testCaseID string) (bool, error) {
+	if tx == nil {
+		tx = pr.db
+	}
+
+	var count int64
+
+	err := tx.WithContext(ctx).
+		Table("user_classes").
+		Joins("JOIN classes ON user_classes.class_id = classes.id").
+		Joins("JOIN exams ON exams.class_id = classes.id").
+		Joins("JOIN problems ON problems.exam_id = exams.id").
+		Joins("JOIN test_cases ON test_cases.problem_id = problems.id").
+		Where("user_classes.user_id = ? AND test_cases.id = ?", userID, testCaseID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (pr *testCaseRepository) IsUserInProblemClass(ctx context.Context, tx *gorm.DB, userID, problemID string) (bool, error) {
+	if tx == nil {
+		tx = pr.db
+	}
+
+	var count int64
+	err := tx.WithContext(ctx).
+		Table("user_classes").
+		Joins("JOIN exams ON user_classes.class_id = exams.class_id").
+		Joins("JOIN problems ON exams.id = problems.exam_id").
+		Where("user_classes.user_id = ? AND problems.id = ?", userID, problemID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
