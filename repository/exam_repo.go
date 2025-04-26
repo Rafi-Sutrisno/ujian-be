@@ -18,6 +18,10 @@ type (
 		GetAllExamWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllExamRepositoryResponse, error)
 		UpdateExam(ctx context.Context, tx *gorm.DB, exam entity.Exam) (entity.Exam, error)
 		DeleteExam(ctx context.Context, tx *gorm.DB, examId string) error
+		IsUserInExamClass(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error)
+		IsUserInClass(ctx context.Context, tx *gorm.DB, userID, classID string) (bool, error)
+
+
 	}
 
 	examRepository struct {
@@ -31,7 +35,10 @@ func NewExamRepository(db *gorm.DB) ExamRepository {
 	}
 }
 
-func (er *examRepository) CreateExam(ctx context.Context,tx *gorm.DB, exam entity.Exam) (entity.Exam, error) {
+
+
+
+func (er *examRepository) CreateExam(ctx context.Context, tx *gorm.DB, exam entity.Exam) (entity.Exam, error) {
 	if tx == nil {
 		tx = er.db
 	}
@@ -138,4 +145,43 @@ func (ur *examRepository) DeleteExam(ctx context.Context, tx *gorm.DB, examId st
 	}
 
 	return nil
+}
+
+func (er *examRepository) IsUserInExamClass(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error) {
+	if tx == nil {
+		tx = er.db
+	}
+
+	// First, get the class_id from the exam
+	var exam entity.Exam
+	if err := tx.WithContext(ctx).Select("class_id").Where("id = ?", examId).First(&exam).Error; err != nil {
+		return false, err
+	}
+
+	// Now check if user exists in that class
+	var count int64
+	if err := tx.WithContext(ctx).Model(&entity.UserClass{}).
+		Where("user_id = ? AND class_id = ?", userId, exam.ClassID).
+		Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
+}
+
+func (er *examRepository) IsUserInClass(ctx context.Context, tx *gorm.DB, userID, classID string) (bool, error) {
+	if tx == nil {
+		tx = er.db
+	}
+
+	var count int64
+	err := tx.WithContext(ctx).Model(&entity.UserClass{}).
+		Where("user_id = ? AND class_id = ?", userID, classID).
+		Count(&count).Error
+
+	if err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
