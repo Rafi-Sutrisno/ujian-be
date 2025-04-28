@@ -10,6 +10,7 @@ import (
 type (
 	ExamSessionRepository interface {
 		CreateSession(ctx context.Context, tx *gorm.DB, session entity.ExamSesssion)  error
+		GetBySessionID(ctx context.Context, tx *gorm.DB, sessionID string) (*entity.ExamSesssion, error)
 		FindByUserAndExam(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error)
 		GetByExamID(ctx context.Context, tx *gorm.DB, examId string) ([]entity.ExamSesssion, error)
 		DeleteByID(ctx context.Context, tx *gorm.DB, id string) error
@@ -37,6 +38,24 @@ func (er *examSessionRepository) CreateSession(ctx context.Context, tx *gorm.DB,
 
 	return  nil
 }
+
+func (r *examSessionRepository) GetBySessionID(ctx context.Context, tx *gorm.DB, sessionID string) (*entity.ExamSesssion, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var session entity.ExamSesssion
+	err := tx.WithContext(ctx).
+		Preload("User").
+		Where("session_id = ?", sessionID).
+		First(&session).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return &session, nil
+}
+
 
 func (r *examSessionRepository) FindByUserAndExam(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error) {
 	var count int64
@@ -69,7 +88,6 @@ func (r *examSessionRepository) GetByExamID(ctx context.Context, tx *gorm.DB, ex
 
 	return sessions, nil
 }
-
 
 func (r *examSessionRepository) DeleteByID(ctx context.Context, tx *gorm.DB, id string) error {
 	if tx == nil {
