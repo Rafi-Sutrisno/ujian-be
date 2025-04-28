@@ -35,14 +35,14 @@ func NewClassController(cs service.ClassService) ClassController {
 
 func (cc *classController)Create(ctx *gin.Context){
 	var classReq dto.ClassCreateRequest
-
+	userId := ctx.MustGet("requester_id").(string)
 	if err := ctx.ShouldBind(&classReq); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	createdClass, err := cc.classService.Create(ctx.Request.Context(), classReq)
+	createdClass, err := cc.classService.Create(ctx.Request.Context(), classReq, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -69,10 +69,11 @@ func (cc *classController) GetById(ctx *gin.Context) {
 }
 
 func (cc *classController) GetByUserID(ctx *gin.Context) {
-	userID := ctx.Param("user_id")
+	// userID := ctx.Param("user_id")
 	// fmt.Println("user id di controller:", userID)
+	userId := ctx.MustGet("requester_id").(string)
 
-	result, err := cc.classService.GetByUserID(ctx.Request.Context(), userID)
+	result, err := cc.classService.GetByUserID(ctx.Request.Context(), userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
