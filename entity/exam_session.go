@@ -1,0 +1,14 @@
+package entity
+
+import "github.com/google/uuid"
+
+type ExamSesssion struct {
+	ID          		uuid.UUID   `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
+	UserID      		string      `gorm:"not null" json:"user_id"`
+	ExamID      		string      `gorm:"not null" json:"exam_id"`
+	SessionID			string		`gorm:"not null" json:"session_id"`
+
+	User      			User    	`gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user"`
+	Exam      			Exam    	`gorm:"foreignKey:ExamID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"exam"`
+	Timestamp
+}
