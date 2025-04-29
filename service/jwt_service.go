@@ -11,15 +11,15 @@ import (
 )
 
 type JWTService interface {
-	GenerateToken(userId string, role uint) string
+	GenerateToken(userId string, role string) string
 	ValidateToken(token string) (*jwt.Token, error)
 	GetUserIDByToken(token string) (string, error)
-	GetRoleByToken(token string) (string, error)
+	GetRoleByToken(role string) (string, error)
 }
 
 type jwtCustomClaim struct {
 	ID   string `json:"id"`
-	Role uint   `json:"role_id"`
+	Role string   `json:"role"`
 	jwt.RegisteredClaims
 }
 
@@ -43,12 +43,12 @@ func getSecretKey() string {
 	return secretKey
 }
 
-func (j *jwtService) GenerateToken(userId string, role uint) string {
+func (j *jwtService) GenerateToken(userId string, role string) string {
 	claims := jwtCustomClaim{
 		userId,
 		role,
 		jwt.RegisteredClaims{
-			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Minute * 120)),
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(time.Hour * 24)),
 			Issuer:    j.issuer,
 			IssuedAt:  jwt.NewNumericDate(time.Now()),
 		},

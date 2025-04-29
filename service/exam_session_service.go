@@ -8,6 +8,7 @@ import (
 	"mods/dto"
 	"mods/entity"
 	"mods/repository"
+	"strings"
 	"time"
 )
 
@@ -17,7 +18,8 @@ type (
 	}
 
 	ExamSessionService interface {
-		CreateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string) (dto.ExamSessionCreateResponse, string, error)
+		CreateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
+			userAgent string,) (dto.ExamSessionCreateResponse, string, error)
 		GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error)
 		GetByExamID(ctx context.Context, examId string) ([]dto.ExamSessionGetResponse, error)
 		DeleteByID(ctx context.Context, id string) error
@@ -30,7 +32,8 @@ func NewExamSessionService(er repository.ExamSessionRepository) ExamSessionServi
 	}
 }
 
-func (s *examSessionService) CreateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string) (dto.ExamSessionCreateResponse, string, error) {
+func (s *examSessionService) CreateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
+    userAgent string,) (dto.ExamSessionCreateResponse, string, error) {
 	exists, err := s.examSessionRepository.FindByUserAndExam(ctx, nil, userId, req.ExamID)
 	if err != nil {
 		return dto.ExamSessionCreateResponse{}, "", err
@@ -44,10 +47,15 @@ func (s *examSessionService) CreateSession(ctx context.Context, req dto.ExamSess
 		return dto.ExamSessionCreateResponse{}, "", err
 	}
 
+	device := detectDevice(userAgent)
+
 	newSession := entity.ExamSesssion{
 		UserID:    userId,
 		ExamID:    req.ExamID,
 		SessionID: sessionID,
+		IPAddress: ipAddress,
+		UserAgent: userAgent,
+		Device:    device,
 		Timestamp: entity.Timestamp{
 			CreatedAt: time.Now(),
 			UpdatedAt: time.Now(),
@@ -63,7 +71,14 @@ func (s *examSessionService) CreateSession(ctx context.Context, req dto.ExamSess
 		UserID:          userId,
 		ExamID: 		req.ExamID,
 	}, sessionID, nil
+}
 
+func detectDevice(userAgent string) string {
+	userAgent = strings.ToLower(userAgent)
+	if strings.Contains(userAgent, "mobile") {
+		return "Mobile"
+	}
+	return "Desktop"
 }
 
 func (s *examSessionService) GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error) {
@@ -92,6 +107,9 @@ func (s *examSessionService) GetByExamID(ctx context.Context, examId string) ([]
 			ID:     session.ID.String(),
 			UserID: session.UserID,
 			ExamID: session.ExamID,
+			IpAddress: session.IPAddress,
+			UserAgent: session.UserAgent,
+			Device: session.Device,
 			User: &dto.UserResponse{
 				ID:       	session.User.ID.String(),
 				Name: 		session.User.Name,

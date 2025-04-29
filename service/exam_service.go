@@ -2,8 +2,8 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"mods/dto"
+	dto_error "mods/dto/error"
 	"mods/entity"
 	"mods/repository"
 )
@@ -14,12 +14,13 @@ type (
 	}
 
 	ExamService interface {
-		CreateExam(ctx context.Context, req dto.ExamCreateRequest) (dto.ExamResponse, error)
+		CreateExam(ctx context.Context, req dto.ExamCreateRequest, userId string) (dto.ExamResponse, error)
 		GetAllExamWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ExamPaginationResponse, error)
-		GetExamById(ctx context.Context, examId string) (dto.ExamResponse, error)
-		GetByClassID(ctx context.Context, classID string) ([]dto.ExamResponse, error)
-		Update(ctx context.Context, req dto.ExamUpdateRequest, examId string) (dto.ExamUpdateResponse, error)
-		Delete(ctx context.Context, examId string) error
+		GetExamById(ctx context.Context, examId string, userId string) (dto.ExamResponse, error)
+		GetByClassID(ctx context.Context, classID string, userId string) ([]dto.ExamResponse, error)
+		Update(ctx context.Context, req dto.ExamUpdateRequest, examId string, userId string) (dto.ExamUpdateResponse, error)
+		Delete(ctx context.Context, examId string, userId string) error
+		
 		
 	}
 )
@@ -30,7 +31,18 @@ func NewExamService(er repository.ExamRepository) ExamService {
 	}
 }
 
-func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest) (dto.ExamResponse, error) {
+
+
+
+func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest, userId string) (dto.ExamResponse, error) {
+	exists, err := es.examRepository.IsUserInClass(ctx, nil, userId, req.ClassID)
+	if err != nil {
+		return dto.ExamResponse{}, dto.ErrAuthorize
+	}
+
+	if !exists {
+		return dto.ExamResponse{}, dto.ErrAuthorize 
+	}
 	// 1. Create Exam entity
 	exam := entity.Exam{
 		ClassID:     req.ClassID,
@@ -61,10 +73,26 @@ func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest
 	}, nil
 }
 
-func (es *examService) GetByClassID(ctx context.Context, classID string) ([]dto.ExamResponse, error) {
+func (es *examService) GetByClassID(ctx context.Context, classID string, userId string) ([]dto.ExamResponse, error) {
+	
+	
 	exams, err := es.examRepository.GetByClassID(ctx, nil, classID)
 	if err != nil {
 		return nil, dto.ErrGetAllExamsByClassId
+	}
+
+	if len(exams) == 0 {
+		// return empty slice, not nil, to indicate success with no data
+		return []dto.ExamResponse{}, nil
+	}
+
+	exists, err := es.examRepository.IsUserInExamClass(ctx, nil, userId, exams[0].ID.String())
+	if err != nil {
+		return  nil,err
+	}
+
+	if !exists {
+		return  nil, dto_error.ErrAuthorizeFor("this exam")
 	}
 
 	var responses []dto.ExamResponse
@@ -120,8 +148,15 @@ func (us *examService) GetAllExamWithPagination(ctx context.Context, req dto.Pag
 	}, nil
 }
 
-func (us *examService) GetExamById(ctx context.Context, examId string) (dto.ExamResponse, error) {
-	fmt.Println("exam id di service:", examId)
+func (us *examService) GetExamById(ctx context.Context, examId string, userId string) (dto.ExamResponse, error) {
+	exists, err := us.examRepository.IsUserInExamClass(ctx, nil, userId, examId)
+	if err != nil {
+		return  dto.ExamResponse{},err
+	}
+
+	if !exists {
+		return  dto.ExamResponse{}, dto_error.ErrAuthorizeFor("this exam")
+	}
 	exam, err := us.examRepository.GetExamById(ctx, nil, examId)
 	if err != nil {
 		return dto.ExamResponse{}, dto.ErrExamNotFound
@@ -140,7 +175,16 @@ func (us *examService) GetExamById(ctx context.Context, examId string) (dto.Exam
 	}, nil
 }
 
-func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, examId string) (dto.ExamUpdateResponse, error) {
+func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, examId string, userId string) (dto.ExamUpdateResponse, error) {
+	exists, err := us.examRepository.IsUserInExamClass(ctx, nil, userId, examId)
+	if err != nil {
+		return  dto.ExamUpdateResponse{},err
+	}
+
+	if !exists {
+		return  dto.ExamUpdateResponse{}, dto_error.ErrAuthorizeFor("this exam")
+	}
+
 	exam, err := us.examRepository.GetExamById(ctx, nil, examId)
 	if err != nil {
 		return dto.ExamUpdateResponse{}, dto.ErrExamNotFound
@@ -175,7 +219,17 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 	}, nil
 }
 
-func (us *examService) Delete(ctx context.Context, examId string) error {
+func (us *examService) Delete(ctx context.Context, examId string, userId string) error {
+
+	exists, err := us.examRepository.IsUserInExamClass(ctx, nil, userId, examId)
+	if err != nil {
+		return  err
+	}
+
+	if !exists {
+		return  dto_error.ErrAuthorizeFor("this exam")
+	}
+
 	exam, err := us.examRepository.GetExamById(ctx, nil, examId)
 	if err != nil {
 		return dto.ErrExamNotFound

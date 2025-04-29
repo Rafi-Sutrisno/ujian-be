@@ -15,11 +15,11 @@ type (
 
 	UserClassService interface {
 		GetByUserID(ctx context.Context, userID string) ([]dto.UserClassResponse, error)
-		GetByClassID(ctx context.Context, classID string) ([]dto.UserClassResponse, error)
-		GetUnassignedUsersByClassID(ctx context.Context, classID string) ([]dto.UserResponse, error)
-		Create(ctx context.Context, req dto.UserClassCreateRequest) (dto.UserClassResponse, error)
-		CreateMany(ctx context.Context, reqs []dto.UserClassCreateRequest) error
-		Delete(ctx context.Context, id string) error
+		GetByClassID(ctx context.Context, classID string, userId string) ([]dto.UserClassResponse, error)
+		GetUnassignedUsersByClassID(ctx context.Context, classID string, userId string) ([]dto.UserResponse, error)
+		Create(ctx context.Context, req dto.UserClassCreateRequest, userId string) (dto.UserClassResponse, error)
+		CreateMany(ctx context.Context, reqs []dto.UserClassCreateRequest, userId string) error
+		Delete(ctx context.Context, id string, userId string) error
 	}
 )
 
@@ -49,7 +49,16 @@ func (ucs *userClassService) GetByUserID(ctx context.Context, userID string) ([]
 	return responses, nil
 }
 
-func (ucs *userClassService) GetByClassID(ctx context.Context, classID string) ([]dto.UserClassResponse, error) {
+func (ucs *userClassService) GetByClassID(ctx context.Context, classID string, userId string) ([]dto.UserClassResponse, error) {
+	exists, err := ucs.repo.IsUserInClass(ctx, nil, userId, classID)
+	if err != nil {
+		return nil, dto.ErrAuthorize
+	}
+
+	if !exists {
+		return nil, dto.ErrAuthorize 
+	}
+
 	userClasses, err := ucs.repo.GetByClassID(ctx, nil, classID)
 	if err != nil {
 		return nil, dto.ErrGetAllUserClassByClassId
@@ -75,7 +84,16 @@ func (ucs *userClassService) GetByClassID(ctx context.Context, classID string) (
 	return responses, nil
 }
 
-func (ucs *userClassService) GetUnassignedUsersByClassID(ctx context.Context, classID string) ([]dto.UserResponse, error) {
+func (ucs *userClassService) GetUnassignedUsersByClassID(ctx context.Context, classID string, userId string) ([]dto.UserResponse, error) {
+	exists, err := ucs.repo.IsUserInClass(ctx, nil, userId, classID)
+	if err != nil {
+		return nil, dto.ErrAuthorize
+	}
+
+	if !exists {
+		return nil, dto.ErrAuthorize 
+	}
+
 	allStudents, err := ucs.UserRepo.GetAllStudents(ctx, nil)
 	if err != nil {
 		return nil, err
@@ -109,7 +127,16 @@ func (ucs *userClassService) GetUnassignedUsersByClassID(ctx context.Context, cl
 }
 
 
-func (ucs *userClassService) Create(ctx context.Context, req dto.UserClassCreateRequest) (dto.UserClassResponse, error) {
+func (ucs *userClassService) Create(ctx context.Context, req dto.UserClassCreateRequest, userId string) (dto.UserClassResponse, error) {
+	exists, err := ucs.repo.IsUserInClass(ctx, nil, userId, req.ClassID)
+	if err != nil {
+		return dto.UserClassResponse{}, dto.ErrAuthorize
+	}
+
+	if !exists {
+		return dto.UserClassResponse{}, dto.ErrAuthorize // or any custom error you want
+	}
+
 	userClass := entity.UserClass{
 		UserID:    req.UserID,
 		ClassID:   req.ClassID,
@@ -129,7 +156,16 @@ func (ucs *userClassService) Create(ctx context.Context, req dto.UserClassCreate
 	}, nil
 }
 
-func (ucs *userClassService) CreateMany(ctx context.Context, reqs []dto.UserClassCreateRequest) error {
+func (ucs *userClassService) CreateMany(ctx context.Context, reqs []dto.UserClassCreateRequest, userId string) error {
+	exists, err := ucs.repo.IsUserInClass(ctx, nil, userId, reqs[0].ClassID)
+	if err != nil {
+		return dto.ErrAuthorize
+	}
+
+	if !exists {
+		return dto.ErrAuthorize // or any custom error you want
+	}
+	
 	var userClasses []entity.UserClass
 	for _, req := range reqs {
 		userClasses = append(userClasses, entity.UserClass{
@@ -146,7 +182,20 @@ func (ucs *userClassService) CreateMany(ctx context.Context, reqs []dto.UserClas
 	return nil
 }
 
-func (ucs *userClassService) Delete(ctx context.Context, id string) error {
+func (ucs *userClassService) Delete(ctx context.Context, id string, userId string) error {
+	userClasses, err := ucs.repo.GetById(ctx, nil, id)
+	if err != nil {
+		return dto.ErrGetAllUserClass
+	}
+
+	exists, err := ucs.repo.IsUserInClass(ctx, nil, userId, userClasses.ClassID)
+	if err != nil {
+		return  dto.ErrAuthorize
+	}
+
+	if !exists {
+		return  dto.ErrAuthorize // or any custom error you want
+	}
 	userClass, err := ucs.repo.GetById(ctx, nil, id)
 	if err != nil {
 		return dto.ErrUserClassNotFound

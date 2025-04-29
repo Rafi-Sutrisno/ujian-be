@@ -14,11 +14,11 @@ type (
 
 	TestCaseService interface {
 		GetByID(ctx context.Context, id string) (dto.TestCaseResponse, error)
-		GetByProblemID(ctx context.Context, problemID string) ([]dto.TestCaseResponse, error)
+		GetByProblemID(ctx context.Context, problemID string, userId string) ([]dto.TestCaseResponse, error)
 		GetAll(ctx context.Context) ([]dto.TestCaseResponse, error)
-		Create(ctx context.Context, req dto.TestCaseCreateRequest) (dto.TestCaseResponse, error)
-		Update(ctx context.Context, req dto.TestCaseUpdateRequest, id string) (dto.TestCaseUpdateResponse, error)
-		Delete(ctx context.Context, id string) error
+		Create(ctx context.Context, req dto.TestCaseCreateRequest, userId string) (dto.TestCaseResponse, error)
+		Update(ctx context.Context, req dto.TestCaseUpdateRequest, id string, userId string) (dto.TestCaseUpdateResponse, error)
+		Delete(ctx context.Context, id string, userId string) error
 	}
 )
 
@@ -42,7 +42,7 @@ func (ts *testCaseService) GetByID(ctx context.Context, id string) (dto.TestCase
 	}, nil
 }
 
-func (ts *testCaseService) GetByProblemID(ctx context.Context, problemID string) ([]dto.TestCaseResponse, error) {
+func (ts *testCaseService) GetByProblemID(ctx context.Context, problemID, userId string) ([]dto.TestCaseResponse, error) {
 	testCases, err := ts.repo.GetByProblemID(ctx, nil, problemID)
 	if err != nil {
 		return nil, err
@@ -80,7 +80,7 @@ func (ts *testCaseService) GetAll(ctx context.Context) ([]dto.TestCaseResponse, 
 	return responses, nil
 }
 
-func (ts *testCaseService) Create(ctx context.Context, req dto.TestCaseCreateRequest) (dto.TestCaseResponse, error) {
+func (ts *testCaseService) Create(ctx context.Context, req dto.TestCaseCreateRequest, userId string) (dto.TestCaseResponse, error) {
 	testCase := entity.TestCase{
 		ProblemID:      req.ProblemID,
 		InputData:      req.InputData,
@@ -100,7 +100,7 @@ func (ts *testCaseService) Create(ctx context.Context, req dto.TestCaseCreateReq
 	}, nil
 }
 
-func (ts *testCaseService) Update(ctx context.Context, req dto.TestCaseUpdateRequest, id string) (dto.TestCaseUpdateResponse, error) {
+func (ts *testCaseService) Update(ctx context.Context, req dto.TestCaseUpdateRequest, id string, userId string) (dto.TestCaseUpdateResponse, error) {
 	testCase, err := ts.repo.GetByID(ctx, nil, id)
 	if err != nil {
 		return dto.TestCaseUpdateResponse{}, dto.ErrTestCaseNotFound
@@ -126,7 +126,7 @@ func (ts *testCaseService) Update(ctx context.Context, req dto.TestCaseUpdateReq
 	}, nil
 }
 
-func (ts *testCaseService) Delete(ctx context.Context, id string) error {
+func (ts *testCaseService) Delete(ctx context.Context, id string, userId string) error {
 	if err := ts.repo.Delete(ctx, nil, id); err != nil {
 		return dto.ErrDeleteTestCase
 	}
