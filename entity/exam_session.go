@@ -7,6 +7,9 @@ type ExamSesssion struct {
 	UserID      		string      `gorm:"not null" json:"user_id"`
 	ExamID      		string      `gorm:"not null" json:"exam_id"`
 	SessionID			string		`gorm:"not null" json:"session_id"`
+	IPAddress  			string		`gorm:"not null" json:"ip_address"`
+	UserAgent  			string		`gorm:"not null" json:"user_agent"`
+	Device     			string		`gorm:"not null" json:"device"`
 
 	User      			User    	`gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user"`
 	Exam      			Exam    	`gorm:"foreignKey:ExamID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"exam"`
