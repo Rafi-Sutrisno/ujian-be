@@ -10,6 +10,7 @@ import (
 type (
 	classService struct {
 		classRepository repository.ClassRepository
+		userClassRepository repository.UserClassRepository
 	}
 
 	ClassService interface {
@@ -17,20 +18,20 @@ type (
 		GetAll(ctx context.Context) ([]dto.ClassResponse, error)
 		GetByUserID(ctx context.Context, userID string) ([]dto.ClassResponse, error)
 		GetAllWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ClassPaginationResponse, error)
-		Create(ctx context.Context, req dto.ClassCreateRequest) (dto.ClassResponse, error)
+		Create(ctx context.Context, req dto.ClassCreateRequest, userId string) (dto.ClassResponse, error)
 		Update(ctx context.Context, req dto.ClassUpdateRequest, classId string) (dto.ClassUpdateResponse, error)
 		Delete(ctx context.Context, classId string) error
-		
 	}
 )
 
-func NewClassService(cr repository.ClassRepository) ClassService {
+func NewClassService(cr repository.ClassRepository, ucr repository.UserClassRepository) ClassService {
 	return &classService{
 		classRepository: cr,
+		userClassRepository: ucr,
 	}
 }
 
-func (cs *classService) Create(ctx context.Context, req dto.ClassCreateRequest) (dto.ClassResponse, error) {
+func (cs *classService) Create(ctx context.Context, req dto.ClassCreateRequest, userId string) (dto.ClassResponse, error) {
 	class := entity.Class{
 		Name:        	req.Name,
 		Year: 			req.Year,
@@ -41,6 +42,16 @@ func (cs *classService) Create(ctx context.Context, req dto.ClassCreateRequest) 
 	classCreate, err := cs.classRepository.Create(ctx, nil, class)
 	if err != nil {
 		return dto.ClassResponse{}, dto.ErrCreateClass
+	}
+
+	userClass := entity.UserClass{
+		UserID:    userId,
+		ClassID:   classCreate.ID.String(),
+	}
+
+	_, err = cs.userClassRepository.Create(ctx, nil, userClass)
+	if err != nil {
+		return dto.ClassResponse{}, dto.ErrCreateUserClass
 	}
 
 	return dto.ClassResponse{
