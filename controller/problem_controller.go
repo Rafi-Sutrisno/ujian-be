@@ -32,7 +32,8 @@ func NewProblemController(ps service.ProblemService) ProblemController {
 
 func (pc *problemController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
-	result, err := pc.problemService.GetByID(ctx.Request.Context(), id)
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := pc.problemService.GetByID(ctx.Request.Context(), id, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -44,7 +45,8 @@ func (pc *problemController) GetByID(ctx *gin.Context) {
 
 func (pc *problemController) GetByExamID(ctx *gin.Context) {
 	examID := ctx.Param("exam_id")
-	result, err := pc.problemService.GetByExamID(ctx.Request.Context(), examID)
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := pc.problemService.GetByExamID(ctx.Request.Context(), examID, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -55,7 +57,8 @@ func (pc *problemController) GetByExamID(ctx *gin.Context) {
 }
 
 func (pc *problemController) GetAll(ctx *gin.Context) {
-	result, err := pc.problemService.GetAll(ctx.Request.Context())
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := pc.problemService.GetAll(ctx.Request.Context(), userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -66,13 +69,14 @@ func (pc *problemController) GetAll(ctx *gin.Context) {
 }
 
 func (pc *problemController) Create(ctx *gin.Context) {
+	userId := ctx.MustGet("requester_id").(string)
 	var req dto.ProblemCreateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	createdProblem, err := pc.problemService.Create(ctx.Request.Context(), req)
+	createdProblem, err := pc.problemService.Create(ctx.Request.Context(), req, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -83,6 +87,7 @@ func (pc *problemController) Create(ctx *gin.Context) {
 }
 
 func (pc *problemController) Update(ctx *gin.Context) {
+	userId := ctx.MustGet("requester_id").(string)
 	id := ctx.Param("id")
 	var req dto.ProblemUpdateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -90,7 +95,7 @@ func (pc *problemController) Update(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	updatedProblem, err := pc.problemService.Update(ctx.Request.Context(), req, id)
+	updatedProblem, err := pc.problemService.Update(ctx.Request.Context(), req, id, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -101,8 +106,9 @@ func (pc *problemController) Update(ctx *gin.Context) {
 }
 
 func (pc *problemController) Delete(ctx *gin.Context) {
+	userId := ctx.MustGet("requester_id").(string)
 	id := ctx.Param("id")
-	if err := pc.problemService.Delete(ctx.Request.Context(), id); err != nil {
+	if err := pc.problemService.Delete(ctx.Request.Context(), id, userId); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_DELETE_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return

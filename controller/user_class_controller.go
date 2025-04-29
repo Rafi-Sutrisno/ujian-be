@@ -59,7 +59,8 @@ func (ucc *userClassController) GetByUserID(ctx *gin.Context) {
 
 func (ucc *userClassController) GetByClassID(ctx *gin.Context) {
 	classID := ctx.Param("class_id")
-	result, err := ucc.userClassService.GetByClassID(ctx.Request.Context(), classID)
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := ucc.userClassService.GetByClassID(ctx.Request.Context(), classID, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -71,7 +72,8 @@ func (ucc *userClassController) GetByClassID(ctx *gin.Context) {
 
 func (ucc *userClassController) GetUnassigned(ctx *gin.Context) {
 	classID := ctx.Param("class_id")
-	result, err := ucc.userClassService.GetUnassignedUsersByClassID(ctx.Request.Context(), classID)
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := ucc.userClassService.GetUnassignedUsersByClassID(ctx.Request.Context(), classID, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -83,12 +85,13 @@ func (ucc *userClassController) GetUnassigned(ctx *gin.Context) {
 
 func (ucc *userClassController) Create(ctx *gin.Context) {
 	var req dto.UserClassCreateRequest
+	userId := ctx.MustGet("requester_id").(string)
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	createdUserClass, err := ucc.userClassService.Create(ctx.Request.Context(), req)
+	createdUserClass, err := ucc.userClassService.Create(ctx.Request.Context(), req, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_USER_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -100,12 +103,13 @@ func (ucc *userClassController) Create(ctx *gin.Context) {
 
 func (ucc *userClassController) CreateMany(ctx *gin.Context) {
 	var reqs []dto.UserClassCreateRequest
+	userId := ctx.MustGet("requester_id").(string)
 	if err := ctx.ShouldBindJSON(&reqs); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	if err := ucc.userClassService.CreateMany(ctx.Request.Context(), reqs); err != nil {
+	if err := ucc.userClassService.CreateMany(ctx.Request.Context(), reqs, userId); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_USER_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
@@ -116,7 +120,8 @@ func (ucc *userClassController) CreateMany(ctx *gin.Context) {
 
 func (ucc *userClassController) Delete(ctx *gin.Context) {
 	id := ctx.Param("id")
-	if err := ucc.userClassService.Delete(ctx.Request.Context(), id); err != nil {
+	userId := ctx.MustGet("requester_id").(string)
+	if err := ucc.userClassService.Delete(ctx.Request.Context(), id, userId); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_DELETE_USER_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return

@@ -44,7 +44,8 @@ func (tc *testCaseController) GetByID(ctx *gin.Context) {
 
 func (tc *testCaseController) GetByProblemID(ctx *gin.Context) {
 	problemID := ctx.Param("problem_id")
-	results, err := tc.testCaseService.GetByProblemID(ctx.Request.Context(), problemID)
+	userId := ctx.MustGet("requester_id").(string)
+	results, err := tc.testCaseService.GetByProblemID(ctx.Request.Context(), problemID, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_TEST_CASE, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -66,6 +67,7 @@ func (tc *testCaseController) GetAll(ctx *gin.Context) {
 }
 
 func (tc *testCaseController) Create(ctx *gin.Context) {
+	userId := ctx.MustGet("requester_id").(string)
 	var req dto.TestCaseCreateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
@@ -73,7 +75,7 @@ func (tc *testCaseController) Create(ctx *gin.Context) {
 		return
 	}
 
-	result, err := tc.testCaseService.Create(ctx.Request.Context(), req)
+	result, err := tc.testCaseService.Create(ctx.Request.Context(), req, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_TEST_CASE, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -85,6 +87,7 @@ func (tc *testCaseController) Create(ctx *gin.Context) {
 }
 
 func (tc *testCaseController) Update(ctx *gin.Context) {
+	userId := ctx.MustGet("requester_id").(string)
 	id := ctx.Param("id")
 	var req dto.TestCaseUpdateRequest
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -93,7 +96,7 @@ func (tc *testCaseController) Update(ctx *gin.Context) {
 		return
 	}
 
-	result, err := tc.testCaseService.Update(ctx.Request.Context(), req, id)
+	result, err := tc.testCaseService.Update(ctx.Request.Context(), req, id, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_TEST_CASE, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -105,8 +108,9 @@ func (tc *testCaseController) Update(ctx *gin.Context) {
 }
 
 func (tc *testCaseController) Delete(ctx *gin.Context) {
+	userId := ctx.MustGet("requester_id").(string)
 	id := ctx.Param("id")
-	if err := tc.testCaseService.Delete(ctx.Request.Context(), id); err != nil {
+	if err := tc.testCaseService.Delete(ctx.Request.Context(), id, userId); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_DELETE_TEST_CASE, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
