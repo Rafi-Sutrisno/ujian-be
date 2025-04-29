@@ -1,13 +1,18 @@
 package service
 
 import (
+	"bytes"
 	"context"
 	"fmt"
+	"html/template"
 	"io"
 	"mime/multipart"
 	"mods/dto"
 	"mods/entity"
 	"mods/repository"
+	"os"
+	"strings"
+	"time"
 
 	"mods/utils"
 
@@ -27,9 +32,11 @@ type UserService interface {
 	GetAllUserWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.UserPaginationResponse, error)
 	Verify(ctx context.Context, loginDTO dto.UserLoginRequest) (dto.UserLoginResponse, error)
 	Update(ctx context.Context, req dto.UserUpdateRequest, userId string) (dto.UserUpdateResponse, error)
-	UpdateMe(ctx context.Context, req dto.UserUpdateRequest, userId string) (dto.UserUpdateResponse, error)
+	UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequest, userId string) (dto.UserUpdateResponse, error)
 	Delete(ctx context.Context, userId string) error
 	GetUserById(ctx context.Context, userId string) (dto.UserResponse, error)
+	SendForgotPasswordEmail(ctx context.Context, req dto.SendResetPasswordRequest) error
+	ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) (dto.ResetPasswordResponse, error)
 
 	RegisterUsersFromYAML(ctx context.Context, fileHeader *multipart.FileHeader) (map[string]interface{}, error)
 }
@@ -40,6 +47,11 @@ func NewUserService(ur repository.UserRepository, jwtService JWTService) UserSer
 		jwtService:  jwtService,
 	}
 }
+
+const (
+	LOCAL_URL          = "http://localhost:3000"
+	RESET_PASSWORD_ROUTE = "reset_password"
+)
 
 func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) (dto.UserResponse, error) {
 	_, flag, _ := us.userRepository.CheckNoId(ctx, nil, req.Noid)
@@ -134,7 +146,7 @@ func (us *userService) Verify(ctx context.Context, loginDTO dto.UserLoginRequest
 		return dto.UserLoginResponse{}, dto.ErrPasswordNotMatch
 	}
 
-	token := us.jwtService.GenerateToken(check.ID.String(), check.RoleID)
+	token := us.jwtService.GenerateToken(check.ID.String(), check.Role.Name)
 
 	return dto.UserLoginResponse{
 		Token: token,
@@ -190,7 +202,7 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 	}, nil
 }
 
-func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateRequest, userId string) (dto.UserUpdateResponse, error) {
+func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequest, userId string) (dto.UserUpdateResponse, error) {
 	user, err := us.userRepository.GetUserById(ctx, nil, userId)
 	if err != nil {
 		return dto.UserUpdateResponse{}, dto.ErrUserNotFound
@@ -198,10 +210,7 @@ func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateRequest, 
 
 	data := entity.User{
 		ID:         user.ID,
-		Name:       req.Name,
-		RoleID:       user.RoleID,
 		Email:      req.Email,
-		Noid:       req.Noid,
 	}
 
 	userUpdate, err := us.userRepository.UpdateUser(ctx, nil, data)
@@ -322,4 +331,114 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 		"failed_users":  failedUsers,
 	}, nil
 
+}
+
+func makeForgotPasswordEmail(receiverEmail string) (map[string]string, error) {
+	expired := time.Now().Add(time.Hour * 1).Format("2006-01-02 15:04:05") // token valid for 1 hour
+	plainText := receiverEmail + "_" + expired
+	token, err := utils.AESEncrypt(plainText)
+	if err != nil {
+		return nil, err
+	}
+
+	resetLink := LOCAL_URL + "/" + RESET_PASSWORD_ROUTE + "?token=" + token
+
+	readHtml, err := os.ReadFile("utils/email-template/forgot_password_mail.html")
+	if err != nil {
+		return nil, err
+	}
+
+	data := struct {
+		Email string
+		Reset string
+	}{
+		Email: receiverEmail,
+		Reset: resetLink,
+	}
+
+	tmpl, err := template.New("forgot-password").Parse(string(readHtml))
+	if err != nil {
+		return nil, err
+	}
+
+	var strMail bytes.Buffer
+	if err := tmpl.Execute(&strMail, data); err != nil {
+		return nil, err
+	}
+
+	draftEmail := map[string]string{
+		"subject": "Reset Your Password",
+		"body":    strMail.String(),
+	}
+
+	return draftEmail, nil
+}
+
+func (s *userService) SendForgotPasswordEmail(ctx context.Context, req dto.SendResetPasswordRequest) error {
+	user, err := s.userRepository.GetUserByEmail(ctx, nil, req.Email)
+	if err != nil {
+		return dto.ErrEmailNotFound
+	}
+
+	draftEmail, err := makeForgotPasswordEmail(user.Email)
+	if err != nil {
+		return err
+	}
+
+	err = utils.SendMail(user.Email, draftEmail["subject"], draftEmail["body"])
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (s *userService) ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) (dto.ResetPasswordResponse, error) {
+	decryptedToken, err := utils.AESDecrypt(req.Token)
+	if err != nil {
+		return dto.ResetPasswordResponse{}, dto.ErrTokenInvalid
+	}
+
+	if !strings.Contains(decryptedToken, "_") {
+		return dto.ResetPasswordResponse{}, dto.ErrTokenInvalid
+	}
+
+	decryptedTokenSplit := strings.Split(decryptedToken, "_")
+	email := decryptedTokenSplit[0]
+	expired := decryptedTokenSplit[1]
+
+	now := time.Now()
+	layout := "2006-01-02 15:04:05"
+	loc, _ := time.LoadLocation("Asia/Jakarta")
+	expiredTime, err := time.ParseInLocation(layout, expired, loc)
+	if err != nil {
+		return dto.ResetPasswordResponse{}, dto.ErrTokenInvalid
+	}
+
+	fmt.Println("Is expired?", expiredTime.Before(now))
+	if expiredTime.Before(now) {
+		return dto.ResetPasswordResponse{}, dto.ErrTokenExpired
+	}
+
+	user, err := s.userRepository.GetUserByEmail(ctx, nil, email)
+	if err != nil {
+		return dto.ResetPasswordResponse{}, dto.ErrUserNotFound
+	}
+
+	// Update password (you should hash the password first!)
+	hashedPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return dto.ResetPasswordResponse{}, dto.ErrHashPassword
+	}
+	_, err = s.userRepository.UpdateUser(ctx, nil, entity.User{
+		ID:       user.ID,
+		Password: hashedPassword,
+	})
+	if err != nil {
+		return dto.ResetPasswordResponse{}, dto.ErrUpdateUser
+	}
+
+	return dto.ResetPasswordResponse{
+		Email: user.Email,
+	}, nil
 }
