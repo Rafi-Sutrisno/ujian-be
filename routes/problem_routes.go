@@ -2,6 +2,7 @@ package routes
 
 import (
 	"mods/controller"
+	"mods/middleware"
 	"mods/service"
 
 	"github.com/gin-gonic/gin"
@@ -19,13 +20,17 @@ func ProblemRoutes(router *gin.Engine, ProblemController controller.ProblemContr
 	// 	problemPrivate.DELETE("/:id", ProblemController.Delete)
 	// }
 
-	problemPublic := router.Group("/api/problem")
+	problemPrivate := router.Group("/api/problem").Use(middleware.Authenticate(jwtService))
 	{
-		problemPublic.GET("/", ProblemController.GetAll)
-		problemPublic.GET("/:id", ProblemController.GetByID)
-		problemPublic.GET("/exam/:exam_id", ProblemController.GetByExamID)
-		problemPublic.POST("/", ProblemController.Create)
-		problemPublic.PATCH("/:id", ProblemController.Update)
-		problemPublic.DELETE("/:id", ProblemController.Delete)
+		problemPrivate.GET("/:id", ProblemController.GetByID)
+		problemPrivate.GET("/exam/:exam_id", ProblemController.GetByExamID)
+	}
+
+	problemPrivateAdmin := router.Group("/api/problem").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
+	{
+		problemPrivateAdmin.GET("/", ProblemController.GetAll)
+		problemPrivateAdmin.POST("/", ProblemController.Create)
+		problemPrivateAdmin.PATCH("/:id", ProblemController.Update)
+		problemPrivateAdmin.DELETE("/:id", ProblemController.Delete)
 	}
 }

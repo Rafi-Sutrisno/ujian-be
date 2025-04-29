@@ -2,6 +2,7 @@ package routes
 
 import (
 	"mods/controller"
+	"mods/middleware"
 	"mods/service"
 
 	"github.com/gin-gonic/gin"
@@ -18,16 +19,21 @@ func ClassRoutes(router *gin.Engine, ClassController controller.ClassController,
 	// 	classPrivate.DELETE("/delete/:class_id", ClassController.Delete)
 	// }
 
-	classPublic := router.Group("/api/class")
+	classPrivate := router.Group("/api/class").Use(middleware.Authenticate(jwtService))
 	{
-		classPublic.POST("/create", ClassController.Create)
-		classPublic.GET("/:class_id", ClassController.GetById)
-		classPublic.GET("/all/paginate", ClassController.GetAllWithPagination)
-		classPublic.GET("/all", ClassController.GetAll)
-		classPublic.GET("/user/:user_id", ClassController.GetByUserID) // ganti ke by token
-		classPublic.PATCH("/update/:class_id", ClassController.Update)
-		classPublic.DELETE("/delete/:class_id", ClassController.Delete)
+		classPrivate.GET("/:class_id", ClassController.GetById)
+		classPrivate.GET("/user", ClassController.GetByUserID) // ganti ke by token
 	}
+
+	classPrivateAdmin := router.Group("/api/class").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
+	{
+		classPrivateAdmin.POST("/create", ClassController.Create)
+		classPrivateAdmin.GET("/all/paginate", ClassController.GetAllWithPagination)
+		classPrivateAdmin.GET("/all", ClassController.GetAll)
+		classPrivateAdmin.PATCH("/update/:class_id", ClassController.Update)
+		classPrivateAdmin.DELETE("/delete/:class_id", ClassController.Delete)
+	}
+
 	// examPrivateAdmin := router.Group("/api/class").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	// {
 	// 	examPrivateAdmin.POST("/add", ClassController.CreateExam)

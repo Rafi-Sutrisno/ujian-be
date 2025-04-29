@@ -2,6 +2,7 @@ package routes
 
 import (
 	"mods/controller"
+	"mods/middleware"
 	"mods/service"
 
 	"github.com/gin-gonic/gin"
@@ -9,28 +10,25 @@ import (
 
 func ExamRoutes(router *gin.Engine, ExamController controller.ExamController, jwtService service.JWTService) {
 
-	// examPublic := router.Group("/api/exam").Use(middleware.Authenticate(jwtService))
+	// examPrivate := router.Group("/api/exam").Use(middleware.Authenticate(jwtService))
 	// {
-	// 	examPublic.GET("/:exam_id", ExamController.GetExamById)
-	// 	examPublic.PATCH("/update/:exam_id", ExamController.Update)
-	// 	examPublic.POST("/add", ExamController.CreateExam)
-	// 	examPublic.GET("/all", ExamController.GetAllExam)
-	// 	examPublic.DELETE("/delete/:exam_id", ExamController.Delete)
+	// 	examPrivate.GET("/:exam_id", ExamController.GetExamById)
+	// 	examPrivate.PATCH("/update/:exam_id", ExamController.Update)
+	// 	examPrivate.POST("/add", ExamController.CreateExam)
+	// 	examPrivate.GET("/all", ExamController.GetAllExam)
+	// 	examPrivate.DELETE("/delete/:exam_id", ExamController.Delete)
 	// }
-	examPublic := router.Group("/api/exam")
+	examPrivate := router.Group("/api/exam").Use(middleware.Authenticate(jwtService))
 	{
-		examPublic.GET("/:exam_id", ExamController.GetExamById)
-		examPublic.GET("/byclass/:class_id", ExamController.GetByClassID)
-		examPublic.PATCH("/:exam_id", ExamController.Update)
-		examPublic.POST("/create", ExamController.CreateExam)
-		examPublic.GET("/all", ExamController.GetAllExam)
-		examPublic.DELETE("/:exam_id", ExamController.Delete)
+		examPrivate.GET("/:exam_id", ExamController.GetExamById)
+		examPrivate.GET("/byclass/:class_id", ExamController.GetByClassID)
 	}
-	// examPrivateAdmin := router.Group("/api/exam").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
-	// {
-	// 	examPrivateAdmin.POST("/add", ExamController.CreateExam)
-	// 	examPrivateAdmin.GET("/all", ExamController.GetAllExam)
-	// 	examPrivateAdmin.DELETE("/delete/:exam_id", ExamController.Delete)
-	// }
+	examPrivateAdmin := router.Group("/api/exam").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
+	{
+		examPrivateAdmin.PATCH("/:exam_id", ExamController.Update)
+		examPrivateAdmin.POST("/create", ExamController.CreateExam)
+		examPrivateAdmin.GET("/all", ExamController.GetAllExam)
+		examPrivateAdmin.DELETE("/:exam_id", ExamController.Delete)
+	}
 
 }

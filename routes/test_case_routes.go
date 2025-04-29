@@ -2,6 +2,7 @@ package routes
 
 import (
 	"mods/controller"
+	"mods/middleware"
 	"mods/service"
 
 	"github.com/gin-gonic/gin"
@@ -19,13 +20,17 @@ func TestCaseRoutes(router *gin.Engine, TestCaseController controller.TestCaseCo
 	// 	testCasePrivate.DELETE("/:id", TestCaseController.Delete)
 	// }
 
-	testCasePublic := router.Group("/api/testcase")
+	testCasePrivate := router.Group("/api/testcase").Use(middleware.Authenticate(jwtService))
 	{
-		testCasePublic.GET("/", TestCaseController.GetAll)
-		testCasePublic.GET("/:id", TestCaseController.GetByID)
-		testCasePublic.GET("/problem/:problem_id", TestCaseController.GetByProblemID)
-		testCasePublic.POST("/", TestCaseController.Create)
-		testCasePublic.PATCH("/:id", TestCaseController.Update)
-		testCasePublic.DELETE("/:id", TestCaseController.Delete)
+		testCasePrivate.GET("/:id", TestCaseController.GetByID)
+		testCasePrivate.GET("/problem/:problem_id", TestCaseController.GetByProblemID)
+	}
+	
+	testCasePrivateAdmin := router.Group("/api/testcase").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
+	{
+		testCasePrivateAdmin.GET("/", TestCaseController.GetAll)
+		testCasePrivateAdmin.POST("/", TestCaseController.Create)
+		testCasePrivateAdmin.PATCH("/:id", TestCaseController.Update)
+		testCasePrivateAdmin.DELETE("/:id", TestCaseController.Delete)
 	}
 }
