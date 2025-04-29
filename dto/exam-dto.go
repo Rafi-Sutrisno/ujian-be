@@ -58,7 +58,6 @@ type (
 		DurationStr string    `json:"duration" binding:"required"` 
 		Duration    time.Duration `json:"-"`
 	}
-	
 
 	ExamResponse struct {
 		ID          string        `json:"id"`

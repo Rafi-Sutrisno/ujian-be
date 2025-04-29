@@ -31,8 +31,8 @@ const (
 	MESSAGE_SUCCESS_LOGIN                   = "success login"
 	MESSAGE_SUCCESS_UPDATE_USER             = "success update user"
 	MESSAGE_SUCCESS_DELETE_USER             = "success delete user"
-	MESSAGE_SEND_VERIFICATION_EMAIL_SUCCESS = "success send verification email"
-	MESSAGE_SUCCESS_VERIFY_EMAIL            = "success verify email"
+	MESSAGE_SEND_FORGOT_PASSWORD_SUCCESS    = "success send forgot password email"
+	MESSAGE_SUCCESS_RESET_PASSWORD            = "success reset password"
 )
 
 var (
@@ -55,6 +55,7 @@ var (
 	ErrTokenInvalid           = errors.New("token invalid")
 	ErrTokenExpired           = errors.New("token expired")
 	ErrAccountAlreadyVerified = errors.New("account already verified")
+	ErrHashPassword           = errors.New("err hash password")
 )
 
 type (
@@ -112,6 +113,9 @@ type (
 		Email      string `json:"email" form:"email"`
 		Noid       string `json:"noid" form:"noid"`
 	}
+	UserUpdateEmailRequest struct {
+		Email      string `json:"email" form:"email"`
+	}
 
 	UserUpdateResponse struct {
 		ID         string `json:"id"`
@@ -121,18 +125,21 @@ type (
 		Noid       string `json:"noid" `
 	}
 
-	SendVerificationEmailRequest struct {
+	SendResetPasswordRequest struct {
 		Email string `json:"email" form:"email" binding:"required"`
 	}
 
-	VerifyEmailRequest struct {
-		Token string `json:"token" form:"token" binding:"required"`
+	ResetPasswordRequest struct {
+		Token       string `json:"token" binding:"required"`
+		NewPassword string `json:"new_password" binding:"required"`
 	}
+	
 
-	VerifyEmailResponse struct {
-		Email      string `json:"email"`
-		IsVerified bool   `json:"is_verified"`
+	ResetPasswordResponse struct {
+		Email string `json:"email"`
 	}
+	
+	
 
 	UserLoginRequest struct {
 		Noid     string `json:"noid" form:"noid" binding:"required"`

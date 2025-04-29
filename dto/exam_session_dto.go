@@ -44,16 +44,17 @@ type (
 	}
 
 	ExamSessionCreateResponse struct {
-
 		UserID          	string        	`json:"user_id"`
 		ExamID     			string     		`json:"exam_id"`
-
 	}
 
 	ExamSessionGetResponse struct {
 		ID					string 			`json:"id"`
 		UserID          	string        	`json:"user_id"`
 		ExamID     			string     		`json:"exam_id"`
+		IpAddress			string 			`json:"ip_address"`
+		UserAgent			string 			`json:"user_agent"`
+		Device				string 			`json:"device"`
 		User    			*UserResponse 	`json:"user"`
 	}
 	
