@@ -41,8 +41,11 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
         return
     }
 
+	ipAddress := ctx.ClientIP()
+    userAgent := ctx.Request.UserAgent()
+
     // Create a new session
-    newSession, sessionID, err := cc.examSessionService.CreateSession(ctx.Request.Context(), request, userId)
+    newSession, sessionID, err := cc.examSessionService.CreateSession(ctx.Request.Context(), request, userId, ipAddress, userAgent)
     if err != nil {
         res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_EXAM_SESSION, err.Error(), nil)
         ctx.JSON(http.StatusBadRequest, res)
