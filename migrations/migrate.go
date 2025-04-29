@@ -17,7 +17,9 @@ func Migrate(db *gorm.DB) error {
 		&entity.UserClass{}, 
 		&entity.Submission{}, 
 		&entity.Language{},    
-		&entity.ExamLang{}, )
+		&entity.ExamLang{},
+		&entity.ExamSesssion{},
+	 )
 
 	if err := db.AutoMigrate(
 		&entity.UserRole{},    
@@ -30,6 +32,7 @@ func Migrate(db *gorm.DB) error {
 		&entity.Submission{}, 
 		&entity.Language{},    
 		&entity.ExamLang{}, 
+		&entity.ExamSesssion{},
 	); err != nil {
 		return err
 	}
