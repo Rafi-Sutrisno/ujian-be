@@ -20,7 +20,6 @@ type Exam struct {
 	Timestamp
 
     Class       Class         `gorm:"foreignKey:ClassID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"class"`
-    Problem     []Problem     `gorm:"foreignKey:ExamID" json:"problem"`
     ExamLang    []ExamLang    `gorm:"foreignKey:ExamID" json:"exam_lang"`
     Submission  []Submission  `gorm:"foreignKey:ExamID" json:"submission"`
 }
