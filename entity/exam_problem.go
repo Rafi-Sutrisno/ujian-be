@@ -9,5 +9,5 @@ type ExamProblem struct {
 
 	// Relationships
 	Exam  		Exam      `gorm:"foreignKey:ExamID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"exam"`
-	Problem		Class     `gorm:"foreignKey:ProblemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"problem"`
+	Problem		Problem     `gorm:"foreignKey:ProblemID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"problem"`
 }
