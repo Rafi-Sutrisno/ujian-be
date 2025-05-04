@@ -46,7 +46,7 @@ var (
 	ErrUserNotAdmin           = errors.New("user not admin")
 	ErrUserNotFound           = errors.New("user not found")
 	ErrEmailNotFound          = errors.New("email not found")
-	ErrNRPNotFound            = errors.New("NRP not found")
+	ErrUsernameNotFound            = errors.New("Username not found")
 	ErrDeleteUser             = errors.New("failed to delete user")
 	ErrDeniedAccess           = errors.New("denied access")
 	ErrPasswordNotMatch       = errors.New("password not match")
@@ -142,7 +142,7 @@ type (
 	
 
 	UserLoginRequest struct {
-		Noid     string `json:"noid" form:"noid" binding:"required"`
+		Username     string `json:"username" form:"noid" binding:"required"`
 		Password string `json:"password" form:"password" binding:"required"`
 	}
 

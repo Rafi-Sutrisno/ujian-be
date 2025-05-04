@@ -15,7 +15,7 @@ type (
 		GetAllUsers(ctx context.Context, tx *gorm.DB) ([]entity.User, error)
 		GetAllStudents(ctx context.Context, tx *gorm.DB) ([]entity.User, error)
 		GetAllUserWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllUserRepositoryResponse, error)
-		CheckNoId(ctx context.Context,tx *gorm.DB, NoId string) (entity.User, bool, error)
+		CheckUsername(ctx context.Context,tx *gorm.DB, Username string) (entity.User, bool, error)
 		GetUserById(ctx context.Context, tx *gorm.DB, userId string) (entity.User, error)
 		GetUserByEmail(ctx context.Context, tx *gorm.DB, email string) (entity.User, error)
 		UpdateUser(ctx context.Context, tx *gorm.DB, user entity.User) (entity.User, error)
@@ -118,7 +118,7 @@ func (ur *userRepository) GetAllUserWithPagination(ctx context.Context, tx *gorm
 }
 
 
-func (ur *userRepository) CheckNoId(ctx context.Context, tx *gorm.DB, NoId string) (entity.User, bool, error) {
+func (ur *userRepository) CheckUsername(ctx context.Context, tx *gorm.DB, Username string) (entity.User, bool, error) {
 
 	if tx == nil {
 		tx = ur.db
@@ -126,7 +126,7 @@ func (ur *userRepository) CheckNoId(ctx context.Context, tx *gorm.DB, NoId strin
 
 	var user entity.User
 	if err := tx.WithContext(ctx).
-	Preload("Role").Where("noid = ?", NoId).Take(&user).Error; err != nil {
+	Preload("Role").Where("username = ?", Username).Take(&user).Error; err != nil {
 		return entity.User{}, false, err
 	}
 

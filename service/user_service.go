@@ -54,7 +54,7 @@ const (
 )
 
 func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) (dto.UserResponse, error) {
-	_, flag, _ := us.userRepository.CheckNoId(ctx, nil, req.Noid)
+	_, flag, _ := us.userRepository.CheckUsername(ctx, nil, req.Noid)
 	if flag {
 		return dto.UserResponse{}, dto.ErrNoidAlreadyExists
 	}
@@ -136,9 +136,9 @@ func (us *userService) GetAllUserWithPagination(ctx context.Context, req dto.Pag
 
 
 func (us *userService) Verify(ctx context.Context, loginDTO dto.UserLoginRequest) (dto.UserLoginResponse, error) {
-	check, flag, err := us.userRepository.CheckNoId(ctx,nil,  loginDTO.Noid)
+	check, flag, err := us.userRepository.CheckUsername(ctx,nil,  loginDTO.Username)
 	if err != nil || !flag {
-		return dto.UserLoginResponse{}, dto.ErrNRPNotFound
+		return dto.UserLoginResponse{}, dto.ErrUsernameNotFound
 	}
 
 	checkPassword, err := utils.CheckPassword(check.Password, []byte(loginDTO.Password))
@@ -287,7 +287,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
             })
             continue
         }
-		_, flag, _ := us.userRepository.CheckNoId(ctx, nil, user.Noid)
+		_, flag, _ := us.userRepository.CheckUsername(ctx, nil, user.Noid)
 		if flag {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{
 				Noid:   user.Noid,
