@@ -32,7 +32,7 @@ var (
 	ErrCreateUserClass             = errors.New("failed to create user class")
 	ErrGetAllUserClass             = errors.New("failed to get all user class")
 	ErrGetAllUserClassByUserId     = errors.New("failed to get all user class by user id")
-	ErrAuthorize                   = errors.New("You are not authorized for this class")
+	ErrAuthorize                   = errors.New("you are not authorized for this class")
 	ErrGetAllUserClassByClassId    = errors.New("failed to get all user class by class id")
 	ErrGetUserClassById            = errors.New("failed to get user class by id")
 	ErrGetUserClassByEmail         = errors.New("failed to get user class by email")
