@@ -46,7 +46,7 @@ var (
 	ErrUserNotAdmin           = errors.New("user not admin")
 	ErrUserNotFound           = errors.New("user not found")
 	ErrEmailNotFound          = errors.New("email not found")
-	ErrUsernameNotFound            = errors.New("Username not found")
+	ErrUsernameNotFound       = errors.New("username not found")
 	ErrDeleteUser             = errors.New("failed to delete user")
 	ErrDeniedAccess           = errors.New("denied access")
 	ErrPasswordNotMatch       = errors.New("password not match")
