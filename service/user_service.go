@@ -54,13 +54,14 @@ const (
 )
 
 func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) (dto.UserResponse, error) {
-	_, flag, _ := us.userRepository.CheckUsername(ctx, nil, req.Noid)
+	_, flag, _ := us.userRepository.CheckNoid(ctx, nil, req.Noid)
 	if flag {
 		return dto.UserResponse{}, dto.ErrNoidAlreadyExists
 	}
 
 
 	user := entity.User{
+		Username:   req.Username,
 		Name:       req.Name,
 		Noid:       req.Noid,
 		RoleID:     uint(req.RoleId),
@@ -75,6 +76,7 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 
 	return dto.UserResponse{
 		ID:         userReg.ID.String(),
+		Username:   userReg.Username,
 		Name:       userReg.Name,
 		Noid: 		userReg.Noid,
 		RoleID:       userReg.RoleID,
@@ -93,6 +95,7 @@ func (us *userService) GetAllUsers(ctx context.Context) ([]dto.UserResponse, err
 	for _, User := range Users {
 		responses = append(responses, dto.UserResponse{
 			ID:            	User.ID.String(),
+			Username:       User.Username,
 			Name: 			User.Name,
 			Email: 			User.Email,
 			RoleID: 		User.RoleID,
@@ -114,6 +117,7 @@ func (us *userService) GetAllUserWithPagination(ctx context.Context, req dto.Pag
 	for _, user := range dataWithPaginate.Users {
 		data := dto.UserResponse{
 			ID:         user.ID.String(),
+			Username:   user.Username,
 			Name:       user.Name,
 			Email:      user.Email,
 			RoleID:       user.RoleID,
@@ -162,6 +166,7 @@ func (us *userService) GetUserById(ctx context.Context, userId string) (dto.User
 
 	return dto.UserResponse{
 		ID:         user.ID.String(),
+		Username:   user.Username,
 		Name:       user.Name,
 		Noid:       user.Noid,
 		RoleID:       user.RoleID,
@@ -182,6 +187,7 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 
 	data := entity.User{
 		ID:         user.ID,
+		Username:   req.Username,
 		Name:       req.Name,
 		RoleID:       user.RoleID,
 		Email:      req.Email,
@@ -195,6 +201,7 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 
 	return dto.UserUpdateResponse{
 		ID:         userUpdate.ID.String(),
+		Username:   userUpdate.Username,
 		Name:       userUpdate.Name,
 		Noid:       userUpdate.Noid,
 		RoleID:       userUpdate.RoleID,
@@ -220,6 +227,7 @@ func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequ
 
 	return dto.UserUpdateResponse{
 		ID:         userUpdate.ID.String(),
+		Username:   userUpdate.Username,
 		Name:       userUpdate.Name,
 		Noid:       userUpdate.Noid,
 		RoleID:       userUpdate.RoleID,
@@ -287,7 +295,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
             })
             continue
         }
-		_, flag, _ := us.userRepository.CheckUsername(ctx, nil, user.Noid)
+		_, flag, _ := us.userRepository.CheckNoid(ctx, nil, user.Noid)
 		if flag {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{
 				Noid:   user.Noid,
@@ -298,6 +306,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 		}
 
 		req := entity.User{
+			Username: user.Username,
 			Name:     user.Name,
 			Noid:     user.Noid,
 			RoleID:   0,
@@ -308,6 +317,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 		userReg, err := us.userRepository.RegisterUser(ctx, nil, req)
 		resp := dto.UserResponse{
 			ID:    userReg.ID.String(),
+			Username: userReg.Username,
 			Name:  userReg.Name,
 			Noid:  userReg.Noid,
 			RoleID:  userReg.RoleID,

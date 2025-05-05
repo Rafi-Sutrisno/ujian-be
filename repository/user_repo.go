@@ -16,6 +16,7 @@ type (
 		GetAllStudents(ctx context.Context, tx *gorm.DB) ([]entity.User, error)
 		GetAllUserWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllUserRepositoryResponse, error)
 		CheckUsername(ctx context.Context,tx *gorm.DB, Username string) (entity.User, bool, error)
+		CheckNoid(ctx context.Context, tx *gorm.DB, Noid string) (entity.User, bool, error)
 		GetUserById(ctx context.Context, tx *gorm.DB, userId string) (entity.User, error)
 		GetUserByEmail(ctx context.Context, tx *gorm.DB, email string) (entity.User, error)
 		UpdateUser(ctx context.Context, tx *gorm.DB, user entity.User) (entity.User, error)
@@ -127,6 +128,21 @@ func (ur *userRepository) CheckUsername(ctx context.Context, tx *gorm.DB, Userna
 	var user entity.User
 	if err := tx.WithContext(ctx).
 	Preload("Role").Where("username = ?", Username).Take(&user).Error; err != nil {
+		return entity.User{}, false, err
+	}
+
+	return user, true, nil
+}
+
+func (ur *userRepository) CheckNoid(ctx context.Context, tx *gorm.DB, Noid string) (entity.User, bool, error) {
+
+	if tx == nil {
+		tx = ur.db
+	}
+
+	var user entity.User
+	if err := tx.WithContext(ctx).
+	Preload("Role").Where("noid = ?", Noid).Take(&user).Error; err != nil {
 		return entity.User{}, false, err
 	}
 
