@@ -43,7 +43,6 @@ var (
 
 type (
 	ProblemCreateRequest struct {
-		ExamID        string    `json:"exam_id" binding:"required"`
 		Title         string    `json:"title" binding:"required"`
 		Description   string    `json:"description" binding:"required"`
 		Constraints   string    `json:"constraints" binding:"required"`
@@ -53,12 +52,12 @@ type (
 
 	ProblemResponse struct {
 		ID         	  string    `json:"id"`
-		ExamID        string    `json:"exam_id" `
 		Title         string    `json:"title"`
 		Description   string    `json:"description" `
 		Constraints   string    `json:"constraints" `
 		SampleInput   string    `json:"sample_input" `
 		SampleOutput  string    `json:"sample_output" `
+		CreatedAt     string	`json:"created_at" `
 	}
 
 	ProblemPaginationResponse struct {
@@ -81,7 +80,6 @@ type (
 
 	ProblemUpdateResponse struct {
 		ID            string    `json:"id"`
-		ExamID        string    `json:"exam_id" `
 		Title         string    `json:"title"`
 		Description   string    `json:"description" `
 		Constraints   string    `json:"constraints" `
