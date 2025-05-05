@@ -47,6 +47,7 @@ func main() {
 		testCaseRepository    repository.TestCaseRepository    = repository.NewTestCaseRepository(db)
 		submissionRepository  repository.SubmissionRepository  = repository.NewSubmissionRepository(db)
 		examSessionRepository repository.ExamSessionRepository = repository.NewExamSessionRepository(db)
+		examProblemRepository repository.ExamProblemRepository = repository.NewExamProblemRepository(db)
 	
 		// Service
 		userService        service.UserService        = service.NewUserService(userRepository, jwtService)
@@ -58,6 +59,7 @@ func main() {
 		testCaseService    service.TestCaseService    = service.NewTestCaseService(testCaseRepository)
 		submissionService  service.SubmissionService  = service.NewSubmissionService(submissionRepository)
 		examSessionService  service.ExamSessionService  = service.NewExamSessionService(examSessionRepository)
+		examProblemService  service.ExamProblemService  = service.NewExamProblemService(examProblemRepository)
 	
 		// Controller
 		userController        controller.UserController        = controller.NewUserController(userService)
@@ -69,7 +71,7 @@ func main() {
 		testCaseController    controller.TestCaseController    = controller.NewTestCaseController(testCaseService)
 		submissionController  controller.SubmissionController  = controller.NewSubmissionController(submissionService)
 		examSessionController  controller.ExamSessionController  = controller.NewExamSessionController(examSessionService)
-
+		examProblemController  controller.ExamProblemController  = controller.NewExamProblemController(examProblemService)
 	)
 	
 
@@ -86,6 +88,7 @@ func main() {
 	routes.TestCaseRoutes(server, testCaseController, jwtService)
 	routes.SubmissionRoutes(server, submissionController, jwtService)
 	routes.ExamSessionRoutes(server, examSessionController, jwtService)
+	routes.ExamProblemRoutes(server, examProblemController, jwtService)
 
 	// routes.UserExamRoutes(server, userExamController, jwtService)
 
