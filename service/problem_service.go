@@ -3,7 +3,6 @@ package service
 import (
 	"context"
 	"mods/dto"
-	dto_error "mods/dto/error"
 	"mods/entity"
 	"mods/repository"
 )
@@ -30,13 +29,13 @@ func NewProblemService(repo repository.ProblemRepository) ProblemService {
 }
 
 func (ps *problemService) GetByID(ctx context.Context, id string, userId string) (dto.ProblemResponse, error) {
-	authorized, err := ps.repo.IsUserInProblemClass(ctx, nil, userId, id)
-	if err != nil {
-		return dto.ProblemResponse{}, err
-	}
-	if !authorized {
-		return dto.ProblemResponse{}, dto_error.ErrAuthorizeFor("this problem")
-	}
+	// authorized, err := ps.repo.IsUserInProblemClass(ctx, nil, userId, id)
+	// if err != nil {
+	// 	return dto.ProblemResponse{}, err
+	// }
+	// if !authorized {
+	// 	return dto.ProblemResponse{}, dto_error.ErrAuthorizeFor("this problem")
+	// }
 
 	problem, err := ps.repo.GetByID(ctx, nil, id)
 	if err != nil {
@@ -45,7 +44,7 @@ func (ps *problemService) GetByID(ctx context.Context, id string, userId string)
 
 	return dto.ProblemResponse{
 		ID:      		problem.ID.String(),
-		ExamID:  		problem.ExamID,
+		// ExamID:  		problem.ExamID,
 		Title:        	problem.Title,
 		Description:  	problem.Description,
 		Constraints:  	problem.Constraints,
@@ -55,13 +54,13 @@ func (ps *problemService) GetByID(ctx context.Context, id string, userId string)
 }
 
 func (ps *problemService) GetByExamID(ctx context.Context, examID string, userId string) ([]dto.ProblemResponse, error) {
-	authorized, err := ps.repo.IsUserInExamClass(ctx, nil, userId, examID)
-	if err != nil {
-		return nil, err
-	}
-	if !authorized {
-		return nil, dto_error.ErrAuthorizeFor("this problem")
-	}
+	// authorized, err := ps.repo.IsUserInExamClass(ctx, nil, userId, examID)
+	// if err != nil {
+	// 	return nil, err
+	// }
+	// if !authorized {
+	// 	return nil, dto_error.ErrAuthorizeFor("this problem")
+	// }
 
 	problems, err := ps.repo.GetByExamID(ctx, nil, examID)
 	if err != nil {
@@ -72,7 +71,7 @@ func (ps *problemService) GetByExamID(ctx context.Context, examID string, userId
 	for _, problem := range problems {
 		responses = append(responses, dto.ProblemResponse{
 			ID:      		problem.ID.String(),
-			ExamID:  		problem.ExamID,
+			// ExamID:  		problem.ExamID,
 			Title:        	problem.Title,
 			Description:  	problem.Description,
 			Constraints:  	problem.Constraints,
@@ -94,12 +93,13 @@ func (ps *problemService) GetAll(ctx context.Context, userId string) ([]dto.Prob
 	for _, problem := range problems {
 		responses = append(responses, dto.ProblemResponse{
 			ID:      problem.ID.String(),
-			ExamID:  problem.ExamID,
+			// ExamID:  problem.ExamID,
 			Title:        	problem.Title,
 			Description:  	problem.Description,
 			Constraints:  	problem.Constraints,
 			SampleInput:  	problem.SampleInput,
 			SampleOutput: 	problem.SampleOutput,
+			CreatedAt:      problem.CreatedAt.String(),
 		})
 	}
 
@@ -107,16 +107,9 @@ func (ps *problemService) GetAll(ctx context.Context, userId string) ([]dto.Prob
 }
 
 func (ps *problemService) Create(ctx context.Context, req dto.ProblemCreateRequest, userId string) (dto.ProblemResponse, error) {
-	authorized, err := ps.repo.IsUserInExamClass(ctx, nil, userId, req.ExamID)
-	if err != nil {
-		return dto.ProblemResponse{}, err
-	}
-	if !authorized {
-		return dto.ProblemResponse{}, dto_error.ErrAuthorizeFor("this problem")
-	}
 
 	problem := entity.Problem{
-		ExamID:  req.ExamID,
+		// ExamID:  req.ExamID,
 		Title:        	req.Title,
 		Description:  	req.Description,
 		Constraints:  	req.Constraints,
@@ -131,7 +124,7 @@ func (ps *problemService) Create(ctx context.Context, req dto.ProblemCreateReque
 
 	return dto.ProblemResponse{
 		ID:      		createdProblem.ID.String(),
-		ExamID:  		createdProblem.ExamID,
+		// ExamID:  		createdProblem.ExamID,
 		Title:        	createdProblem.Title,
 		Description:  	createdProblem.Description,
 		Constraints:  	createdProblem.Constraints,
@@ -142,13 +135,13 @@ func (ps *problemService) Create(ctx context.Context, req dto.ProblemCreateReque
 
 func (ps *problemService) Update(ctx context.Context, req dto.ProblemUpdateRequest, id string, userId string) (dto.ProblemUpdateResponse, error) {
 
-	authorized, err := ps.repo.IsUserInProblemClass(ctx, nil, userId, id)
-	if err != nil {
-		return dto.ProblemUpdateResponse{}, err
-	}
-	if !authorized {
-		return dto.ProblemUpdateResponse{}, dto_error.ErrAuthorizeFor("this problem")
-	}
+	// authorized, err := ps.repo.IsUserInProblemClass(ctx, nil, userId, id)
+	// if err != nil {
+	// 	return dto.ProblemUpdateResponse{}, err
+	// }
+	// if !authorized {
+	// 	return dto.ProblemUpdateResponse{}, dto_error.ErrAuthorizeFor("this problem")
+	// }
 
 	problem, err := ps.repo.GetByID(ctx, nil, id)
 	if err != nil {
@@ -157,7 +150,7 @@ func (ps *problemService) Update(ctx context.Context, req dto.ProblemUpdateReque
 	
 	data := entity.Problem{
 		ID:  			problem.ID,
-		ExamID: 		problem.ExamID,
+		// ExamID: 		problem.ExamID,
 		Title:        	req.Title,
 		Description:  	req.Description,
 		Constraints:  	req.Constraints,
@@ -172,7 +165,7 @@ func (ps *problemService) Update(ctx context.Context, req dto.ProblemUpdateReque
 
 	return dto.ProblemUpdateResponse{
 		ID:      updatedProblem.ID.String(),
-		ExamID:  updatedProblem.ExamID,
+		// ExamID:  updatedProblem.ExamID,
 		Title:        	req.Title,
 		Description:  	req.Description,
 		Constraints:  	req.Constraints,
@@ -183,13 +176,13 @@ func (ps *problemService) Update(ctx context.Context, req dto.ProblemUpdateReque
 
 func (ps *problemService) Delete(ctx context.Context, id string, userId string) error {
 
-	authorized, err := ps.repo.IsUserInProblemClass(ctx, nil, userId, id)
-	if err != nil {
-		return err
-	}
-	if !authorized {
-		return dto_error.ErrAuthorizeFor("this problem")
-	}
+	// authorized, err := ps.repo.IsUserInProblemClass(ctx, nil, userId, id)
+	// if err != nil {
+	// 	return err
+	// }
+	// if !authorized {
+	// 	return dto_error.ErrAuthorizeFor("this problem")
+	// }
 
 	if err := ps.repo.Delete(ctx, nil, id); err != nil {
 		return dto.ErrDeleteProblem

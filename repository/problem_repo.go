@@ -14,8 +14,8 @@ type ProblemRepository interface {
 	Create(ctx context.Context, tx *gorm.DB, problem entity.Problem) (entity.Problem, error)
 	Update(ctx context.Context, tx *gorm.DB, problem entity.Problem) (entity.Problem, error)
 	Delete(ctx context.Context, tx *gorm.DB, id string) error
-	IsUserInProblemClass(ctx context.Context, tx *gorm.DB, userID, problemID string) (bool, error)
-	IsUserInExamClass(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error)
+	// IsUserInProblemClass(ctx context.Context, tx *gorm.DB, userID, problemID string) (bool, error)
+	// IsUserInExamClass(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error)
 }
 
 type problemRepository struct {
