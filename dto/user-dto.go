@@ -60,6 +60,7 @@ var (
 
 type (
 	UserCreateRequest struct {
+		Username   string `json:"username" binding:"required"`
 		Name       string `json:"name" binding:"required"`
 		Password   string `json:"password" binding:"required"`
 		Email      string `json:"email" binding:"required"`
@@ -69,6 +70,7 @@ type (
 
 	UserResponse struct {
 		ID        string `json:"id"`
+		Username  string `json:"username"`
 		Name      string `json:"name"`
 		Email     string `json:"email"`
 		RoleID    uint   `json:"role_id"`
@@ -81,6 +83,7 @@ type (
 	}
 
 	 UserYAML struct {
+		Username       string `yaml:"username"`
 		Name       string `yaml:"name"`
 		Email      string `yaml:"email"`
 		Noid 	   string `yaml:"noid"`
@@ -109,6 +112,7 @@ type (
 	}
 
 	UserUpdateRequest struct {
+		Username       string `json:"username" form:"username"`
 		Name       string `json:"name" form:"name"`
 		Email      string `json:"email" form:"email"`
 		Noid       string `json:"noid" form:"noid"`
@@ -119,6 +123,7 @@ type (
 
 	UserUpdateResponse struct {
 		ID         string `json:"id"`
+		Username  string `json:"username"`
 		Name       string `json:"name"`
 		RoleID       uint `json:"role_id"`
 		Email      string `json:"email"`
@@ -142,7 +147,7 @@ type (
 	
 
 	UserLoginRequest struct {
-		Username     string `json:"username" form:"noid" binding:"required"`
+		Username     string `json:"username" form:"username" binding:"required"`
 		Password string `json:"password" form:"password" binding:"required"`
 	}
 
