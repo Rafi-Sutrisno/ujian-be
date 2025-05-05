@@ -28,6 +28,7 @@ type UserController interface {
 	Delete(ctx *gin.Context)
 	LoginUser(ctx *gin.Context)
 	Me(ctx *gin.Context)
+	GetByUserId(ctx *gin.Context)
 	UpdateEmailMe(ctx *gin.Context)
 	SendResetPassword(ctx *gin.Context)
 	ResetPassword(ctx *gin.Context)
@@ -43,7 +44,22 @@ func NewUserController(us service.UserService) UserController {
 
 func (c *userController) Me(ctx *gin.Context) {
 	userId := ctx.MustGet("requester_id").(string)
-	fmt.Println("ini userId controller:", userId)
+
+	result, err := c.userService.GetUserById(ctx.Request.Context(), userId)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	
+	fmt.Println("ini result controller:", result)
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_USER, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *userController) GetByUserId(ctx *gin.Context) {
+	userId := ctx.Param("id")
 
 	result, err := c.userService.GetUserById(ctx.Request.Context(), userId)
 	if err != nil {
