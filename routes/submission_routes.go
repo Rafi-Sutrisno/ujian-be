@@ -12,6 +12,7 @@ func SubmissionRoutes(router *gin.Engine, SubmissionController controller.Submis
 
 	submissionPrivate := router.Group("/api/submission").Use(middleware.Authenticate(jwtService))
 	{
+		submissionPrivate.POST("/run", SubmissionController.RunCode)
 		submissionPrivate.POST("/", SubmissionController.Create)
 		submissionPrivate.GET("/:id", SubmissionController.GetByID)
 		submissionPrivate.GET("/exam/:exam_id", SubmissionController.GetByExamID)

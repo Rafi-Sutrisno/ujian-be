@@ -5,10 +5,12 @@ import (
 	"mods/dto"
 	"mods/entity"
 	"mods/repository"
+	judge0 "mods/repository/external"
 	"time"
 )
 
 type SubmissionService interface {
+	RunCode(ctx context.Context, req dto.Judge0Request) (dto.Judge0Response, error)
 	CreateSubmission(ctx context.Context, request dto.SubmissionCreateRequest) (dto.SubmissionResponse, error)
 	GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error)
 	GetByExamID(ctx context.Context, examID string) ([]dto.SubmissionResponse, error)
@@ -154,4 +156,8 @@ func (s *submissionService) GetByUserID(ctx context.Context, userID string) ([]d
 	}
 
 	return response, nil
+}
+
+func (s *submissionService) RunCode(ctx context.Context, req dto.Judge0Request) (dto.Judge0Response, error) {
+	return judge0.SubmitToJudge0(req)
 }
