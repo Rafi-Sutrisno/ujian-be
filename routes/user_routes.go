@@ -43,12 +43,13 @@ func UserRoutes(router *gin.Engine, UserController controller.UserController, jw
 
 	userPrivateAdmin := router.Group("/api/user").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
+		userPrivateAdmin.GET("/:id", UserController.GetByUserId)
 		userPrivateAdmin.GET("/all/paginate", UserController.GetAllUserPaginate)
 		userPrivateAdmin.GET("/all", UserController.GetAllUser)
 		userPrivateAdmin.POST("/add", UserController.Register)
 		userPrivateAdmin.PATCH("/update/:id", UserController.Update)
 		userPrivateAdmin.DELETE("/delete/:id", UserController.Delete)
-		userPrivateAdmin.POST("/add/upload-yaml", UserController.RegisterYAML)
+		userPrivateAdmin.POST("/add/upload-file", UserController.RegisterFile)
 	}
 
 	// userPublic := router.Group("/api/user")
