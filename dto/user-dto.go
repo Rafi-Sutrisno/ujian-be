@@ -78,11 +78,11 @@ type (
 		CreatedAt string `json:"created_at"`
 	}
 
-	UserYAMLUploadRequest struct {
-		File *multipart.FileHeader `form:"yaml_file" binding:"required"`
+	UserFileUploadRequest struct {
+		File *multipart.FileHeader `form:"file" binding:"required"`
 	}
 
-	 UserYAML struct {
+	 UserFile struct {
 		Username       string `yaml:"username"`
 		Name       string `yaml:"name"`
 		Email      string `yaml:"email"`
@@ -90,8 +90,8 @@ type (
 		Password   string `yaml:"password"`  
 	}
 	
-	 UserYAMLList struct {
-		Users []UserYAML `yaml:"users"`
+	 UserFileList struct {
+		Users []UserFile `yaml:"users"`
 	}
 
 	FailedUserResponse struct {

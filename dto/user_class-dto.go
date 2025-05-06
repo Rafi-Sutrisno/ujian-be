@@ -58,6 +58,7 @@ type (
 		ClassID string `json:"class_id" `
 		User    *UserResponse `json:"user"`
 	}
+	
 
 	UserClassYAMLUploadRequest struct {
 		File *multipart.FileHeader `form:"yaml_file" binding:"required"`
