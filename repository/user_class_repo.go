@@ -10,6 +10,7 @@ import (
 type (
 	UserClassRepository interface {
 		GetById(ctx context.Context, tx *gorm.DB, Id string) (entity.UserClass, error)
+		CheckExist(ctx context.Context, tx *gorm.DB, userID string, classID string) (bool, error)
 		GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.UserClass, error)
 		GetByClassID(ctx context.Context, tx *gorm.DB, classID string) ([]entity.UserClass, error)
 		Create(ctx context.Context, tx *gorm.DB, userClass entity.UserClass) (entity.UserClass, error)
@@ -40,6 +41,22 @@ func (ucr *userClassRepository) GetById(ctx context.Context, tx *gorm.DB, Id str
 	}
 
 	return userClass, nil
+}
+
+func (ucr *userClassRepository) CheckExist(ctx context.Context, tx *gorm.DB, userID string, classID string) (bool, error) {
+	if tx == nil {
+		tx = ucr.db
+	}
+
+	var count int64
+	if err := tx.WithContext(ctx).
+		Model(&entity.UserClass{}).
+		Where("user_id = ? AND class_id = ?", userID, classID).
+		Count(&count).Error; err != nil {
+		return false, err
+	}
+
+	return count > 0, nil
 }
 
 func (ucr *userClassRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.UserClass, error) {

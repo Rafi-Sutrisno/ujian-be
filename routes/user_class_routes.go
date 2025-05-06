@@ -31,6 +31,7 @@ func UserClassRoutes(router *gin.Engine, UserClassController controller.UserClas
 	{
 		// userClassPrivateAdmin.GET("/user/:user_id", UserClassController.GetByUserID)
 		userClassPrivateAdmin.GET("/class/unassigned/:class_id", UserClassController.GetUnassigned)
+		userClassPrivateAdmin.POST("/create/upload-file/:class_id", UserClassController.AssignFile)
 		userClassPrivateAdmin.POST("/create", UserClassController.Create)
 		userClassPrivateAdmin.POST("/create_many", UserClassController.CreateMany)
 		userClassPrivateAdmin.DELETE("/delete/:id", UserClassController.Delete)
