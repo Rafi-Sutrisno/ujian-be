@@ -19,6 +19,7 @@ func ExamProblemRoutes(router *gin.Engine, ExamProblemController controller.Exam
 
 	examProblemPrivateAdmin := router.Group("/api/exam_problem").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
+		examProblemPrivateAdmin.GET("/unassigned/exam/:exam_id", ExamProblemController.GetUnassignedByExamID)
 		examProblemPrivateAdmin.POST("/create", ExamProblemController.Create)
 		examProblemPrivateAdmin.POST("/create_many", ExamProblemController.CreateMany)
 		examProblemPrivateAdmin.DELETE("/delete/:id", ExamProblemController.Delete)

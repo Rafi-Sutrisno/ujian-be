@@ -16,6 +16,7 @@ type (
 	ExamProblemService interface {
 		GetByExamID(ctx context.Context, examID string, userId string) ([]dto.ExamProblemResponse, error)
 		GetByProblemID(ctx context.Context, problemID string, userId string) ([]dto.ExamProblemResponse, error)
+		GetUnassignedByExamID(ctx context.Context, examID string, userId string) ([]dto.ExamProblemResponse, error)
 		Create(ctx context.Context, req dto.ExamProblemCreateRequest, userId string) (dto.ExamProblemResponse, error)
 		CreateMany(ctx context.Context, reqs []dto.ExamProblemCreateRequest, userId string) error
 		Delete(ctx context.Context, id string, userId string) error
@@ -54,6 +55,37 @@ func (ucs *examProblemService) GetByExamID(ctx context.Context, examID string, u
 			ID:        	uc.ID.String(),
 			ExamID: 	uc.ExamID,
 			ProblemID: 	uc.ProblemID,
+			Problem: 	problem,
+		})
+	}
+
+	return responses, nil
+}
+
+func (ucs *examProblemService) GetUnassignedByExamID(ctx context.Context, examID string, userId string) ([]dto.ExamProblemResponse, error) {
+	exists, err := ucs.repo.IsUserInExam(ctx, nil, userId, examID)
+	if err != nil {
+		return nil, dto_error.ErrAuthorizeFor("this exam")
+	}
+
+	if !exists {
+		return nil, dto_error.ErrAuthorizeFor("this exam")
+	}
+
+	examProblem, err := ucs.repo.GetUnassignedProblemsByExamID(ctx, nil, examID)
+	if err != nil {
+		return nil, dto.ErrGetAllExamProblemByExamId
+	}
+
+	var responses []dto.ExamProblemResponse
+	for _, uc := range examProblem {
+		problem := &dto.ProblemResponse{
+			ID: uc.ID.String(),
+			Title: uc.Title,
+		}
+
+		responses = append(responses, dto.ExamProblemResponse{
+			ID:        	uc.ID.String(),
 			Problem: 	problem,
 		})
 	}

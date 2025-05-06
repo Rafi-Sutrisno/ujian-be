@@ -12,6 +12,7 @@ type (
 		GetById(ctx context.Context, tx *gorm.DB, Id string) (entity.ExamProblem, error)
 		GetByExamID(ctx context.Context, tx *gorm.DB, examID string) ([]entity.ExamProblem, error)
 		GetByProblemID(ctx context.Context, tx *gorm.DB, problemID string) ([]entity.ExamProblem, error)
+		GetUnassignedProblemsByExamID(ctx context.Context, tx *gorm.DB, examID string) ([]entity.Problem, error)
 		Create(ctx context.Context, tx *gorm.DB, examProblem entity.ExamProblem) (entity.ExamProblem, error)
 		CreateMany(ctx context.Context, tx *gorm.DB, examProblem []entity.ExamProblem) error
 		Delete(ctx context.Context, tx *gorm.DB, id string) error
@@ -67,6 +68,28 @@ func (ucr *examProblemRepository) GetByProblemID(ctx context.Context, tx *gorm.D
 
 	return examProblem, nil
 }
+
+func (ucr *examProblemRepository) GetUnassignedProblemsByExamID(ctx context.Context, tx *gorm.DB, examID string) ([]entity.Problem, error) {
+	if tx == nil {
+		tx = ucr.db
+	}
+
+	var problems []entity.Problem
+	subQuery := tx.Model(&entity.ExamProblem{}).
+		Select("problem_id").
+		Where("exam_id = ?", examID)
+
+	err := tx.WithContext(ctx).
+		Where("id NOT IN (?)", subQuery).
+		Find(&problems).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return problems, nil
+}
+
 
 func (ucr *examProblemRepository) Create(ctx context.Context, tx *gorm.DB, examProblem entity.ExamProblem) (entity.ExamProblem, error) {
 	if tx == nil {

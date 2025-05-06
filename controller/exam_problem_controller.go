@@ -18,6 +18,7 @@ type (
 	ExamProblemController interface {
 		GetByExamID(ctx *gin.Context)
 		GetByProblemID(ctx *gin.Context)
+		GetUnassignedByExamID(ctx *gin.Context)
 		Create(ctx *gin.Context)
 		CreateMany(ctx *gin.Context)
 		Delete(ctx *gin.Context)
@@ -44,9 +45,22 @@ func (ucc *examProblemController) GetByExamID(ctx *gin.Context) {
 }
 
 func (ucc *examProblemController) GetByProblemID(ctx *gin.Context) {
-	problemID := ctx.Param("class_id")
+	problemID := ctx.Param("problem_id")
 	userId := ctx.MustGet("requester_id").(string)
 	result, err := ucc.service.GetByProblemID(ctx.Request.Context(), problemID, userId)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_USER_CLASS, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (ucc *examProblemController) GetUnassignedByExamID(ctx *gin.Context) {
+	examID := ctx.Param("exam_id")
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := ucc.service.GetUnassignedByExamID(ctx.Request.Context(), examID, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
