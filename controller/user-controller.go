@@ -7,6 +7,8 @@ import (
 	"mods/service"
 	"mods/utils"
 	"net/http"
+	"path/filepath"
+	"strings"
 
 	// "os/exec"
 	// "strconv"
@@ -32,7 +34,7 @@ type UserController interface {
 	UpdateEmailMe(ctx *gin.Context)
 	SendResetPassword(ctx *gin.Context)
 	ResetPassword(ctx *gin.Context)
-	RegisterYAML(ctx *gin.Context)
+	RegisterFile(ctx *gin.Context)
 }
 
 func NewUserController(us service.UserService) UserController {
@@ -204,18 +206,30 @@ func (uc *userController) Delete(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func (uc *userController) RegisterYAML(ctx *gin.Context) {
-	var req dto.UserYAMLUploadRequest
+func (uc *userController) RegisterFile(ctx *gin.Context) {
+	var req dto.UserFileUploadRequest
 
-	// Bind multipart form data (file field)
 	if err := ctx.ShouldBind(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
-	// Pass to service
-	result, err := uc.userService.RegisterUsersFromYAML(ctx.Request.Context(), req.File)
+	filename := req.File.Filename
+	ext := strings.ToLower(filepath.Ext(filename))
+
+	var result map[string]interface{}
+	var err error
+
+	switch ext {
+	case ".yaml", ".yml":
+		result, err = uc.userService.RegisterUsersFromYAML(ctx.Request.Context(), req.File)
+	case ".csv":
+		result, err = uc.userService.RegisterUsersFromCSV(ctx.Request.Context(), req.File)
+	default:
+		err = fmt.Errorf("unsupported file format: %s", ext)
+	}
+
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_REGISTER_USER, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
