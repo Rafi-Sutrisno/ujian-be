@@ -3,6 +3,7 @@ package service
 import (
 	"bytes"
 	"context"
+	"encoding/csv"
 	"fmt"
 	"html/template"
 	"io"
@@ -39,6 +40,7 @@ type UserService interface {
 	ResetPassword(ctx context.Context, req dto.ResetPasswordRequest) (dto.ResetPasswordResponse, error)
 
 	RegisterUsersFromYAML(ctx context.Context, fileHeader *multipart.FileHeader) (map[string]interface{}, error)
+	RegisterUsersFromCSV(ctx context.Context, fileHeader *multipart.FileHeader) (map[string]interface{}, error)
 }
 
 func NewUserService(ur repository.UserRepository, jwtService JWTService) UserService {
@@ -269,7 +271,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
         return nil, fmt.Errorf("uploaded YAML file is empty")
     }
 
-    var yamlData dto.UserYAMLList
+    var yamlData dto.UserFileList
     if err := yaml.Unmarshal(data, &yamlData); err != nil {
         return nil, fmt.Errorf("invalid YAML format: %w", err)
     }
@@ -287,7 +289,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 	}
 
 	for _, user := range yamlData.Users {
-		if user.Noid == "" || user.Name == "" || user.Email == "" || user.Password == "" {
+		if user.Username == "" || user.Noid == "" || user.Name == "" || user.Email == "" || user.Password == "" {
             failedUsers = append(failedUsers, dto.FailedUserResponse{
                 Noid:   user.Noid,
                 Email:  user.Email,
@@ -309,7 +311,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 			Username: user.Username,
 			Name:     user.Name,
 			Noid:     user.Noid,
-			RoleID:   0,
+			RoleID:   2,
 			Email:    user.Email,
 			Password: user.Password,
 		}
@@ -340,8 +342,107 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 		"created_users": createdUsers,
 		"failed_users":  failedUsers,
 	}, nil
-
 }
+
+func (us *userService) RegisterUsersFromCSV(ctx context.Context, fileHeader *multipart.FileHeader) (map[string]interface{}, error) {
+	file, err := fileHeader.Open()
+	if err != nil {
+		return nil, fmt.Errorf("failed to open uploaded CSV file: %w", err)
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	reader.TrimLeadingSpace = true
+
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, fmt.Errorf("failed to read CSV file: %w", err)
+	}
+
+	if len(records) < 1 {
+		return nil, fmt.Errorf("CSV file is empty")
+	}
+
+	headers := records[0]
+	fieldMap := map[string]int{}
+	for i, h := range headers {
+		fieldMap[strings.ToLower(h)] = i
+	}
+
+	var createdUsers []dto.UserResponse
+	var failedUsers []dto.FailedUserResponse
+
+	for _, record := range records[1:] {
+		get := func(key string) string {
+			if idx, ok := fieldMap[strings.ToLower(key)]; ok && idx < len(record) {
+				return strings.TrimSpace(record[idx])
+			}
+			return ""
+		}
+
+		user := dto.UserFile{
+			Username: get("username"),
+			Name:     get("name"),
+			Email:    get("email"),
+			Noid:     get("noid"),
+			Password: get("password"),
+		}
+
+		if user.Username == "" || user.Noid == "" || user.Name == "" || user.Email == "" || user.Password == "" {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Missing required fields",
+			})
+			continue
+		}
+
+		_, exists, _ := us.userRepository.CheckNoid(ctx, nil, user.Noid)
+		if exists {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: dto.ErrNoidAlreadyExists.Error(),
+			})
+			continue
+		}
+
+		newUser := entity.User{
+			Username: user.Username,
+			Name:     user.Name,
+			Noid:     user.Noid,
+			RoleID:   2,
+			Email:    user.Email,
+			Password: user.Password,
+		}
+
+		userReg, err := us.userRepository.RegisterUser(ctx, nil, newUser)
+		if err != nil {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: fmt.Sprintf("Database error: %v", err.Error()),
+			})
+			continue
+		}
+
+		createdUsers = append(createdUsers, dto.UserResponse{
+			ID:       userReg.ID.String(),
+			Username: userReg.Username,
+			Name:     userReg.Name,
+			Noid:     userReg.Noid,
+			RoleID:   userReg.RoleID,
+			Email:    userReg.Email,
+		})
+	}
+
+	return map[string]interface{}{
+		"created_users": createdUsers,
+		"failed_users":  failedUsers,
+	}, nil
+}
+
+
 
 func makeForgotPasswordEmail(receiverEmail string) (map[string]string, error) {
 	expired := time.Now().Add(time.Hour * 1).Format("2006-01-02 15:04:05") // token valid for 1 hour
