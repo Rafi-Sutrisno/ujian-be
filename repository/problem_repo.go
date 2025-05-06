@@ -47,12 +47,19 @@ func (pr *problemRepository) GetByExamID(ctx context.Context, tx *gorm.DB, examI
 	}
 
 	var problems []entity.Problem
-	if err := tx.WithContext(ctx).Where("exam_id = ?", examID).Find(&problems).Error; err != nil {
+	err := tx.WithContext(ctx).
+		Model(&entity.Problem{}).
+		Joins("JOIN exam_problems ON exam_problems.problem_id = problems.id").
+		Where("exam_problems.exam_id = ?", examID).
+		Find(&problems).Error
+
+	if err != nil {
 		return nil, err
 	}
 
 	return problems, nil
 }
+
 
 func (pr *problemRepository) GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Problem, error) {
 	if tx == nil {
