@@ -15,6 +15,7 @@ type (
 	}
 
 	SubmissionController interface {
+		RunCode(ctx *gin.Context)
 		Create(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
 		GetByExamID(ctx *gin.Context)
@@ -27,6 +28,27 @@ func NewSubmissionController(ss service.SubmissionService) SubmissionController 
 	return &submissionController{
 		submissionService: ss,
 	}
+}
+
+func  (sc *submissionController) RunCode(ctx *gin.Context) {
+	var req dto.Judge0Request
+
+	// Bind JSON body
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	// Call service
+	result, err := sc.submissionService.RunCode(ctx.Request.Context(), req)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
 }
 
 func (sc *submissionController) Create(ctx *gin.Context) {
