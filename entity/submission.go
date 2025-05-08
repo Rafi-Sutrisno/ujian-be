@@ -10,7 +10,10 @@ type Submission struct {
 	Code     			string      `json:"code" binding:"required"`
 	LangID 				string      `json:"lang_id" binding:"required"`
 	SubmissionTime    	string      `json:"submission_time" binding:"required"`
+	Judge0Token			string		`json:"judge0_token" binding:"required"`
 	Status     			string      `json:"status" binding:"required"`
+	Time 				string		`json:"time"`
+	Memory				string		`json:"memory"`
 
 	User      			User    	`gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user"`
 	Exam      			Exam    	`gorm:"foreignKey:ExamID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"exam"`
