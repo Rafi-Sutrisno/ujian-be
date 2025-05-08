@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"log"
 	"mods/command"
 	"mods/config"
@@ -57,7 +58,7 @@ func main() {
 		examLangService    service.ExamLangService    = service.NewExamLangService(examLangRepository)
 		problemService     service.ProblemService     = service.NewProblemService(problemRepository)
 		testCaseService    service.TestCaseService    = service.NewTestCaseService(testCaseRepository)
-		submissionService  service.SubmissionService  = service.NewSubmissionService(submissionRepository)
+		submissionService  service.SubmissionService  = service.NewSubmissionService(submissionRepository, testCaseRepository)
 		examSessionService  service.ExamSessionService  = service.NewExamSessionService(examSessionRepository)
 		examProblemService  service.ExamProblemService  = service.NewExamProblemService(examProblemRepository)
 	
@@ -74,7 +75,8 @@ func main() {
 		examProblemController  controller.ExamProblemController  = controller.NewExamProblemController(examProblemService)
 	)
 	
-
+	go submissionService.StartSubmissionPolling(context.Background())
+	
 	server := gin.Default()
 	server.Use(middleware.CORSMiddleware())
 
