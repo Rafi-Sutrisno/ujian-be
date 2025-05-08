@@ -10,7 +10,8 @@ import (
 type SubmissionRepository interface {
 	GetByID(ctx context.Context, tx *gorm.DB, id string) (entity.Submission, error)
 	GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.Submission, error)
-	GetByExamID(ctx context.Context, tx *gorm.DB, examID string, userID string) ([]entity.Submission, error)
+	GetByExamIDandUserID(ctx context.Context, tx *gorm.DB, examID string, userID string) ([]entity.Submission, error)
+	GetByExamID(ctx context.Context, tx *gorm.DB, examID string) ([]entity.Submission, error)
 	GetPendingSubmissions(ctx context.Context) ([]entity.Submission, error)
 	Update(ctx context.Context, tx *gorm.DB, sub entity.Submission) (entity.Submission, error)
 	GetByProblemID(ctx context.Context, tx *gorm.DB, problemID string) ([]entity.Submission, error)
@@ -76,13 +77,26 @@ func (r *submissionRepository) GetByUserID(ctx context.Context, tx *gorm.DB, use
 	return submissions, nil
 }
 
-func (r *submissionRepository) GetByExamID(ctx context.Context, tx *gorm.DB, examID string, userID string) ([]entity.Submission, error) {
+func (r *submissionRepository) GetByExamIDandUserID(ctx context.Context, tx *gorm.DB, examID string, userID string) ([]entity.Submission, error) {
 	if tx == nil {
 		tx = r.db
 	}
 
 	var submissions []entity.Submission
 	if err := tx.WithContext(ctx).Where("exam_id = ? AND user_id = ?", examID, userID).Find(&submissions).Error; err != nil {
+		return nil, err
+	}
+
+	return submissions, nil
+}
+
+func (r *submissionRepository) GetByExamID(ctx context.Context, tx *gorm.DB, examID string) ([]entity.Submission, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var submissions []entity.Submission
+	if err := tx.WithContext(ctx).Where("exam_id = ?", examID).Find(&submissions).Error; err != nil {
 		return nil, err
 	}
 

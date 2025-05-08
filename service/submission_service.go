@@ -20,6 +20,7 @@ type SubmissionService interface {
 	StartSubmissionPolling(ctx context.Context)
 	CreateSubmission(ctx context.Context, request dto.SubmissionCreateRequest) (dto.SubmissionResponse, error)
 	GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error)
+	GetByExamIDandUserID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
 	GetByExamID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
 	GetByProblemID(ctx context.Context, problemID string) ([]dto.SubmissionResponse, error)
 	GetByUserID(ctx context.Context, userID string) ([]dto.SubmissionResponse, error)
@@ -225,9 +226,36 @@ func (s *submissionService) GetByID(ctx context.Context, id string) (dto.Submiss
 	return response, nil
 }
 
+func (s *submissionService) GetByExamIDandUserID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error) {
+	// Get submissions by Exam ID from the repository
+	submissions, err := s.submissionRepo.GetByExamIDandUserID(ctx, nil, examID, userID)
+	if err != nil {
+		return nil, err
+	}
+
+	// Map the submissions entities to response DTOs
+	var response []dto.SubmissionResponse
+	for _, submission := range submissions {
+		response = append(response, dto.SubmissionResponse{
+			ID:            submission.ID.String(),
+			UserID:        submission.UserID,
+			ExamID:        submission.ExamID,
+			ProblemID:     submission.ProblemID,
+			LangID:        submission.LangID,
+			Code:          submission.Code,
+			SubmissionTime: submission.SubmissionTime,
+			Status:        submission.Status,
+			Time:          submission.Time,
+			Memory: 	   submission.Memory,
+		})
+	}
+
+	return response, nil
+}
+
 func (s *submissionService) GetByExamID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error) {
 	// Get submissions by Exam ID from the repository
-	submissions, err := s.submissionRepo.GetByExamID(ctx, nil, examID, userID)
+	submissions, err := s.submissionRepo.GetByExamID(ctx, nil, examID)
 	if err != nil {
 		return nil, err
 	}

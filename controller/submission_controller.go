@@ -19,6 +19,7 @@ type (
 		SubmitCode(ctx *gin.Context)
 		Create(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
+		GetByExamIDandUserID(ctx *gin.Context)
 		GetByExamID(ctx *gin.Context)
 		GetByProblemID(ctx *gin.Context)
 		GetByUserID(ctx *gin.Context)
@@ -103,6 +104,20 @@ func (sc *submissionController) GetByID(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_SUBMISSION, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (sc *submissionController) GetByExamIDandUserID(ctx *gin.Context) {
+	examID := ctx.Param("exam_id")
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := sc.submissionService.GetByExamIDandUserID(ctx.Request.Context(), examID, userId)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_SUBMISSION, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_SUBMISSION, result)
 	ctx.JSON(http.StatusOK, res)
 }
 
