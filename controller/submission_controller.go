@@ -16,6 +16,7 @@ type (
 
 	SubmissionController interface {
 		RunCode(ctx *gin.Context)
+		SubmitCode(ctx *gin.Context)
 		Create(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
 		GetByExamID(ctx *gin.Context)
@@ -42,6 +43,27 @@ func  (sc *submissionController) RunCode(ctx *gin.Context) {
 
 	// Call service
 	result, err := sc.submissionService.RunCode(ctx.Request.Context(), req)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	ctx.JSON(http.StatusOK, result)
+}
+
+func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
+	var req dto.SubmissionRequest
+	userId := ctx.MustGet("requester_id").(string)
+	// Bind JSON body
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	// Call service
+	result, err := sc.submissionService.SubmitCode(ctx.Request.Context(), req, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -86,8 +108,8 @@ func (sc *submissionController) GetByID(ctx *gin.Context) {
 
 func (sc *submissionController) GetByExamID(ctx *gin.Context) {
 	examID := ctx.Param("exam_id")
-
-	result, err := sc.submissionService.GetByExamID(ctx.Request.Context(), examID)
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := sc.submissionService.GetByExamID(ctx.Request.Context(), examID, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
