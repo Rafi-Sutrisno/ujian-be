@@ -21,7 +21,7 @@ func ExamSessionRoutes(router *gin.Engine, ExamSessionController controller.Exam
 	examSessionPrivateAdmin := router.Group("/api/exam_session").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
 		examSessionPrivateAdmin.GET("/byexamid/:exam_id", ExamSessionController.GetByExamID)
-		examSessionPrivateAdmin.DELETE("/:id", ExamSessionController.DeleteByID)
+		// examSessionPrivateAdmin.DELETE("/:id", ExamSessionController.DeleteByID)
 	}
 
 }

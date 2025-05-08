@@ -12,6 +12,7 @@ type (
 		CreateSession(ctx context.Context, tx *gorm.DB, session entity.ExamSesssion)  error
 		GetBySessionID(ctx context.Context, tx *gorm.DB, sessionID string) (*entity.ExamSesssion, error)
 		FindByUserAndExam(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error)
+		UpdateSession(ctx context.Context, tx *gorm.DB, session entity.ExamSesssion) (entity.ExamSesssion, error)
 		GetByExamID(ctx context.Context, tx *gorm.DB, examId string) ([]entity.ExamSesssion, error)
 		DeleteByID(ctx context.Context, tx *gorm.DB, id string) error
 	}
@@ -88,6 +89,31 @@ func (r *examSessionRepository) GetByExamID(ctx context.Context, tx *gorm.DB, ex
 
 	return sessions, nil
 }
+
+func (r *examSessionRepository) UpdateSession(ctx context.Context, tx *gorm.DB, session entity.ExamSesssion) (entity.ExamSesssion, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	// Only update relevant fields, not the entire struct
+	err := tx.WithContext(ctx).
+		Model(&entity.ExamSesssion{}).
+		Where("user_id = ? AND exam_id = ?", session.UserID, session.ExamID).
+		Updates(map[string]interface{}{
+			"session_id": session.SessionID,
+			"ip_address": session.IPAddress,
+			"user_agent": session.UserAgent,
+			"device":     session.Device,
+			"updated_at": session.Timestamp.UpdatedAt,
+		}).Error
+
+	if err != nil {
+		return entity.ExamSesssion{}, err
+	}
+
+	return session, nil
+}
+
 
 func (r *examSessionRepository) DeleteByID(ctx context.Context, tx *gorm.DB, id string) error {
 	if tx == nil {

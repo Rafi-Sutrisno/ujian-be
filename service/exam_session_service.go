@@ -4,7 +4,6 @@ import (
 	"context"
 	"crypto/rand"
 	"encoding/base64"
-	"errors"
 	"mods/dto"
 	"mods/entity"
 	"mods/repository"
@@ -18,7 +17,7 @@ type (
 	}
 
 	ExamSessionService interface {
-		CreateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
+		CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
 			userAgent string,) (dto.ExamSessionCreateResponse, string, error)
 		GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error)
 		GetByExamID(ctx context.Context, examId string) ([]dto.ExamSessionGetResponse, error)
@@ -32,45 +31,72 @@ func NewExamSessionService(er repository.ExamSessionRepository) ExamSessionServi
 	}
 }
 
-func (s *examSessionService) CreateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
+func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
     userAgent string,) (dto.ExamSessionCreateResponse, string, error) {
 	exists, err := s.examSessionRepository.FindByUserAndExam(ctx, nil, userId, req.ExamID)
 	if err != nil {
 		return dto.ExamSessionCreateResponse{}, "", err
 	}
 	if exists {
-		return dto.ExamSessionCreateResponse{}, "", errors.New("session already exists for this user and exam")
+		sessionID, err := generateRandomToken(32)
+		device := detectDevice(userAgent)
+		if err != nil {
+			return dto.ExamSessionCreateResponse{}, "", err
+		}
+
+		newSession := entity.ExamSesssion{
+			UserID:    userId,
+			ExamID:    req.ExamID,
+			SessionID: sessionID,
+			IPAddress: ipAddress,
+			UserAgent: userAgent,
+			Device:    device,
+			Timestamp: entity.Timestamp{
+				UpdatedAt: time.Now(),
+			},
+		}
+	
+		_, err = s.examSessionRepository.UpdateSession(ctx, nil, newSession)
+		if err != nil {
+			return dto.ExamSessionCreateResponse{}, "", err
+		}
+
+		return dto.ExamSessionCreateResponse{
+			UserID:          userId,
+			ExamID: 		req.ExamID,
+		}, sessionID, nil
+	}else {
+		sessionID, err := generateRandomToken(32) // generate a 32-byte random token
+		if err != nil {
+			return dto.ExamSessionCreateResponse{}, "", err
+		}
+	
+		device := detectDevice(userAgent)
+	
+		newSession := entity.ExamSesssion{
+			UserID:    userId,
+			ExamID:    req.ExamID,
+			SessionID: sessionID,
+			IPAddress: ipAddress,
+			UserAgent: userAgent,
+			Device:    device,
+			TotalCorrect: 0,
+			Timestamp: entity.Timestamp{
+				CreatedAt: time.Now(),
+				UpdatedAt: time.Now(),
+			},
+		}
+	
+		err = s.examSessionRepository.CreateSession(ctx, nil, newSession)
+		if err != nil {
+			return dto.ExamSessionCreateResponse{}, "", err
+		}
+	
+		return dto.ExamSessionCreateResponse{
+			UserID:          userId,
+			ExamID: 		req.ExamID,
+		}, sessionID, nil
 	}
-
-	sessionID, err := generateRandomToken(32) // generate a 32-byte random token
-	if err != nil {
-		return dto.ExamSessionCreateResponse{}, "", err
-	}
-
-	device := detectDevice(userAgent)
-
-	newSession := entity.ExamSesssion{
-		UserID:    userId,
-		ExamID:    req.ExamID,
-		SessionID: sessionID,
-		IPAddress: ipAddress,
-		UserAgent: userAgent,
-		Device:    device,
-		Timestamp: entity.Timestamp{
-			CreatedAt: time.Now(),
-			UpdatedAt: time.Now(),
-		},
-	}
-
-	err = s.examSessionRepository.CreateSession(ctx, nil, newSession)
-	if err != nil {
-		return dto.ExamSessionCreateResponse{}, "", err
-	}
-
-	return dto.ExamSessionCreateResponse{
-		UserID:          userId,
-		ExamID: 		req.ExamID,
-	}, sessionID, nil
 }
 
 func detectDevice(userAgent string) string {
