@@ -61,6 +61,8 @@ type (
 		Code     			string      `json:"code"`
 		SubmissionTime    	string      `json:"submission_time"`
 		Status     			string      `json:"status"`
+		Time 				string		`json:"time"`
+		Memory				string		`json:"memory"`
 	}
 
 	SubmissionPaginationResponse struct {
