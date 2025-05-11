@@ -18,6 +18,7 @@ type (
 		RunCode(ctx *gin.Context)
 		SubmitCode(ctx *gin.Context)
 		Create(ctx *gin.Context)
+		GetCorrectStatsByExam(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
 		GetByExamIDandUserID(ctx *gin.Context)
 		GetByExamID(ctx *gin.Context)
@@ -92,6 +93,21 @@ func (sc *submissionController) Create(ctx *gin.Context) {
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_SUBMISSION, result)
 	ctx.JSON(http.StatusCreated, res)
 }
+
+func (sc *submissionController) GetCorrectStatsByExam(ctx *gin.Context) {
+	examID := ctx.Param("exam_id")
+
+	stats, err := sc.submissionService.GetCorrectSubmissionStatsByExam(ctx.Request.Context(), examID)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_SUBMISSION, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_SUBMISSION, stats)
+	ctx.JSON(http.StatusOK, res)
+}
+
 
 func (sc *submissionController) GetByID(ctx *gin.Context) {
 	id := ctx.Param("id")
