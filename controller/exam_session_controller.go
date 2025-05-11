@@ -1,11 +1,13 @@
 package controller
 
 import (
+	"fmt"
 	"mods/dto"
 	"mods/service"
 	"mods/utils"
 	"net/http"
 	"os"
+	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -43,9 +45,27 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 
 	ipAddress := ctx.ClientIP()
     userAgent := ctx.Request.UserAgent()
+	fmt.Println("User-Agent:", userAgent)
+
+	if strings.Contains(userAgent, "SEB") {
+		fmt.Println("✅ Request is from Safe Exam Browser")
+	} else {
+		fmt.Println("⚠️ Request is NOT from Safe Exam Browser")
+	}
+
+	requestHash := ctx.Request.Header.Get("X-SafeExamBrowser-RequestHash")
+
+	fmt.Println("X-SafeExamBrowser-RequestHash:", requestHash)
+
+	scheme := "http"
+	if ctx.Request.TLS != nil {
+		scheme = "https"
+	}
+	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
+	fmt.Println("ini full url: ", fullURL)
 
     // Create a new session
-    newSession, sessionID, err := cc.examSessionService.CreateorUpdateSession(ctx.Request.Context(), request, userId, ipAddress, userAgent)
+    newSession, sessionID, err := cc.examSessionService.CreateorUpdateSession(ctx.Request.Context(), request, userId, ipAddress, userAgent, requestHash, fullURL)
     if err != nil {
         res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_EXAM_SESSION, err.Error(), nil)
         ctx.JSON(http.StatusBadRequest, res)
@@ -74,6 +94,7 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
     res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_EXAM_SESSION, newSession)
     ctx.JSON(http.StatusCreated, res)
 }
+
 
 func (cc *examSessionController) CheckSession(ctx *gin.Context) {
 	sessionID, err := ctx.Cookie("session_id")
