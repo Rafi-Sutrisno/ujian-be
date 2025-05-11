@@ -15,7 +15,9 @@ type Exam struct {
 	IsPublished bool          `json:"is_published"`
     StartTime   time.Time     `json:"start_time"`           
     Duration    time.Duration `json:"duration"`             
-	EndTime     time.Time     `json:"end_time"`                      
+	EndTime     time.Time     `json:"end_time"`
+    IsSEBOnly   bool          `gorm:"default:false" json:"is_seb_only"`
+    SEBKey      string        `gorm:"type:text" json:"seb_key"`                      
     
 	Timestamp
 
