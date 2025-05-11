@@ -24,5 +24,6 @@ func SubmissionRoutes(router *gin.Engine, SubmissionController controller.Submis
 	submissionPrivateAdmin := router.Group("/api/submission").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
 		submissionPrivateAdmin.GET("/exam/:exam_id", SubmissionController.GetByExamID)
+		submissionPrivateAdmin.GET("/stats/exam/:exam_id", SubmissionController.GetCorrectStatsByExam)
 	}
 }
