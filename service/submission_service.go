@@ -19,6 +19,7 @@ type SubmissionService interface {
 	SubmitCode(ctx context.Context, req dto.SubmissionRequest, userId string) (dto.SubmissionResponse, error)
 	StartSubmissionPolling(ctx context.Context)
 	CreateSubmission(ctx context.Context, request dto.SubmissionCreateRequest) (dto.SubmissionResponse, error)
+	GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error)
 	GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error)
 	GetByExamIDandUserID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
 	GetByExamID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
@@ -151,17 +152,29 @@ func (s *submissionService) pollPendingSubmissions(ctx context.Context) {
 			if res.Memory > maxMemory {
 				maxMemory = res.Memory
 			}
-			if res.Status.ID == 6 {
+			switch res.Status.ID {
+			case 6:
 				status = "wrong_answer"
-			} else if res.Status.ID == 11 {
+			case 11:
 				status = "compilation_error"
+			case 4:
+				status = "wrong_answer"
+			case 13:
+				status = "runtime_error"
+			case 5:
+				status = "time_limit_exceeded"
+			// You can keep adding more status codes if needed
+			default:
+				fmt.Println("masuk else data res status:", res.Status)
 			}
 		}
 
 		if allDone {
+			fmt.Println("ini last status", status)
 			submission.Status = status
 			submission.Time = fmt.Sprintf("%.2f", maxTime)
 			submission.Memory = fmt.Sprintf("%d", maxMemory)
+			fmt.Println("ini last submission", submission)
 
 			if _, err := s.submissionRepo.Update(ctx, nil, submission); err != nil {
 				log.Printf("poll error: failed to update submission %s: %v", submission.ID, err)
@@ -202,6 +215,17 @@ func (s *submissionService) CreateSubmission(ctx context.Context, request dto.Su
 	}
 
 	return response, nil
+}
+
+func (s *submissionService) GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error) {
+	// var results []dto.ExamUserCorrectDTO
+	results, err := s.submissionRepo.GetCorrectSubmissionStatsByExam(ctx, examID)
+	if err != nil {
+		return []dto.ExamUserCorrectDTO{}, err
+	}
+
+	fmt.Println("ini hasil query:", results)
+	return results, nil
 }
 
 func (s *submissionService) GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error) {
