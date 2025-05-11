@@ -74,4 +74,11 @@ type (
 		Submission []entity.Submission `json:"submission"`
 		PaginationResponse
 	}
+
+	ExamUserCorrectDTO struct {
+		UserID       string `json:"user_id"`
+		UserName     string `json:"user_name"`
+		UserNoID     string `json:"user_no_id"`
+		TotalCorrect int    `json:"total_correct"`
+	}
 )
