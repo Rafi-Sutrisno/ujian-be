@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"mods/dto"
 	dto_error "mods/dto/error"
 	"mods/entity"
@@ -164,14 +165,15 @@ func (us *examService) GetExamById(ctx context.Context, examId string, userId st
 
 	return dto.ExamResponse{
 		ID:         	exam.ID.String(),
-		ClassID: exam.ClassID,
+		ClassID: 		exam.ClassID,
 		Name:       	exam.Name,
 		ShortName:  	exam.ShortName,
 		IsPublished: 	exam.IsPublished,
 		StartTime:   	exam.StartTime,
 		Duration: 		exam.Duration.String(),
 		EndTime: 		exam.EndTime,
-		
+		IsSEBOnly:      exam.IsSEBOnly,
+		SEBKey:         exam.SEBKey,
 	}, nil
 }
 
@@ -199,7 +201,11 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 		StartTime:  req.StartTime,
 		Duration:   req.Duration,
 		EndTime:    req.StartTime,
+		IsSEBOnly:  req.IsSEBOnly,
+		SEBKey:     req.SEBKey,
 	}
+
+	fmt.Println("ini exam update:", data)
 
 	examUpdate, err := us.examRepository.UpdateExam(ctx, nil, data)
 	if err != nil {

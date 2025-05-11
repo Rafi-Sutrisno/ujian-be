@@ -3,7 +3,10 @@ package service
 import (
 	"context"
 	"crypto/rand"
+	"crypto/sha256"
 	"encoding/base64"
+	"encoding/hex"
+	"fmt"
 	"mods/dto"
 	"mods/entity"
 	"mods/repository"
@@ -18,7 +21,7 @@ type (
 
 	ExamSessionService interface {
 		CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
-			userAgent string,) (dto.ExamSessionCreateResponse, string, error)
+			userAgent string, SEBRequestHash string, url string) (dto.ExamSessionCreateResponse, string, error)
 		GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error)
 		GetByExamID(ctx context.Context, examId string) ([]dto.ExamSessionGetResponse, error)
 		DeleteByID(ctx context.Context, id string) error
@@ -31,8 +34,13 @@ func NewExamSessionService(er repository.ExamSessionRepository) ExamSessionServi
 	}
 }
 
-func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
-    userAgent string,) (dto.ExamSessionCreateResponse, string, error) {
+func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, 	ipAddress string, userAgent string, SEBRequestHash string, url string) (dto.ExamSessionCreateResponse, string, error) {
+	validateSEBRequest(url, "8ed997ea4bc74761607eda3c0c322297d8df2d5ea563cf916615d99e2a0bbd48", SEBRequestHash)
+
+	if !validateSEBRequest(url, "8ed997ea4bc74761607eda3c0c322297d8df2d5ea563cf916615d99e2a0bbd48", SEBRequestHash) {
+		fmt.Println("unauthorized SEB request: hash mismatch")
+	}
+
 	exists, err := s.examSessionRepository.FindByUserAndExam(ctx, nil, userId, req.ExamID)
 	if err != nil {
 		return dto.ExamSessionCreateResponse{}, "", err
@@ -80,7 +88,6 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 			IPAddress: ipAddress,
 			UserAgent: userAgent,
 			Device:    device,
-			TotalCorrect: 0,
 			Timestamp: entity.Timestamp{
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
@@ -97,6 +104,30 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 			ExamID: 		req.ExamID,
 		}, sessionID, nil
 	}
+}
+
+func validateSEBRequest(url string, bek string, recvHash string) bool {
+
+    // Step 1: Initialize hash
+    hasher := sha256.New()
+
+    // Step 2: Update with URL (first!)
+    hasher.Write([]byte(url))
+
+    // Step 3: Then update with BEK
+    hasher.Write([]byte(bek))
+
+    // Step 4: Finalize hash
+    finalHash := hasher.Sum(nil)
+    hashHex := hex.EncodeToString(finalHash)
+
+    // Step 5: Get received hash
+    receivedHash := recvHash
+
+    fmt.Println("Expected Hash:", hashHex)
+    fmt.Println("Received Hash:", receivedHash)
+
+    return hashHex == receivedHash
 }
 
 func detectDevice(userAgent string) string {
