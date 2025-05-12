@@ -6,6 +6,7 @@ import (
 	"crypto/sha256"
 	"encoding/base64"
 	"encoding/hex"
+	"errors"
 	"fmt"
 	"mods/dto"
 	"mods/entity"
@@ -35,11 +36,28 @@ func NewExamSessionService(er repository.ExamSessionRepository) ExamSessionServi
 }
 
 func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, 	ipAddress string, userAgent string, SEBRequestHash string, url string) (dto.ExamSessionCreateResponse, string, error) {
-	validateSEBRequest(url, "8ed997ea4bc74761607eda3c0c322297d8df2d5ea563cf916615d99e2a0bbd48", SEBRequestHash)
-
-	if !validateSEBRequest(url, "8ed997ea4bc74761607eda3c0c322297d8df2d5ea563cf916615d99e2a0bbd48", SEBRequestHash) {
-		fmt.Println("unauthorized SEB request: hash mismatch")
+	exam, err := s.examSessionRepository.GetSEBkey(ctx, nil, req.ExamID)
+	if err != nil {
+		return dto.ExamSessionCreateResponse{}, "", dto.ErrExamNotFound
 	}
+	if(exam.IsSEBOnly){
+		// validateSEBRequest(url, exam.SEBKey, SEBRequestHash)
+		if(exam.SEBKey != "" ){
+			if !validateSEBRequest(url, exam.SEBKey, SEBRequestHash) {
+				fmt.Println("ini req hash:", SEBRequestHash)
+				return dto.ExamSessionCreateResponse{}, "", errors.New("unauthorized SEB request: hash mismatch")
+			} else {
+				fmt.Println("Request is from Safe Exam Browser and correct bek key")
+			}
+		}else {
+			if strings.Contains(userAgent, "SEB") {
+				fmt.Println("Request is from Safe Exam Browser")
+			} else {
+				return dto.ExamSessionCreateResponse{}, "", errors.New("unauthorized SEB request: user agent mismatch")
+			}
+		}
+	}
+	
 
 	exists, err := s.examSessionRepository.FindByUserAndExam(ctx, nil, userId, req.ExamID)
 	if err != nil {
@@ -122,12 +140,11 @@ func validateSEBRequest(url string, bek string, recvHash string) bool {
     hashHex := hex.EncodeToString(finalHash)
 
     // Step 5: Get received hash
-    receivedHash := recvHash
 
     fmt.Println("Expected Hash:", hashHex)
-    fmt.Println("Received Hash:", receivedHash)
+    fmt.Println("Received Hash:", recvHash)
 
-    return hashHex == receivedHash
+    return hashHex == recvHash
 }
 
 func detectDevice(userAgent string) string {
