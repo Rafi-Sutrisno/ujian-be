@@ -15,6 +15,7 @@ type (
 		UpdateSession(ctx context.Context, tx *gorm.DB, session entity.ExamSesssion) (entity.ExamSesssion, error)
 		GetByExamID(ctx context.Context, tx *gorm.DB, examId string) ([]entity.ExamSesssion, error)
 		DeleteByID(ctx context.Context, tx *gorm.DB, id string) error
+		GetSEBkey(ctx context.Context, tx *gorm.DB, examId string) (entity.Exam, error)
 	}
 
 	examSessionRepository struct {
@@ -123,4 +124,16 @@ func (r *examSessionRepository) DeleteByID(ctx context.Context, tx *gorm.DB, id 
 	return tx.WithContext(ctx).Where("id = ?", id).Delete(&entity.ExamSesssion{}).Error
 }
 
+func (ur *examSessionRepository) GetSEBkey(ctx context.Context, tx *gorm.DB, examId string) (entity.Exam, error) {
+	if tx == nil {
+		tx = ur.db
+	}
+
+	var exam entity.Exam
+	if err := tx.WithContext(ctx).Where("id = ?", examId).Take(&exam).Error; err != nil {
+		return entity.Exam{}, err
+	}
+
+	return exam, nil
+}
 
