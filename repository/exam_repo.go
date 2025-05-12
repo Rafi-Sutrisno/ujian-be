@@ -2,7 +2,6 @@ package repository
 
 import (
 	"context"
-	"fmt"
 	"math"
 	"mods/dto"
 	"mods/entity"
@@ -54,8 +53,6 @@ func (ur *examRepository) GetExamById(ctx context.Context, tx *gorm.DB, examId s
 	if tx == nil {
 		tx = ur.db
 	}
-
-	fmt.Println("exam id di Repo:", examId)
 
 	var exam entity.Exam
 	if err := tx.WithContext(ctx).Where("id = ?", examId).Take(&exam).Error; err != nil {
