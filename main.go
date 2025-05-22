@@ -49,6 +49,7 @@ func main() {
 		submissionRepository  repository.SubmissionRepository  = repository.NewSubmissionRepository(db)
 		examSessionRepository repository.ExamSessionRepository = repository.NewExamSessionRepository(db)
 		examProblemRepository repository.ExamProblemRepository = repository.NewExamProblemRepository(db)
+		languageRepository    repository.LanguageRepository    = repository.NewLanguageRepository(db)
 	
 		// Service
 		userService        service.UserService        = service.NewUserService(userRepository, jwtService)
@@ -61,6 +62,7 @@ func main() {
 		submissionService  service.SubmissionService  = service.NewSubmissionService(submissionRepository, testCaseRepository)
 		examSessionService  service.ExamSessionService  = service.NewExamSessionService(examSessionRepository)
 		examProblemService  service.ExamProblemService  = service.NewExamProblemService(examProblemRepository)
+		languageService     service.LanguageService     = service.NewLanguageService(languageRepository)
 	
 		// Controller
 		userController        controller.UserController        = controller.NewUserController(userService)
@@ -73,11 +75,13 @@ func main() {
 		submissionController  controller.SubmissionController  = controller.NewSubmissionController(submissionService)
 		examSessionController  controller.ExamSessionController  = controller.NewExamSessionController(examSessionService)
 		examProblemController  controller.ExamProblemController  = controller.NewExamProblemController(examProblemService)
+		languageController     controller.LanguageController     = controller.NewLanguageController(languageService)
 	)
 	
 	go submissionService.StartSubmissionPolling(context.Background())
 	
 	server := gin.Default()
+	// server.Use(routes.RequestLogger())
 	server.Use(middleware.CORSMiddleware())
 
 	// routes
@@ -91,6 +95,7 @@ func main() {
 	routes.SubmissionRoutes(server, submissionController, jwtService)
 	routes.ExamSessionRoutes(server, examSessionController, jwtService)
 	routes.ExamProblemRoutes(server, examProblemController, jwtService)
+	routes.LanguageRoutes(server, languageController, jwtService)
 
 	// routes.UserExamRoutes(server, userExamController, jwtService)
 
