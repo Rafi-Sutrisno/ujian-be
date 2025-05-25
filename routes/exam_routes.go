@@ -10,14 +10,6 @@ import (
 
 func ExamRoutes(router *gin.Engine, ExamController controller.ExamController, jwtService service.JWTService) {
 
-	// examPrivate := router.Group("/api/exam").Use(middleware.Authenticate(jwtService))
-	// {
-	// 	examPrivate.GET("/:exam_id", ExamController.GetExamById)
-	// 	examPrivate.PATCH("/update/:exam_id", ExamController.Update)
-	// 	examPrivate.POST("/add", ExamController.CreateExam)
-	// 	examPrivate.GET("/all", ExamController.GetAllExam)
-	// 	examPrivate.DELETE("/delete/:exam_id", ExamController.Delete)
-	// }
 	examPrivate := router.Group("/api/exam").Use(middleware.Authenticate(jwtService))
 	{
 		examPrivate.GET("/:exam_id", ExamController.GetExamById)
