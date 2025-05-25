@@ -22,7 +22,7 @@ type (
 
 	ExamSessionService interface {
 		CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
-			userAgent string, SEBRequestHash string, url string) (dto.ExamSessionCreateResponse, string, error)
+			userAgent string, SEBRequestHash string, configKeyHash string, url string) (dto.ExamSessionCreateResponse, string, error)
 		GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error)
 		GetByExamID(ctx context.Context, examId string) ([]dto.ExamSessionGetResponse, error)
 		DeleteByID(ctx context.Context, id string) error
@@ -35,21 +35,33 @@ func NewExamSessionService(er repository.ExamSessionRepository) ExamSessionServi
 	}
 }
 
-func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, 	ipAddress string, userAgent string, SEBRequestHash string, url string) (dto.ExamSessionCreateResponse, string, error) {
+func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, 	ipAddress string, userAgent string, SEBRequestHash string, configKeyHash string, url string) (dto.ExamSessionCreateResponse, string, error) {
 	exam, err := s.examSessionRepository.GetSEBkey(ctx, nil, req.ExamID)
 	if err != nil {
 		return dto.ExamSessionCreateResponse{}, "", dto.ErrExamNotFound
 	}
-	if(exam.IsSEBOnly){
+	fmt.Println("check 1")
+	if(exam.IsSEBRestricted){
+		fmt.Println("check 2")
 		// validateSEBRequest(url, exam.SEBKey, SEBRequestHash)
-		if(exam.SEBKey != "" ){
-			if !validateSEBRequest(url, exam.SEBKey, SEBRequestHash) {
-				fmt.Println("ini req hash:", SEBRequestHash)
+		if(exam.SEBBrowserKey != "" ){
+			fmt.Println("check 3")
+			if !validateSEBRequest(url, exam.SEBBrowserKey, SEBRequestHash) {
+				fmt.Println("unauthorized SEB request: browser exam key hash mismatch")
 				return dto.ExamSessionCreateResponse{}, "", errors.New("unauthorized SEB request: hash mismatch")
 			} else {
 				fmt.Println("Request is from Safe Exam Browser and correct bek key")
 			}
-		}else {
+		}
+		if(exam.SEBConfigKey != "" ){
+			if !validateSEBRequest(url, exam.SEBConfigKey, configKeyHash) {
+				fmt.Println("unauthorized SEB request: configuration key hash mismatch")
+				return dto.ExamSessionCreateResponse{}, "", errors.New("unauthorized SEB request: hash mismatch")
+			} else {
+				fmt.Println("Request is from Safe Exam Browser and correct config key")
+			}
+		}
+		if(exam.SEBBrowserKey == "" && exam.SEBConfigKey == "") {
 			if strings.Contains(userAgent, "SEB") {
 				fmt.Println("Request is from Safe Exam Browser")
 			} else {
@@ -124,25 +136,18 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 	}
 }
 
-func validateSEBRequest(url string, bek string, recvHash string) bool {
+func validateSEBRequest(url string, key string, recvHash string) bool {
 
-    // Step 1: Initialize hash
     hasher := sha256.New()
 
-    // Step 2: Update with URL (first!)
-    hasher.Write([]byte(url))
-
-    // Step 3: Then update with BEK
-    hasher.Write([]byte(bek))
-
-    // Step 4: Finalize hash
+	hasher.Write([]byte(url))
+	hasher.Write([]byte(key))
+    
     finalHash := hasher.Sum(nil)
     hashHex := hex.EncodeToString(finalHash)
 
-    // Step 5: Get received hash
-
-    fmt.Println("Expected Hash:", hashHex)
-    fmt.Println("Received Hash:", recvHash)
+    fmt.Println("BEK/ConfigKey: Expected Hash:", hashHex)
+    fmt.Println("BEK/ConfigKey: Received Hash:", recvHash)
 
     return hashHex == recvHash
 }
