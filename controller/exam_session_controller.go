@@ -48,14 +48,16 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	fmt.Println("User-Agent:", userAgent)
 
 	if strings.Contains(userAgent, "SEB") {
-		fmt.Println("✅ Request is from Safe Exam Browser")
+		fmt.Println("Request is from Safe Exam Browser")
 	} else {
-		fmt.Println("⚠️ Request is NOT from Safe Exam Browser")
+		fmt.Println("Request is NOT from Safe Exam Browser")
 	}
 
 	requestHash := ctx.Request.Header.Get("X-SafeExamBrowser-RequestHash")
+	configKeyHash := ctx.Request.Header.Get("X-Safeexambrowser-Configkeyhash")
 
 	fmt.Println("X-SafeExamBrowser-RequestHash:", requestHash)
+	fmt.Println("X-Safeexambrowser-Configkeyhash:", configKeyHash)
 
 	scheme := "http"
 	if ctx.Request.TLS != nil {
@@ -64,15 +66,13 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
 
-    // Create a new session
-    newSession, sessionID, err := cc.examSessionService.CreateorUpdateSession(ctx.Request.Context(), request, userId, ipAddress, userAgent, requestHash, fullURL)
+    newSession, sessionID, err := cc.examSessionService.CreateorUpdateSession(ctx.Request.Context(), request, userId, ipAddress, userAgent, requestHash, configKeyHash, fullURL)
     if err != nil {
         res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_EXAM_SESSION, err.Error(), nil)
         ctx.JSON(http.StatusBadRequest, res)
         return
     }
 
-    // Set session ID in a cookie
 	isDev := os.Getenv("GIN_MODE") != "release"
 
 	http.SetCookie(ctx.Writer, &http.Cookie{

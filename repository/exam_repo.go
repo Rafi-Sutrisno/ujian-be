@@ -6,6 +6,7 @@ import (
 	"mods/dto"
 	"mods/entity"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -55,12 +56,17 @@ func (ur *examRepository) GetExamById(ctx context.Context, tx *gorm.DB, examId s
 	}
 
 	var exam entity.Exam
-	if err := tx.WithContext(ctx).Where("id = ?", examId).Take(&exam).Error; err != nil {
+	if err := tx.WithContext(ctx).
+		Preload("ExamLang").
+		Preload("ExamLang.Language").
+		Where("id = ?", examId).
+		Take(&exam).Error; err != nil {
 		return entity.Exam{}, err
 	}
 
 	return exam, nil
 }
+
 
 func (ur *examRepository) GetByClassID(ctx context.Context, tx *gorm.DB, classID string) ([]entity.Exam, error) {
 	if tx == nil {
@@ -125,9 +131,20 @@ func (ur *examRepository) UpdateExam(ctx context.Context, tx *gorm.DB, exam enti
 		tx = ur.db
 	}
 
-	if err := tx.WithContext(ctx).Updates(&exam).Error; err != nil {
+	if err := tx.WithContext(ctx).Model(&entity.Exam{ID: exam.ID}).Updates(map[string]interface{}{
+		"name":              exam.Name,
+		"short_name":        exam.ShortName,
+		"is_published":      exam.IsPublished,
+		"start_time":        exam.StartTime,
+		"duration":          exam.Duration,
+		"end_time":          exam.EndTime,
+		"is_seb_restricted": exam.IsSEBRestricted,
+		"seb_browser_key":   exam.SEBBrowserKey,
+		"seb_config_key":    exam.SEBConfigKey,
+	}).Error; err != nil {
 		return entity.Exam{}, err
 	}
+
 
 	return exam, nil
 }
@@ -137,7 +154,9 @@ func (ur *examRepository) DeleteExam(ctx context.Context, tx *gorm.DB, examId st
 		tx = ur.db
 	}
 
-	if err := tx.WithContext(ctx).Delete(&entity.Exam{}, "id = ?", examId).Error; err != nil {
+	// Delete exam along with its related ExamLang entries
+	exam := entity.Exam{ID: uuid.MustParse(examId)}
+	if err := tx.WithContext(ctx).Select("ExamLang").Delete(&exam).Error; err != nil {
 		return err
 	}
 

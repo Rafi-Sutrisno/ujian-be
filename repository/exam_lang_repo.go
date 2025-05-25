@@ -14,6 +14,8 @@ type (
 		Create(ctx context.Context, tx *gorm.DB, examLang entity.ExamLang) (entity.ExamLang, error)
 		CreateMany(ctx context.Context, tx *gorm.DB, examLangs []entity.ExamLang) error
 		Delete(ctx context.Context, tx *gorm.DB, id string) error
+		DeleteByExamID(ctx context.Context, tx *gorm.DB, examID string) error
+
 	}
 
 	examLangRepository struct {
@@ -83,6 +85,18 @@ func (r *examLangRepository) Delete(ctx context.Context, tx *gorm.DB, id string)
 	}
 
 	if err := tx.WithContext(ctx).Delete(&entity.ExamLang{}, "id = ?", id).Error; err != nil {
+		return err
+	}
+
+	return nil
+}
+
+func (r *examLangRepository) DeleteByExamID(ctx context.Context, tx *gorm.DB, examID string) error {
+	if tx == nil {
+		tx = r.db
+	}
+
+	if err := tx.WithContext(ctx).Where("exam_id = ?", examID).Delete(&entity.ExamLang{}).Error; err != nil {
 		return err
 	}
 

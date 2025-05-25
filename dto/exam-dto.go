@@ -50,28 +50,31 @@ var (
 type (
 	// untuk create
 	ExamCreateRequest struct {
-		ClassID     string    		`json:"class_id" binding:"required"`
-		Name        string    		`json:"name" binding:"required"`
-		ShortName   string    		`json:"short_name" binding:"required"`
-		IsPublished bool      		`json:"is_published"`
-		StartTime   time.Time 		`json:"start_time" binding:"required"`
-		DurationStr string    	  	`json:"duration" binding:"required"` 
-		Duration    time.Duration 	`json:"-"`
-		IsSEBOnly   bool            `json:"is_seb_only"`
-		SEBKey      string        	`json:"seb_key"` 
+		ClassID     		string    		`json:"class_id" binding:"required"`
+		Name        		string    		`json:"name" binding:"required"`
+		ShortName   		string    		`json:"short_name" binding:"required"`
+		IsPublished 		bool      		`json:"is_published"`
+		StartTime   		time.Time 		`json:"start_time" binding:"required"`
+		DurationStr 		string    	  	`json:"duration" binding:"required"` 
+		Duration    		time.Duration 	`json:"-"`
+		IsSEBRestricted   	bool            `json:"is_seb_restricted"`
+		SEBBrowserKey      	string        	`json:"seb_browser_key"` 
+		SEBConfigKey      	string        	`json:"seb_config_key"` 
 	}
 
 	ExamResponse struct {
-		ID          string        `json:"id"`
-		ClassID     string        `json:"class_id"`
-		Name        string        `json:"name"`
-		ShortName   string        `json:"short_name"`
-		IsPublished bool          `json:"is_published"`
-		StartTime   time.Time     `json:"start_time"`           
-		Duration    string 		  `json:"duration"`             
-		EndTime     time.Time     `json:"end_time"`
-		IsSEBOnly   bool          `json:"is_seb_only"`
-		SEBKey      string        `json:"seb_key"`           
+		ID          		string        `json:"id"`
+		ClassID     		string        `json:"class_id"`
+		Name        		string        `json:"name"`
+		ShortName   		string        `json:"short_name"`
+		IsPublished 		bool          `json:"is_published"`
+		StartTime   		time.Time     `json:"start_time"`           
+		Duration    		string 		  `json:"duration"`             
+		EndTime     		time.Time     `json:"end_time"`
+		IsSEBRestricted   	bool            `json:"is_seb_restricted"`
+		SEBBrowserKey      	string        	`json:"seb_browser_key"` 
+		SEBConfigKey      	string        	`json:"seb_config_key"`   
+		AllowedLanguages    []LanguageResponse          `json:"allowed_languages"`      
 	}
 
 
@@ -83,8 +86,9 @@ type (
 		StartTime   time.Time     `json:"start_time"` 
 		DurationStr string        `json:"duration"`           
 		Duration    time.Duration `json:"-"`
-		IsSEBOnly   bool          `json:"is_seb_only"`
-		SEBKey      string        `json:"seb_key"`                        
+		IsSEBRestricted   	bool            `json:"is_seb_restricted"`
+		SEBBrowserKey      	string        	`json:"seb_browser_key"` 
+		SEBConfigKey      	string        	`json:"seb_config_key"`                         
 	}
 
 	ExamUpdateResponse struct {
@@ -96,7 +100,7 @@ type (
 		StartTime   time.Time     `json:"start_time"`           
 		Duration    time.Duration `json:"duration"`             
 		EndTime     time.Time     `json:"end_time"`           
-	
+		
 	}
 
 	// untuk get
