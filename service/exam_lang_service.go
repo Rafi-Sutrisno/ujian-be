@@ -82,6 +82,17 @@ func (els *examLangService) Create(ctx context.Context, req dto.ExamLangCreateRe
 }
 
 func (els *examLangService) CreateMany(ctx context.Context, reqs []dto.ExamLangCreateRequest) error {
+	if len(reqs) == 0 {
+		return nil // nothing to process
+	}
+
+	// Delete all existing entries for the exam ID
+	err := els.repo.DeleteByExamID(ctx, nil, reqs[0].ExamID)
+	if err != nil {
+		return err // optionally wrap this with a custom error if needed
+	}
+
+	// Prepare the new records
 	var examLangs []entity.ExamLang
 	for _, req := range reqs {
 		examLangs = append(examLangs, entity.ExamLang{
@@ -90,12 +101,14 @@ func (els *examLangService) CreateMany(ctx context.Context, reqs []dto.ExamLangC
 		})
 	}
 
+	// Create new entries
 	if err := els.repo.CreateMany(ctx, nil, examLangs); err != nil {
 		return dto.ErrCreateExamLang
 	}
 
 	return nil
 }
+
 
 func (els *examLangService) Delete(ctx context.Context, id string) error {
 	

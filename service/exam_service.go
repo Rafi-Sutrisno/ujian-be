@@ -52,7 +52,9 @@ func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest
 		IsPublished: req.IsPublished,
 		StartTime:   req.StartTime,
 		Duration:    req.Duration,
-		
+		IsSEBRestricted: req.IsSEBRestricted,
+		SEBBrowserKey: req.SEBBrowserKey,
+		SEBConfigKey: req.SEBConfigKey,
 	}
 
 	// 2. Save Exam to DB
@@ -163,6 +165,16 @@ func (us *examService) GetExamById(ctx context.Context, examId string, userId st
 		return dto.ExamResponse{}, dto.ErrExamNotFound
 	}
 
+	allowedLangs := make([]dto.LanguageResponse, len(exam.ExamLang))
+	for i, el := range exam.ExamLang {
+		allowedLangs[i] = dto.LanguageResponse{
+			ID:   el.Language.ID,
+			Name: el.Language.Name,
+			Code: el.Language.Code,
+		}
+	}
+
+
 	return dto.ExamResponse{
 		ID:         	exam.ID.String(),
 		ClassID: 		exam.ClassID,
@@ -172,8 +184,10 @@ func (us *examService) GetExamById(ctx context.Context, examId string, userId st
 		StartTime:   	exam.StartTime,
 		Duration: 		exam.Duration.String(),
 		EndTime: 		exam.EndTime,
-		IsSEBOnly:      exam.IsSEBOnly,
-		SEBKey:         exam.SEBKey,
+		IsSEBRestricted:    exam.IsSEBRestricted,
+		SEBBrowserKey: 		exam.SEBBrowserKey,
+		SEBConfigKey: 		exam.SEBConfigKey,
+		AllowedLanguages: allowedLangs,
 	}, nil
 }
 
@@ -193,16 +207,17 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 	}
 
 	data := entity.Exam{
-		ID:         exam.ID,
-		ClassID: 	exam.ClassID,
-		Name:       req.Name,
-		ShortName:  req.ShortName,
-		IsPublished: req.IsPublished,
-		StartTime:  req.StartTime,
-		Duration:   req.Duration,
-		EndTime:    req.StartTime,
-		IsSEBOnly:  req.IsSEBOnly,
-		SEBKey:     req.SEBKey,
+		ID:         		exam.ID,
+		ClassID: 			exam.ClassID,
+		Name:       		req.Name,
+		ShortName:  		req.ShortName,
+		IsPublished: 		req.IsPublished,
+		StartTime:  		req.StartTime,
+		Duration:   		req.Duration,
+		EndTime:    		req.StartTime,
+		IsSEBRestricted: 	req.IsSEBRestricted,
+		SEBBrowserKey: 		req.SEBBrowserKey,
+		SEBConfigKey: 		req.SEBConfigKey,
 	}
 
 	fmt.Println("ini exam update:", data)
