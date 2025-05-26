@@ -21,10 +21,11 @@ type (
 	}
 
 	ExamSessionService interface {
-		CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, ipAddress string,
+		CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, sessionId string, userId string, ipAddress string,
 			userAgent string, SEBRequestHash string, configKeyHash string, url string) (dto.ExamSessionCreateResponse, string, error)
 		GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error)
 		GetByExamID(ctx context.Context, examId string) ([]dto.ExamSessionGetResponse, error)
+		FinishSession(ctx context.Context, UserId string, ExamId string) error
 		DeleteByID(ctx context.Context, id string) error
 	}
 )
@@ -35,7 +36,7 @@ func NewExamSessionService(er repository.ExamSessionRepository) ExamSessionServi
 	}
 }
 
-func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, userId string, 	ipAddress string, userAgent string, SEBRequestHash string, configKeyHash string, url string) (dto.ExamSessionCreateResponse, string, error) {
+func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, sessionId string, userId string, 	ipAddress string, userAgent string, SEBRequestHash string, configKeyHash string, url string) (dto.ExamSessionCreateResponse, string, error) {
 	exam, err := s.examSessionRepository.GetSEBkey(ctx, nil, req.ExamID)
 	if err != nil {
 		return dto.ExamSessionCreateResponse{}, "", dto.ErrExamNotFound
@@ -71,11 +72,23 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 	}
 	
 
-	exists, err := s.examSessionRepository.FindByUserAndExam(ctx, nil, userId, req.ExamID)
+	exists, row, err := s.examSessionRepository.FindByUserAndExam(ctx, nil, userId, req.ExamID)
 	if err != nil {
 		return dto.ExamSessionCreateResponse{}, "", err
 	}
 	if exists {
+		fmt.Println("ini status session:", row.Status)
+		if(row.Status != 0){
+			return dto.ExamSessionCreateResponse{}, "", errors.New("you have already finished this exam")
+		}
+
+		if(sessionId == row.SessionID){
+			return dto.ExamSessionCreateResponse{
+				UserID:          userId,
+				ExamID: 		req.ExamID,
+			}, sessionId, nil
+		}
+
 		sessionID, err := generateRandomToken(32)
 		device := detectDevice(userAgent)
 		if err != nil {
@@ -118,6 +131,7 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 			IPAddress: ipAddress,
 			UserAgent: userAgent,
 			Device:    device,
+			Status: 0,
 			Timestamp: entity.Timestamp{
 				CreatedAt: time.Now(),
 				UpdatedAt: time.Now(),
@@ -189,6 +203,7 @@ func (s *examSessionService) GetByExamID(ctx context.Context, examId string) ([]
 			IpAddress: session.IPAddress,
 			UserAgent: session.UserAgent,
 			Device: session.Device,
+			Status: session.Status,
 			User: &dto.UserResponse{
 				ID:       	session.User.ID.String(),
 				Name: 		session.User.Name,
@@ -200,6 +215,11 @@ func (s *examSessionService) GetByExamID(ctx context.Context, examId string) ([]
 
 	return responses, nil
 }
+
+func (s *examSessionService) FinishSession(ctx context.Context, UserId string, ExamId string) error {
+	return s.examSessionRepository.FinishSession(ctx, nil, UserId, ExamId)
+}
+
 
 func (s *examSessionService) DeleteByID(ctx context.Context, id string) error {
 	return s.examSessionRepository.DeleteByID(ctx, nil, id)

@@ -2,6 +2,8 @@ package repository
 
 import (
 	"context"
+	"errors"
+	"fmt"
 	"mods/entity"
 
 	"gorm.io/gorm"
@@ -11,11 +13,12 @@ type (
 	ExamSessionRepository interface {
 		CreateSession(ctx context.Context, tx *gorm.DB, session entity.ExamSesssion)  error
 		GetBySessionID(ctx context.Context, tx *gorm.DB, sessionID string) (*entity.ExamSesssion, error)
-		FindByUserAndExam(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error)
+		FindByUserAndExam(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, entity.ExamSesssion, error)
 		UpdateSession(ctx context.Context, tx *gorm.DB, session entity.ExamSesssion) (entity.ExamSesssion, error)
 		GetByExamID(ctx context.Context, tx *gorm.DB, examId string) ([]entity.ExamSesssion, error)
 		DeleteByID(ctx context.Context, tx *gorm.DB, id string) error
 		GetSEBkey(ctx context.Context, tx *gorm.DB, examId string) (entity.Exam, error)
+		FinishSession(ctx context.Context, tx *gorm.DB, UserId string, ExamId string) ( error)
 	}
 
 	examSessionRepository struct {
@@ -59,18 +62,20 @@ func (r *examSessionRepository) GetBySessionID(ctx context.Context, tx *gorm.DB,
 }
 
 
-func (r *examSessionRepository) FindByUserAndExam(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, error) {
-	var count int64
+func (r *examSessionRepository) FindByUserAndExam(ctx context.Context, tx *gorm.DB, userId, examId string) (bool, entity.ExamSesssion, error) {
+	var session entity.ExamSesssion
 	err := r.db.WithContext(ctx).
-		Model(&entity.ExamSesssion{}).
 		Where("user_id = ? AND exam_id = ?", userId, examId).
-		Count(&count).Error
+		First(&session).Error
 
 	if err != nil {
-		return false, err
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return false, entity.ExamSesssion{}, nil
+		}
+		return false, entity.ExamSesssion{}, err
 	}
 
-	return count > 0, nil
+	return true, session, nil
 }
 
 func (r *examSessionRepository) GetByExamID(ctx context.Context, tx *gorm.DB, examId string) ([]entity.ExamSesssion, error) {
@@ -96,7 +101,6 @@ func (r *examSessionRepository) UpdateSession(ctx context.Context, tx *gorm.DB, 
 		tx = r.db
 	}
 
-	// Only update relevant fields, not the entire struct
 	err := tx.WithContext(ctx).
 		Model(&entity.ExamSesssion{}).
 		Where("user_id = ? AND exam_id = ?", session.UserID, session.ExamID).
@@ -115,6 +119,26 @@ func (r *examSessionRepository) UpdateSession(ctx context.Context, tx *gorm.DB, 
 	return session, nil
 }
 
+func (r *examSessionRepository) FinishSession(ctx context.Context, tx *gorm.DB, UserId string, ExamId string) ( error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	// Only update relevant fields, not the entire struct
+	err := tx.WithContext(ctx).
+		Model(&entity.ExamSesssion{}).
+		Where("user_id = ? AND exam_id = ?", UserId, ExamId).
+		Updates(map[string]interface{}{
+			"status": 1,
+		}).Error
+
+	if err != nil {
+		return  err
+	}
+
+	fmt.Println("success update status repo")
+	return  nil
+}
 
 func (r *examSessionRepository) DeleteByID(ctx context.Context, tx *gorm.DB, id string) error {
 	if tx == nil {

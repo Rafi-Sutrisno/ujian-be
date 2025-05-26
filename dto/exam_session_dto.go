@@ -13,10 +13,12 @@ const (
 	// MESSAGE_FAILED_TOKEN_NOT_FOUND         = "token not found"
 	MESSAGE_FAILED_GET_EXAM_SESSION               = "failed get  exam session"
 	MESSAGE_FAILED_DELETE_EXAM_SESSION             = "failed delete  exam session"
+	MESSAGE_FAILED_FINISHING_EXAM_SESSION             = "failed finishing  exam session"
 	// MESSAGE_FAILED_PROSES_REQUEST          = "failed proses request"
 	// MESSAGE_FAILED_DENIED_ACCESS           = "denied access"
 
 	// Success
+	MESSAGE_SUCCESS_FINISHING_EXAM_SESSION             = "success finishing  exam session"
 	MESSAGE_SUCCESS_CREATE_EXAM_SESSION           = "success create  exam session"
 	MESSAGE_SUCCESS_GET_LIST_EXAM_SESSION           = "success get list  exam session"
 	MESSAGE_SUCCESS_GET_EXAM_SESSION               = "success get  exam session"
@@ -55,6 +57,7 @@ type (
 		IpAddress			string 			`json:"ip_address"`
 		UserAgent			string 			`json:"user_agent"`
 		Device				string 			`json:"device"`
+		Status              uint			`json:"status"`
 		User    			*UserResponse 	`json:"user"`
 	}
 	

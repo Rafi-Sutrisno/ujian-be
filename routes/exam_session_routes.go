@@ -17,6 +17,7 @@ func ExamSessionRoutes(router *gin.Engine, ExamSessionController controller.Exam
 	examSessionPrivate := router.Group("/api/exam_session").Use(middleware.Authenticate(jwtService))
 	{
 		examSessionPrivate.POST("/start_exam", ExamSessionController.CreateSession)
+		examSessionPrivate.POST("/finish_exam/:exam_id", ExamSessionController.FinishSession)
 	}
 	examSessionPrivateAdmin := router.Group("/api/exam_session").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{

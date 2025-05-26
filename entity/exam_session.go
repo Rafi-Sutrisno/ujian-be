@@ -10,6 +10,7 @@ type ExamSesssion struct {
 	IPAddress  			string		`gorm:"not null" json:"ip_address"`
 	UserAgent  			string		`gorm:"not null" json:"user_agent"`
 	Device     			string		`gorm:"not null" json:"device"`
+	Status     			uint		`gorm:"not null" json:"status"`
 	TotalCorrect		uint		`gorm:"not null" json:"total_correct"`
 
 	User      			User    	`gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user"`

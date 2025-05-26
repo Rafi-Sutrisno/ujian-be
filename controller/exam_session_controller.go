@@ -21,6 +21,7 @@ type (
 		CheckSession(ctx *gin.Context)
 		CreateSession(ctx *gin.Context)
         GetByExamID(ctx *gin.Context)
+		FinishSession(ctx *gin.Context)
 		DeleteByID(ctx *gin.Context)
 	}
 )
@@ -36,6 +37,14 @@ func NewExamSessionController(es service.ExamSessionService) ExamSessionControll
 func (cc *examSessionController) CreateSession(ctx *gin.Context) {
     var request dto.ExamSessionCreateRequest
     userId := ctx.MustGet("requester_id").(string)
+	sessionID, err := ctx.Cookie("session_id")
+	if err != nil {
+		fmt.Println("Tidak ada cookie session_id, lanjutkan tanpa session")
+		sessionID = "" // atau bisa pakai: var sessionID string
+	} else {
+		fmt.Println("ini session id dari cookie:", sessionID)
+	}
+
     
     if err := ctx.ShouldBind(&request); err != nil {
         res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
@@ -66,7 +75,7 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
 
-    newSession, sessionID, err := cc.examSessionService.CreateorUpdateSession(ctx.Request.Context(), request, userId, ipAddress, userAgent, requestHash, configKeyHash, fullURL)
+    newSession, sessionID, err := cc.examSessionService.CreateorUpdateSession(ctx.Request.Context(), request, sessionID, userId, ipAddress, userAgent, requestHash, configKeyHash, fullURL)
     if err != nil {
         res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_EXAM_SESSION, err.Error(), nil)
         ctx.JSON(http.StatusBadRequest, res)
@@ -127,6 +136,21 @@ func (cc *examSessionController) GetByExamID(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_EXAM_SESSION, sessions)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (cc *examSessionController) FinishSession(ctx *gin.Context) {
+	ExamId := ctx.Param("exam_id")
+	userId := ctx.MustGet("requester_id").(string)
+	fmt.Println("start update status controller")
+	err := cc.examSessionService.FinishSession(ctx.Request.Context(), userId, ExamId)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_FINISHING_EXAM_SESSION, err.Error(), nil)
+		ctx.JSON(http.StatusInternalServerError, res)
+		return
+	}
+	fmt.Println("success update status controller")
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_FINISHING_EXAM_SESSION, nil)
 	ctx.JSON(http.StatusOK, res)
 }
 
