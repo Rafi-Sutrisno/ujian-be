@@ -2,14 +2,14 @@ package service
 
 import (
 	"context"
-	"mods/dto"
-	"mods/entity"
-	"mods/repository"
+	"mods/domain/entity"
+	domain "mods/domain/repository"
+	"mods/interface/dto"
 )
 
 type (
 	testCaseService struct {
-		repo repository.TestCaseRepository
+		repo domain.TestCaseRepository
 	}
 
 	TestCaseService interface {
@@ -22,7 +22,7 @@ type (
 	}
 )
 
-func NewTestCaseService(repo repository.TestCaseRepository) TestCaseService {
+func NewTestCaseService(repo domain.TestCaseRepository) TestCaseService {
 	return &testCaseService{
 		repo: repo,
 	}

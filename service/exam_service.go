@@ -3,15 +3,15 @@ package service
 import (
 	"context"
 	"fmt"
-	"mods/dto"
-	dto_error "mods/dto/error"
-	"mods/entity"
-	"mods/repository"
+	"mods/domain/entity"
+	domain "mods/domain/repository"
+	"mods/interface/dto"
+	dto_error "mods/interface/dto/error"
 )
 
 type (
 	examService struct {
-		examRepository repository.ExamRepository
+		examRepository domain.ExamRepository
 	}
 
 	ExamService interface {
@@ -26,7 +26,7 @@ type (
 	}
 )
 
-func NewExamService(er repository.ExamRepository) ExamService {
+func NewExamService(er domain.ExamRepository) ExamService {
 	return &examService{
 		examRepository: er,
 	}
@@ -55,6 +55,7 @@ func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest
 		IsSEBRestricted: req.IsSEBRestricted,
 		SEBBrowserKey: req.SEBBrowserKey,
 		SEBConfigKey: req.SEBConfigKey,
+		SEBQuitURL: req.SEBQuitURL,
 	}
 
 	// 2. Save Exam to DB
@@ -187,6 +188,7 @@ func (us *examService) GetExamById(ctx context.Context, examId string, userId st
 		IsSEBRestricted:    exam.IsSEBRestricted,
 		SEBBrowserKey: 		exam.SEBBrowserKey,
 		SEBConfigKey: 		exam.SEBConfigKey,
+		SEBQuitURL:         exam.SEBQuitURL,
 		AllowedLanguages: allowedLangs,
 	}, nil
 }
@@ -214,10 +216,11 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 		IsPublished: 		req.IsPublished,
 		StartTime:  		req.StartTime,
 		Duration:   		req.Duration,
-		EndTime:    		req.StartTime,
+		EndTime:    		req.StartTime.Add(req.Duration),
 		IsSEBRestricted: 	req.IsSEBRestricted,
 		SEBBrowserKey: 		req.SEBBrowserKey,
 		SEBConfigKey: 		req.SEBConfigKey,
+		SEBQuitURL:         req.SEBQuitURL,
 	}
 
 	fmt.Println("ini exam update:", data)

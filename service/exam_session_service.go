@@ -8,16 +8,16 @@ import (
 	"encoding/hex"
 	"errors"
 	"fmt"
-	"mods/dto"
-	"mods/entity"
-	"mods/repository"
+	"mods/domain/entity"
+	domain "mods/domain/repository"
+	"mods/interface/dto"
 	"strings"
 	"time"
 )
 
 type (
 	examSessionService struct {
-		examSessionRepository repository.ExamSessionRepository
+		examSessionRepository domain.ExamSessionRepository
 	}
 
 	ExamSessionService interface {
@@ -30,7 +30,7 @@ type (
 	}
 )
 
-func NewExamSessionService(er repository.ExamSessionRepository) ExamSessionService {
+func NewExamSessionService(er domain.ExamSessionRepository) ExamSessionService {
 	return &examSessionService{
 		examSessionRepository: er,
 	}
@@ -85,7 +85,7 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 		if(sessionId == row.SessionID){
 			return dto.ExamSessionCreateResponse{
 				UserID:          userId,
-				ExamID: 		req.ExamID,
+				ExamID: 		 req.ExamID,
 			}, sessionId, nil
 		}
 

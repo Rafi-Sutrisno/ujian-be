@@ -2,15 +2,16 @@ package service
 
 import (
 	"context"
-	"mods/dto"
-	"mods/entity"
-	"mods/repository"
+	"mods/domain/entity"
+	domain "mods/domain/repository"
+	"mods/interface/dto"
 )
 
 type (
+
 	classService struct {
-		classRepository repository.ClassRepository
-		userClassRepository repository.UserClassRepository
+		classRepository domain.ClassRepository
+		userClassRepository domain.UserClassRepository
 	}
 
 	ClassService interface {
@@ -24,7 +25,7 @@ type (
 	}
 )
 
-func NewClassService(cr repository.ClassRepository, ucr repository.UserClassRepository) ClassService {
+func NewClassService(cr domain.ClassRepository, ucr domain.UserClassRepository) ClassService {
 	return &classService{
 		classRepository: cr,
 		userClassRepository: ucr,

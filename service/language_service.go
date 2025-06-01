@@ -2,9 +2,9 @@ package service
 
 import (
 	"context"
-	"mods/dto"
-	"mods/entity"
-	"mods/repository"
+	"mods/domain/entity"
+	domain "mods/domain/repository"
+	"mods/interface/dto"
 )
 
 type LanguageService interface {
@@ -16,10 +16,10 @@ type LanguageService interface {
 }
 
 type languageService struct {
-	repo repository.LanguageRepository
+	repo domain.LanguageRepository
 }
 
-func NewLanguageService(repo repository.LanguageRepository) LanguageService {
+func NewLanguageService(repo domain.LanguageRepository) LanguageService {
 	return &languageService{repo: repo}
 }
 

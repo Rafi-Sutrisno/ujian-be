@@ -6,9 +6,9 @@ import (
 	"fmt"
 	"io"
 	"mime/multipart"
-	"mods/dto"
-	"mods/entity"
-	"mods/repository"
+	"mods/domain/entity"
+	domain "mods/domain/repository"
+	"mods/interface/dto"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -16,8 +16,8 @@ import (
 
 type (
 	userClassService struct {
-		repo repository.UserClassRepository
-		UserRepo repository.UserRepository
+		repo domain.UserClassRepository
+		UserDomain domain.UserRepository
 	}
 
 	UserClassService interface {
@@ -32,10 +32,10 @@ type (
 	}
 )
 
-func NewUserClassService(repo repository.UserClassRepository, UserRepo repository.UserRepository) UserClassService {
+func NewUserClassService(repo domain.UserClassRepository, UserDomain domain.UserRepository) UserClassService {
 	return &userClassService{
 		repo: repo,
-		UserRepo:  UserRepo,
+		UserDomain:  UserDomain,
 	}
 }
 
@@ -84,7 +84,7 @@ func (ucs *userClassService) AssignUsersFromYAML(ctx context.Context, class_id s
             })
             continue
         }
-		userCheck, flag, _ := ucs.UserRepo.CheckNoid(ctx, nil, user.Noid)
+		userCheck, flag, _ := ucs.UserDomain.CheckNoid(ctx, nil, user.Noid)
 		
 		if flag {
 			fmt.Println("sudah ada user: ", userCheck)
@@ -136,7 +136,7 @@ func (ucs *userClassService) AssignUsersFromYAML(ctx context.Context, class_id s
 			Password: user.Password,
 		}
 
-		userReg, err := ucs.UserRepo.RegisterUser(ctx, nil, req)
+		userReg, err := ucs.UserDomain.RegisterUser(ctx, nil, req)
 		resp := dto.UserResponse{
 			ID:    userReg.ID.String(),
 			Username: userReg.Username,
@@ -234,7 +234,7 @@ func (ucs *userClassService) AssignUsersFromCSV(ctx context.Context, class_id st
 			continue
 		}
 
-		userCheck, exists, _ := ucs.UserRepo.CheckNoid(ctx, nil, user.Noid)
+		userCheck, exists, _ := ucs.UserDomain.CheckNoid(ctx, nil, user.Noid)
 		if exists {
 			fmt.Println("sudah ada user: ", userCheck)
 			userClass := entity.UserClass{
@@ -286,7 +286,7 @@ func (ucs *userClassService) AssignUsersFromCSV(ctx context.Context, class_id st
 			Password: user.Password,
 		}
 
-		userReg, err := ucs.UserRepo.RegisterUser(ctx, nil, req)
+		userReg, err := ucs.UserDomain.RegisterUser(ctx, nil, req)
 		resp := dto.UserResponse{
 			ID:    userReg.ID.String(),
 			Username: userReg.Username,
@@ -395,7 +395,7 @@ func (ucs *userClassService) GetUnassignedUsersByClassID(ctx context.Context, cl
 		return nil, dto.ErrAuthorize 
 	}
 
-	allStudents, err := ucs.UserRepo.GetAllStudents(ctx, nil)
+	allStudents, err := ucs.UserDomain.GetAllStudents(ctx, nil)
 	if err != nil {
 		return nil, err
 	}

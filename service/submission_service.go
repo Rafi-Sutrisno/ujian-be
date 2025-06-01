@@ -5,10 +5,10 @@ import (
 	"encoding/base64"
 	"fmt"
 	"log"
-	"mods/dto"
-	"mods/entity"
-	"mods/repository"
-	judge0 "mods/repository/external"
+	"mods/domain/entity"
+	domain "mods/domain/repository"
+	"mods/infrastructure/judge0"
+	"mods/interface/dto"
 	"strconv"
 	"strings"
 	"time"
@@ -28,11 +28,11 @@ type SubmissionService interface {
 }
 
 type submissionService struct {
-	submissionRepo repository.SubmissionRepository
-	testcaseRepo repository.TestCaseRepository
+	submissionRepo domain.SubmissionRepository
+	testcaseRepo domain.TestCaseRepository
 }
 
-func NewSubmissionService(submissionRepo repository.SubmissionRepository, testcaseRepo repository.TestCaseRepository) SubmissionService {
+func NewSubmissionService(submissionRepo domain.SubmissionRepository, testcaseRepo domain.TestCaseRepository) SubmissionService {
 	return &submissionService{
 		submissionRepo: submissionRepo,
 		testcaseRepo: testcaseRepo,

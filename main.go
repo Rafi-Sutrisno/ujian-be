@@ -5,10 +5,11 @@ import (
 	"log"
 	"mods/command"
 	"mods/config"
-	"mods/controller"
-	"mods/middleware"
-	"mods/repository"
-	"mods/routes"
+	domain "mods/domain/repository"
+	"mods/infrastructure/repository"
+	"mods/interface/controller"
+	"mods/interface/middleware"
+	"mods/interface/routes"
 	"mods/service"
 	"os"
 
@@ -39,17 +40,17 @@ func main() {
 	
 		// Implementation Dependency Injection
 		// Repository
-		userRepository        repository.UserRepository        = repository.NewUserRepository(db)
-		classRepository       repository.ClassRepository       = repository.NewClassRepository(db)
-		userClassRepository   repository.UserClassRepository   = repository.NewUserClassRepository(db)
-		examRepository        repository.ExamRepository        = repository.NewExamRepository(db)
-		examLangRepository    repository.ExamLangRepository    = repository.NewExamLangRepository(db)
-		problemRepository     repository.ProblemRepository     = repository.NewProblemRepository(db)
-		testCaseRepository    repository.TestCaseRepository    = repository.NewTestCaseRepository(db)
-		submissionRepository  repository.SubmissionRepository  = repository.NewSubmissionRepository(db)
-		examSessionRepository repository.ExamSessionRepository = repository.NewExamSessionRepository(db)
-		examProblemRepository repository.ExamProblemRepository = repository.NewExamProblemRepository(db)
-		languageRepository    repository.LanguageRepository    = repository.NewLanguageRepository(db)
+		userRepository        domain.UserRepository        = repository.NewUserRepository(db)
+		classRepository       domain.ClassRepository       = repository.NewClassRepository(db)
+		userClassRepository   domain.UserClassRepository   = repository.NewUserClassRepository(db)
+		examRepository        domain.ExamRepository        = repository.NewExamRepository(db)
+		examLangRepository    domain.ExamLangRepository    = repository.NewExamLangRepository(db)
+		problemRepository     domain.ProblemRepository     = repository.NewProblemRepository(db)
+		testCaseRepository    domain.TestCaseRepository    = repository.NewTestCaseRepository(db)
+		submissionRepository  domain.SubmissionRepository  = repository.NewSubmissionRepository(db)
+		examSessionRepository domain.ExamSessionRepository = repository.NewExamSessionRepository(db)
+		examProblemRepository domain.ExamProblemRepository = repository.NewExamProblemRepository(db)
+		languageRepository    domain.LanguageRepository    = repository.NewLanguageRepository(db)
 	
 		// Service
 		userService        service.UserService        = service.NewUserService(userRepository, jwtService)

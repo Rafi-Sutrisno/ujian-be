@@ -4,7 +4,7 @@ import (
 	"encoding/json"
 	"errors"
 	"io"
-	"mods/entity"
+	"mods/domain/entity"
 	"os"
 
 	"gorm.io/gorm"

@@ -8,9 +8,9 @@ import (
 	"html/template"
 	"io"
 	"mime/multipart"
-	"mods/dto"
-	"mods/entity"
-	"mods/repository"
+	"mods/domain/entity"
+	domainrepo "mods/domain/repository"
+	"mods/interface/dto"
 	"os"
 	"strings"
 	"time"
@@ -21,7 +21,7 @@ import (
 )
 
 type userService struct {
-	userRepository repository.UserRepository
+	userDomain domainrepo.UserRepository
 	jwtService  JWTService
 	
 }
@@ -43,9 +43,9 @@ type UserService interface {
 	RegisterUsersFromCSV(ctx context.Context, fileHeader *multipart.FileHeader) (map[string]interface{}, error)
 }
 
-func NewUserService(ur repository.UserRepository, jwtService JWTService) UserService {
+func NewUserService(ur domainrepo.UserRepository, jwtService JWTService) UserService {
 	return &userService{
-		userRepository: ur,
+		userDomain: ur,
 		jwtService:  jwtService,
 	}
 }
@@ -56,7 +56,7 @@ const (
 )
 
 func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) (dto.UserResponse, error) {
-	_, flag, _ := us.userRepository.CheckNoid(ctx, nil, req.Noid)
+	_, flag, _ := us.userDomain.CheckNoid(ctx, nil, req.Noid)
 	if flag {
 		return dto.UserResponse{}, dto.ErrNoidAlreadyExists
 	}
@@ -71,7 +71,7 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 		Password:   req.Password,
 	}
 
-	userReg, err := us.userRepository.RegisterUser(ctx, nil, user)
+	userReg, err := us.userDomain.RegisterUser(ctx, nil, user)
 	if err != nil {
 		return dto.UserResponse{}, dto.ErrCreateUser
 	}
@@ -88,7 +88,7 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 }
 
 func (us *userService) GetAllUsers(ctx context.Context) ([]dto.UserResponse, error) {
-	Users, err := us.userRepository.GetAllUsers(ctx, nil)
+	Users, err := us.userDomain.GetAllUsers(ctx, nil)
 	if err != nil {
 		return nil, err
 	}
@@ -110,7 +110,7 @@ func (us *userService) GetAllUsers(ctx context.Context) ([]dto.UserResponse, err
 }
 
 func (us *userService) GetAllUserWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.UserPaginationResponse, error) {
-	dataWithPaginate, err := us.userRepository.GetAllUserWithPagination(ctx, nil, req)
+	dataWithPaginate, err := us.userDomain.GetAllUserWithPagination(ctx, nil, req)
 	if err != nil {
 		return dto.UserPaginationResponse{}, err
 	}
@@ -142,7 +142,7 @@ func (us *userService) GetAllUserWithPagination(ctx context.Context, req dto.Pag
 
 
 func (us *userService) Verify(ctx context.Context, loginDTO dto.UserLoginRequest) (dto.UserLoginResponse, error) {
-	check, flag, err := us.userRepository.CheckUsername(ctx,nil,  loginDTO.Username)
+	check, flag, err := us.userDomain.CheckUsername(ctx,nil,  loginDTO.Username)
 	if err != nil || !flag {
 		return dto.UserLoginResponse{}, dto.ErrUsernameNotFound
 	}
@@ -161,7 +161,7 @@ func (us *userService) Verify(ctx context.Context, loginDTO dto.UserLoginRequest
 }
 
 func (us *userService) GetUserById(ctx context.Context, userId string) (dto.UserResponse, error) {
-	user, err := us.userRepository.GetUserById(ctx, nil, userId)
+	user, err := us.userDomain.GetUserById(ctx, nil, userId)
 	if err != nil {
 		return dto.UserResponse{}, dto.ErrGetUserById
 	}
@@ -178,7 +178,7 @@ func (us *userService) GetUserById(ctx context.Context, userId string) (dto.User
 }
 
 func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, userId string) (dto.UserUpdateResponse, error) {
-	user, err := us.userRepository.GetUserById(ctx, nil, userId)
+	user, err := us.userDomain.GetUserById(ctx, nil, userId)
 	if err != nil {
 		return dto.UserUpdateResponse{}, dto.ErrUserNotFound
 	}
@@ -196,7 +196,7 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 		Noid:       req.Noid,
 	}
 
-	userUpdate, err := us.userRepository.UpdateUser(ctx, nil, data)
+	userUpdate, err := us.userDomain.UpdateUser(ctx, nil, data)
 	if err != nil {
 		return dto.UserUpdateResponse{}, dto.ErrUpdateUser
 	}
@@ -212,7 +212,7 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 }
 
 func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequest, userId string) (dto.UserUpdateResponse, error) {
-	user, err := us.userRepository.GetUserById(ctx, nil, userId)
+	user, err := us.userDomain.GetUserById(ctx, nil, userId)
 	if err != nil {
 		return dto.UserUpdateResponse{}, dto.ErrUserNotFound
 	}
@@ -222,7 +222,7 @@ func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequ
 		Email:      req.Email,
 	}
 
-	userUpdate, err := us.userRepository.UpdateUser(ctx, nil, data)
+	userUpdate, err := us.userDomain.UpdateUser(ctx, nil, data)
 	if err != nil {
 		return dto.UserUpdateResponse{}, dto.ErrUpdateUser
 	}
@@ -238,7 +238,7 @@ func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequ
 }
 
 func (us *userService) Delete(ctx context.Context, userId string) error {
-	user, err := us.userRepository.GetUserById(ctx, nil, userId)
+	user, err := us.userDomain.GetUserById(ctx, nil, userId)
 	if err != nil {
 		return dto.ErrUserNotFound
 	}
@@ -247,7 +247,7 @@ func (us *userService) Delete(ctx context.Context, userId string) error {
 	// 	return dto.ErrDeniedAccess
 	// }
 
-	err = us.userRepository.DeleteUser(ctx, nil, user.ID.String())
+	err = us.userDomain.DeleteUser(ctx, nil, user.ID.String())
 	if err != nil {
 		return dto.ErrDeleteUser
 	}
@@ -297,7 +297,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
             })
             continue
         }
-		_, flag, _ := us.userRepository.CheckNoid(ctx, nil, user.Noid)
+		_, flag, _ := us.userDomain.CheckNoid(ctx, nil, user.Noid)
 		if flag {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{
 				Noid:   user.Noid,
@@ -316,7 +316,7 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
 			Password: user.Password,
 		}
 
-		userReg, err := us.userRepository.RegisterUser(ctx, nil, req)
+		userReg, err := us.userDomain.RegisterUser(ctx, nil, req)
 		resp := dto.UserResponse{
 			ID:    userReg.ID.String(),
 			Username: userReg.Username,
@@ -397,7 +397,7 @@ func (us *userService) RegisterUsersFromCSV(ctx context.Context, fileHeader *mul
 			continue
 		}
 
-		_, exists, _ := us.userRepository.CheckNoid(ctx, nil, user.Noid)
+		_, exists, _ := us.userDomain.CheckNoid(ctx, nil, user.Noid)
 		if exists {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{
 				Noid:   user.Noid,
@@ -416,7 +416,7 @@ func (us *userService) RegisterUsersFromCSV(ctx context.Context, fileHeader *mul
 			Password: user.Password,
 		}
 
-		userReg, err := us.userRepository.RegisterUser(ctx, nil, newUser)
+		userReg, err := us.userDomain.RegisterUser(ctx, nil, newUser)
 		if err != nil {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{
 				Noid:   user.Noid,
@@ -486,7 +486,7 @@ func makeForgotPasswordEmail(receiverEmail string) (map[string]string, error) {
 }
 
 func (s *userService) SendForgotPasswordEmail(ctx context.Context, req dto.SendResetPasswordRequest) error {
-	user, err := s.userRepository.GetUserByEmail(ctx, nil, req.Email)
+	user, err := s.userDomain.GetUserByEmail(ctx, nil, req.Email)
 	if err != nil {
 		return dto.ErrEmailNotFound
 	}
@@ -531,7 +531,7 @@ func (s *userService) ResetPassword(ctx context.Context, req dto.ResetPasswordRe
 		return dto.ResetPasswordResponse{}, dto.ErrTokenExpired
 	}
 
-	user, err := s.userRepository.GetUserByEmail(ctx, nil, email)
+	user, err := s.userDomain.GetUserByEmail(ctx, nil, email)
 	if err != nil {
 		return dto.ResetPasswordResponse{}, dto.ErrUserNotFound
 	}
@@ -541,7 +541,7 @@ func (s *userService) ResetPassword(ctx context.Context, req dto.ResetPasswordRe
 	if err != nil {
 		return dto.ResetPasswordResponse{}, dto.ErrHashPassword
 	}
-	_, err = s.userRepository.UpdateUser(ctx, nil, entity.User{
+	_, err = s.userDomain.UpdateUser(ctx, nil, entity.User{
 		ID:       user.ID,
 		Password: hashedPassword,
 	})
