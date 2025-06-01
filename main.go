@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"log"
+	"mods/application/service"
 	"mods/command"
 	"mods/config"
 	domain "mods/domain/repository"
@@ -10,7 +11,6 @@ import (
 	"mods/interface/controller"
 	"mods/interface/middleware"
 	"mods/interface/routes"
-	"mods/service"
 	"os"
 
 	"github.com/gin-gonic/gin"

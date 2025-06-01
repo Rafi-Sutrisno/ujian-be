@@ -4,8 +4,8 @@ import (
 	"net/http"
 	"strconv"
 
+	"mods/application/service"
 	"mods/interface/dto"
-	"mods/service"
 	"mods/utils"
 
 	"github.com/gin-gonic/gin"

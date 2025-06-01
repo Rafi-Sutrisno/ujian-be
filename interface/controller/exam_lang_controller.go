@@ -1,8 +1,8 @@
 package controller
 
 import (
+	"mods/application/service"
 	"mods/interface/dto"
-	"mods/service"
 	"mods/utils"
 	"net/http"
 	"strconv"

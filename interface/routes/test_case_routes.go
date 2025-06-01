@@ -1,9 +1,9 @@
 package routes
 
 import (
+	"mods/application/service"
 	"mods/interface/controller"
 	"mods/interface/middleware"
-	"mods/service"
 
 	"github.com/gin-gonic/gin"
 )
