@@ -7,6 +7,7 @@ import (
 	domainrepo "mods/domain/repository"
 	"mods/interface/dto"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -113,8 +114,6 @@ func (cr *classRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID 
 	return classes, nil
 }
 
-
-
 func (cr *classRepository) Create(ctx context.Context, tx *gorm.DB, class entity.Class) (entity.Class, error) {
 	if tx == nil {
 		tx = cr.db
@@ -144,7 +143,8 @@ func (cr *classRepository) Delete(ctx context.Context, tx *gorm.DB, classId stri
 		tx = cr.db
 	}
 
-	if err := tx.WithContext(ctx).Delete(&entity.Class{}, "id = ?", classId).Error; err != nil {
+	class := entity.Class{ID: uuid.MustParse(classId)}
+	if err := tx.WithContext(ctx).Select("UserClass").Delete(class).Error; err != nil {
 		return err
 	}
 
