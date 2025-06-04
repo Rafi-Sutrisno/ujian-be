@@ -7,6 +7,7 @@ import (
 	"mods/command"
 	"mods/config"
 	domain "mods/domain/repository"
+	"mods/infrastructure/auth"
 	"mods/infrastructure/repository"
 	"mods/interface/controller"
 	"mods/interface/middleware"
@@ -40,6 +41,7 @@ func main() {
 	
 		// Implementation Dependency Injection
 		// Repository
+		authRepository		  domain.AuthRepo			   = auth.NewAuthRepository(db)
 		userRepository        domain.UserRepository        = repository.NewUserRepository(db)
 		classRepository       domain.ClassRepository       = repository.NewClassRepository(db)
 		userClassRepository   domain.UserClassRepository   = repository.NewUserClassRepository(db)
@@ -58,10 +60,10 @@ func main() {
 		userClassService   service.UserClassService   = service.NewUserClassService(userClassRepository, userRepository)
 		examService        service.ExamService        = service.NewExamService(examRepository)
 		examLangService    service.ExamLangService    = service.NewExamLangService(examLangRepository)
-		problemService     service.ProblemService     = service.NewProblemService(problemRepository)
+		problemService     service.ProblemService     = service.NewProblemService(problemRepository, authRepository)
 		testCaseService    service.TestCaseService    = service.NewTestCaseService(testCaseRepository)
-		submissionService  service.SubmissionService  = service.NewSubmissionService(submissionRepository, testCaseRepository)
-		examSessionService  service.ExamSessionService  = service.NewExamSessionService(examSessionRepository)
+		submissionService  service.SubmissionService  = service.NewSubmissionService(submissionRepository, testCaseRepository, authRepository)
+		examSessionService  service.ExamSessionService  = service.NewExamSessionService(examSessionRepository, authRepository)
 		examProblemService  service.ExamProblemService  = service.NewExamProblemService(examProblemRepository)
 		languageService     service.LanguageService     = service.NewLanguageService(languageRepository)
 	
