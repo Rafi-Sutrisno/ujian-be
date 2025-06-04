@@ -5,16 +5,19 @@ import (
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
+
+	"github.com/gin-gonic/gin"
 )
 
 type (
 	problemService struct {
 		repo domain.ProblemRepository
+		authRepo domain.AuthRepo
 	}
 
 	ProblemService interface {
-		GetByID(ctx context.Context, id string, userId string) (dto.ProblemResponse, error)
-		GetByExamID(ctx context.Context, examID string, userId string) ([]dto.ProblemResponse, error)
+		GetByID(ctx context.Context, ginCtx *gin.Context, id string, userId, problemId string) (dto.ProblemResponse, error)
+		GetByExamID(ctx context.Context, ginCtx *gin.Context, examID string, userId string) ([]dto.ProblemResponse, error)
 		GetAll(ctx context.Context, userId string) ([]dto.ProblemResponse, error)
 		Create(ctx context.Context, req dto.ProblemCreateRequest, userId string) (dto.ProblemResponse, error)
 		Update(ctx context.Context, req dto.ProblemUpdateRequest, id string, userId string) (dto.ProblemUpdateResponse, error)
@@ -22,20 +25,17 @@ type (
 	}
 )
 
-func NewProblemService(repo domain.ProblemRepository) ProblemService {
+func NewProblemService(repo domain.ProblemRepository, authRepo domain.AuthRepo) ProblemService {
 	return &problemService{
 		repo: repo,
+		authRepo: authRepo,
 	}
 }
 
-func (ps *problemService) GetByID(ctx context.Context, id string, userId string) (dto.ProblemResponse, error) {
-	// authorized, err := ps.repo.IsUserInProblemClass(ctx, nil, userId, id)
-	// if err != nil {
-	// 	return dto.ProblemResponse{}, err
-	// }
-	// if !authorized {
-	// 	return dto.ProblemResponse{}, dto_error.ErrAuthorizeFor("this problem")
-	// }
+func (ps *problemService) GetByID(ctx context.Context, ginCtx *gin.Context, id string, userId, problemId string) (dto.ProblemResponse, error) {
+	if err := ps.authRepo.CanAccessProblem(ctx, ginCtx, userId, problemId); err != nil {
+		return dto.ProblemResponse{}, err
+	}
 
 	problem, err := ps.repo.GetByID(ctx, nil, id)
 	if err != nil {
@@ -53,7 +53,7 @@ func (ps *problemService) GetByID(ctx context.Context, id string, userId string)
 	}, nil
 }
 
-func (ps *problemService) GetByExamID(ctx context.Context, examID string, userId string) ([]dto.ProblemResponse, error) {
+func (ps *problemService) GetByExamID(ctx context.Context, ginCtx *gin.Context, userId, examID string) ([]dto.ProblemResponse, error) {
 	// authorized, err := ps.repo.IsUserInExamClass(ctx, nil, userId, examID)
 	// if err != nil {
 	// 	return nil, err

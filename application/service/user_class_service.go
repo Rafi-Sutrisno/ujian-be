@@ -216,6 +216,7 @@ func (ucs *userClassService) AssignUsersFromCSV(ctx context.Context, class_id st
 			}
 			return ""
 		}
+		fmt.Println("ini row:", record)
 
 		user := dto.UserFile{
 			Username: get("username"),
@@ -224,6 +225,8 @@ func (ucs *userClassService) AssignUsersFromCSV(ctx context.Context, class_id st
 			Noid:     get("noid"),
 			Password: get("password"),
 		}
+
+		fmt.Println("ini user:", user)
 
 		if user.Username == "" || user.Noid == "" || user.Name == "" || user.Email == "" || user.Password == "" {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{

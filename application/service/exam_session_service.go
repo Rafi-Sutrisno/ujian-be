@@ -3,26 +3,36 @@ package service
 import (
 	"context"
 	"crypto/rand"
-	"crypto/sha256"
 	"encoding/base64"
-	"encoding/hex"
 	"errors"
 	"fmt"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
+	"mods/infrastructure/auth"
 	"mods/interface/dto"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type (
 	examSessionService struct {
 		examSessionRepository domain.ExamSessionRepository
+		authRepo domain.AuthRepo
 	}
 
 	ExamSessionService interface {
-		CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, sessionId string, userId string, ipAddress string,
-			userAgent string, SEBRequestHash string, configKeyHash string, url string) (dto.ExamSessionCreateResponse, string, error)
+		CreateorUpdateSession(
+			ctx context.Context,
+			req dto.ExamSessionCreateRequest,
+			sessionId string,
+			userId string,
+			ipAddress string,
+			userAgent string,
+			ginCtx *gin.Context, // new param
+			fullURL string,
+		) (dto.ExamSessionCreateResponse, string, int64, error)
 		GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error)
 		GetByExamID(ctx context.Context, examId string) ([]dto.ExamSessionGetResponse, error)
 		FinishSession(ctx context.Context, UserId string, ExamId string) error
@@ -30,69 +40,62 @@ type (
 	}
 )
 
-func NewExamSessionService(er domain.ExamSessionRepository) ExamSessionService {
+func NewExamSessionService(er domain.ExamSessionRepository, authRepo domain.AuthRepo) ExamSessionService {
 	return &examSessionService{
 		examSessionRepository: er,
+		authRepo: authRepo,
 	}
 }
 
-func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.ExamSessionCreateRequest, sessionId string, userId string, 	ipAddress string, userAgent string, SEBRequestHash string, configKeyHash string, url string) (dto.ExamSessionCreateResponse, string, error) {
+func (s *examSessionService) CreateorUpdateSession(
+	ctx context.Context,
+	req dto.ExamSessionCreateRequest,
+	sessionId string,
+	userId string,
+	ipAddress string,
+	userAgent string,
+	ginCtx *gin.Context, // new param
+	fullURL string,
+) (dto.ExamSessionCreateResponse, string, int64, error) {
+	timeleft, err := s.authRepo.CanStartExam(ctx, userId, req.ExamID);
+	if  err != nil {
+		return dto.ExamSessionCreateResponse{},"", 0, err
+	}
+
 	exam, err := s.examSessionRepository.GetSEBkey(ctx, nil, req.ExamID)
 	if err != nil {
-		return dto.ExamSessionCreateResponse{}, "", dto.ErrExamNotFound
+		return dto.ExamSessionCreateResponse{}, "", 0, dto.ErrExamNotFound
 	}
-	fmt.Println("check 1")
-	if(exam.IsSEBRestricted){
-		fmt.Println("check 2")
-		// validateSEBRequest(url, exam.SEBKey, SEBRequestHash)
-		if(exam.SEBBrowserKey != "" ){
-			fmt.Println("check 3")
-			if !validateSEBRequest(url, exam.SEBBrowserKey, SEBRequestHash) {
-				fmt.Println("unauthorized SEB request: browser exam key hash mismatch")
-				return dto.ExamSessionCreateResponse{}, "", errors.New("unauthorized SEB request: hash mismatch")
-			} else {
-				fmt.Println("Request is from Safe Exam Browser and correct bek key")
-			}
-		}
-		if(exam.SEBConfigKey != "" ){
-			if !validateSEBRequest(url, exam.SEBConfigKey, configKeyHash) {
-				fmt.Println("unauthorized SEB request: configuration key hash mismatch")
-				return dto.ExamSessionCreateResponse{}, "", errors.New("unauthorized SEB request: hash mismatch")
-			} else {
-				fmt.Println("Request is from Safe Exam Browser and correct config key")
-			}
-		}
-		if(exam.SEBBrowserKey == "" && exam.SEBConfigKey == "") {
-			if strings.Contains(userAgent, "SEB") {
-				fmt.Println("Request is from Safe Exam Browser")
-			} else {
-				return dto.ExamSessionCreateResponse{}, "", errors.New("unauthorized SEB request: user agent mismatch")
-			}
+
+	if exam.IsSEBRestricted {
+		err := auth.ValidateSEBRequest(ginCtx, exam.SEBBrowserKey, exam.SEBConfigKey, exam.IsSEBRestricted)
+		if err != nil {
+			return dto.ExamSessionCreateResponse{}, "", 0, err
 		}
 	}
 	
 
 	exists, row, err := s.examSessionRepository.FindByUserAndExam(ctx, nil, userId, req.ExamID)
 	if err != nil {
-		return dto.ExamSessionCreateResponse{}, "", err
+		return dto.ExamSessionCreateResponse{}, "", 0, err
 	}
 	if exists {
 		fmt.Println("ini status session:", row.Status)
 		if(row.Status != 0){
-			return dto.ExamSessionCreateResponse{}, "", errors.New("you have already finished this exam")
+			return dto.ExamSessionCreateResponse{}, "", 0, errors.New("you have already finished this exam")
 		}
 
 		if(sessionId == row.SessionID){
 			return dto.ExamSessionCreateResponse{
 				UserID:          userId,
 				ExamID: 		 req.ExamID,
-			}, sessionId, nil
+			}, sessionId, timeleft, nil
 		}
 
 		sessionID, err := generateRandomToken(32)
 		device := detectDevice(userAgent)
 		if err != nil {
-			return dto.ExamSessionCreateResponse{}, "", err
+			return dto.ExamSessionCreateResponse{}, "", 0, err
 		}
 
 		newSession := entity.ExamSesssion{
@@ -109,17 +112,17 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 	
 		_, err = s.examSessionRepository.UpdateSession(ctx, nil, newSession)
 		if err != nil {
-			return dto.ExamSessionCreateResponse{}, "", err
+			return dto.ExamSessionCreateResponse{}, "", 0, err
 		}
 
 		return dto.ExamSessionCreateResponse{
 			UserID:          userId,
 			ExamID: 		req.ExamID,
-		}, sessionID, nil
+		}, sessionID, timeleft, nil
 	}else {
 		sessionID, err := generateRandomToken(32) // generate a 32-byte random token
 		if err != nil {
-			return dto.ExamSessionCreateResponse{}, "", err
+			return dto.ExamSessionCreateResponse{}, "", 0, err
 		}
 	
 		device := detectDevice(userAgent)
@@ -140,31 +143,17 @@ func (s *examSessionService) CreateorUpdateSession(ctx context.Context, req dto.
 	
 		err = s.examSessionRepository.CreateSession(ctx, nil, newSession)
 		if err != nil {
-			return dto.ExamSessionCreateResponse{}, "", err
+			return dto.ExamSessionCreateResponse{}, "", 0, err
 		}
 	
 		return dto.ExamSessionCreateResponse{
 			UserID:          userId,
 			ExamID: 		req.ExamID,
-		}, sessionID, nil
+		}, sessionID, timeleft, nil
 	}
 }
 
-func validateSEBRequest(url string, key string, recvHash string) bool {
 
-    hasher := sha256.New()
-
-	hasher.Write([]byte(url))
-	hasher.Write([]byte(key))
-    
-    finalHash := hasher.Sum(nil)
-    hashHex := hex.EncodeToString(finalHash)
-
-    fmt.Println("BEK/ConfigKey: Expected Hash:", hashHex)
-    fmt.Println("BEK/ConfigKey: Received Hash:", recvHash)
-
-    return hashHex == recvHash
-}
 
 func detectDevice(userAgent string) string {
 	userAgent = strings.ToLower(userAgent)

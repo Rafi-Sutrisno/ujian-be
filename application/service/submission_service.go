@@ -12,11 +12,13 @@ import (
 	"strconv"
 	"strings"
 	"time"
+
+	"github.com/gin-gonic/gin"
 )
 
 type SubmissionService interface {
-	RunCode(ctx context.Context, req dto.Judge0Request) (dto.Judge0Response, error)
-	SubmitCode(ctx context.Context, req dto.SubmissionRequest, userId string) (dto.SubmissionResponse, error)
+	RunCode(ctx context.Context, ginCtx *gin.Context, req dto.Judge0Request, userId, examId string) (dto.Judge0Response, error)
+	SubmitCode(ctx context.Context, ginCtx *gin.Context, req dto.SubmissionRequest, userId, examId string) (dto.SubmissionResponse, error)
 	StartSubmissionPolling(ctx context.Context)
 	CreateSubmission(ctx context.Context, request dto.SubmissionCreateRequest) (dto.SubmissionResponse, error)
 	GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error)
@@ -30,20 +32,30 @@ type SubmissionService interface {
 type submissionService struct {
 	submissionRepo domain.SubmissionRepository
 	testcaseRepo domain.TestCaseRepository
+	authRepo domain.AuthRepo
 }
 
-func NewSubmissionService(submissionRepo domain.SubmissionRepository, testcaseRepo domain.TestCaseRepository) SubmissionService {
+func NewSubmissionService(submissionRepo domain.SubmissionRepository, testcaseRepo domain.TestCaseRepository, authRepo domain.AuthRepo) SubmissionService {
 	return &submissionService{
 		submissionRepo: submissionRepo,
 		testcaseRepo: testcaseRepo,
+		authRepo: authRepo,
 	}
 }
 
-func (s *submissionService) RunCode(ctx context.Context, req dto.Judge0Request) (dto.Judge0Response, error) {
+func (s *submissionService) RunCode(ctx context.Context, ginCtx *gin.Context, req dto.Judge0Request, userId, examId string) (dto.Judge0Response, error){
+	if err := s.authRepo.CanAccessExam(ctx, ginCtx, userId, examId); err != nil {
+		return dto.Judge0Response{}, err
+	}
+
 	return judge0.SubmitToJudge0(req)
 }
 
-func (s *submissionService) SubmitCode(ctx context.Context, req dto.SubmissionRequest, userId string) (dto.SubmissionResponse, error) {
+func (s *submissionService) SubmitCode(ctx context.Context, ginCtx *gin.Context, req dto.SubmissionRequest, userId, examId string) (dto.SubmissionResponse, error) {
+	if err := s.authRepo.CanAccessExam(ctx, ginCtx, userId, examId); err != nil {
+		return dto.SubmissionResponse{}, err
+	}
+
 	testCases, err := s.testcaseRepo.GetByProblemID(ctx, nil, req.ProblemID)
 	if err != nil {
 		return dto.SubmissionResponse{}, err

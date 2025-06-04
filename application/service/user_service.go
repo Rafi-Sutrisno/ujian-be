@@ -34,6 +34,7 @@ type UserService interface {
 	Verify(ctx context.Context, loginDTO dto.UserLoginRequest) (dto.UserLoginResponse, error)
 	Update(ctx context.Context, req dto.UserUpdateRequest, userId string) (dto.UserUpdateResponse, error)
 	UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequest, userId string) (dto.UserUpdateResponse, error)
+	UpdatePassMe(ctx context.Context, req dto.UserUpdatePasswordRequest, userId string) ( error)
 	Delete(ctx context.Context, userId string) error
 	GetUserById(ctx context.Context, userId string) (dto.UserResponse, error)
 	SendForgotPasswordEmail(ctx context.Context, req dto.SendResetPasswordRequest) error
@@ -51,7 +52,6 @@ func NewUserService(ur domainrepo.UserRepository, jwtService JWTService) UserSer
 }
 
 const (
-	LOCAL_URL          = "http://localhost:3000"
 	RESET_PASSWORD_ROUTE = "reset_password"
 )
 
@@ -201,13 +201,18 @@ func (us *userService) Update(ctx context.Context, req dto.UserUpdateRequest, us
 		return dto.UserUpdateResponse{}, dto.ErrUpdateUser
 	}
 
+	userData, err := us.userDomain.GetUserById(ctx, nil, user.ID.String())
+	if err != nil {
+		return dto.UserUpdateResponse{}, dto.ErrUpdateUser
+	}
+
 	return dto.UserUpdateResponse{
 		ID:         userUpdate.ID.String(),
-		Username:   userUpdate.Username,
-		Name:       userUpdate.Name,
-		Noid:       userUpdate.Noid,
-		RoleID:       userUpdate.RoleID,
-		Email:      userUpdate.Email,
+		Username:   userData.Username,
+		Name:       userData.Name,
+		Noid:       userData.Noid,
+		RoleID:     userData.RoleID,
+		Email:      userData.Email,
 	}, nil
 }
 
@@ -228,13 +233,42 @@ func (us *userService) UpdateMe(ctx context.Context, req dto.UserUpdateEmailRequ
 	}
 
 	return dto.UserUpdateResponse{
-		ID:         userUpdate.ID.String(),
-		Username:   userUpdate.Username,
-		Name:       userUpdate.Name,
-		Noid:       userUpdate.Noid,
-		RoleID:       userUpdate.RoleID,
+		ID:         user.ID.String(),
+		Username:   user.Username,
+		Name:       user.Name,
+		Noid:       user.Noid,
+		RoleID:     user.RoleID,
 		Email:      userUpdate.Email,
 	}, nil
+}
+
+func (us *userService) UpdatePassMe(ctx context.Context, req dto.UserUpdatePasswordRequest, userId string) ( error) {
+	user, err := us.userDomain.GetUserById(ctx, nil, userId)
+	if err != nil {
+		return dto.ErrUserNotFound
+	}
+
+	checkPassword, err := utils.CheckPassword(user.Password, []byte(req.OldPassword))
+	if err != nil || !checkPassword {
+		return  dto.ErrPasswordNotMatch
+	}
+
+	NewPassword, err := utils.HashPassword(req.NewPassword)
+	if err != nil {
+		return  err
+	}
+
+	data := entity.User{
+		ID:         user.ID,
+		Password:   NewPassword,
+	}
+
+	_, err = us.userDomain.UpdateUser(ctx, nil, data)
+	if err != nil {
+		return  dto.ErrUpdateUser
+	}
+
+	return nil
 }
 
 func (us *userService) Delete(ctx context.Context, userId string) error {
@@ -379,6 +413,7 @@ func (us *userService) RegisterUsersFromCSV(ctx context.Context, fileHeader *mul
 			}
 			return ""
 		}
+		fmt.Println("ini row:", record)
 
 		user := dto.UserFile{
 			Username: get("username"),
@@ -387,6 +422,7 @@ func (us *userService) RegisterUsersFromCSV(ctx context.Context, fileHeader *mul
 			Noid:     get("noid"),
 			Password: get("password"),
 		}
+		fmt.Println("ini user:", user)
 
 		if user.Username == "" || user.Noid == "" || user.Name == "" || user.Email == "" || user.Password == "" {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{
@@ -451,6 +487,8 @@ func makeForgotPasswordEmail(receiverEmail string) (map[string]string, error) {
 	if err != nil {
 		return nil, err
 	}
+	LOCAL_URL := os.Getenv("CLIENT_URL")
+	fmt.Println("ini url:", LOCAL_URL)
 
 	resetLink := LOCAL_URL + "/" + RESET_PASSWORD_ROUTE + "?token=" + token
 
