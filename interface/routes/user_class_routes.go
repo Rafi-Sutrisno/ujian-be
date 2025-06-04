@@ -18,10 +18,10 @@ func UserClassRoutes(router *gin.Engine, UserClassController controller.UserClas
 	userClassPrivateAdmin := router.Group("/api/user_class").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
 		userClassPrivateAdmin.GET("/class/unassigned/:class_id", UserClassController.GetUnassigned)
-		userClassPrivateAdmin.POST("/create/upload-file/:class_id", UserClassController.AssignFile)
-		userClassPrivateAdmin.POST("/create", UserClassController.Create)
+		userClassPrivateAdmin.POST("/upload-file/:class_id", UserClassController.AssignFile)
+		userClassPrivateAdmin.POST("/", UserClassController.Create)
 		userClassPrivateAdmin.POST("/create_many", UserClassController.CreateMany)
-		userClassPrivateAdmin.DELETE("/delete/:id", UserClassController.Delete)
+		userClassPrivateAdmin.DELETE("/:id", UserClassController.Delete)
 	}
 
 }

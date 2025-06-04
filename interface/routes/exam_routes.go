@@ -18,7 +18,7 @@ func ExamRoutes(router *gin.Engine, ExamController controller.ExamController, jw
 	examPrivateAdmin := router.Group("/api/exam").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
 		examPrivateAdmin.PATCH("/:exam_id", ExamController.Update)
-		examPrivateAdmin.POST("/create", ExamController.CreateExam)
+		examPrivateAdmin.POST("/", ExamController.CreateExam)
 		examPrivateAdmin.GET("/all", ExamController.GetAllExam)
 		examPrivateAdmin.DELETE("/:exam_id", ExamController.Delete)
 	}

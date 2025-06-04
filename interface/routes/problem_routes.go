@@ -12,7 +12,7 @@ func ProblemRoutes(router *gin.Engine, ProblemController controller.ProblemContr
 
 	problemPrivate := router.Group("/api/problem").Use(middleware.Authenticate(jwtService))
 	{
-		problemPrivate.GET("/:id", ProblemController.GetByID)
+		problemPrivate.GET("/:problem_id", ProblemController.GetByID)
 		problemPrivate.GET("/exam/:exam_id", ProblemController.GetByExamID)
 	}
 

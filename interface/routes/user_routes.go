@@ -18,9 +18,9 @@ func UserRoutes(router *gin.Engine, UserController controller.UserController, jw
 
 	userPrivate := router.Group("/api/user").Use(middleware.Authenticate(jwtService))
 	{
-		userPrivate.POST("/login/dummy", UserController.LoginUser)
 		userPrivate.GET("/me", UserController.Me)
-		userPrivate.PATCH("/update/me", UserController.UpdateEmailMe)
+		userPrivate.PATCH("/me", UserController.UpdateEmailMe)
+		userPrivate.PATCH("/me/pass", UserController.UpdatePassMe)
 	}
 
 	userPrivateAdmin := router.Group("/api/user").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
@@ -28,10 +28,10 @@ func UserRoutes(router *gin.Engine, UserController controller.UserController, jw
 		userPrivateAdmin.GET("/:id", UserController.GetByUserId)
 		userPrivateAdmin.GET("/all/paginate", UserController.GetAllUserPaginate)
 		userPrivateAdmin.GET("/all", UserController.GetAllUser)
-		userPrivateAdmin.POST("/add", UserController.Register)
-		userPrivateAdmin.PATCH("/update/:id", UserController.Update)
-		userPrivateAdmin.DELETE("/delete/:id", UserController.Delete)
-		userPrivateAdmin.POST("/add/upload-file", UserController.RegisterFile)
+		userPrivateAdmin.POST("/", UserController.Register)
+		userPrivateAdmin.PATCH("/:id", UserController.Update)
+		userPrivateAdmin.DELETE("/:id", UserController.Delete)
+		userPrivateAdmin.POST("/upload-file", UserController.RegisterFile)
 	}
 
 	// userPublic := router.Group("/api/user")

@@ -27,11 +27,11 @@ func ClassRoutes(router *gin.Engine, ClassController controller.ClassController,
 
 	classPrivateAdmin := router.Group("/api/class").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{
-		classPrivateAdmin.POST("/create", ClassController.Create)
+		classPrivateAdmin.POST("/", ClassController.Create)
 		classPrivateAdmin.GET("/all/paginate", ClassController.GetAllWithPagination)
 		classPrivateAdmin.GET("/all", ClassController.GetAll)
-		classPrivateAdmin.PATCH("/update/:class_id", ClassController.Update)
-		classPrivateAdmin.DELETE("/delete/:class_id", ClassController.Delete)
+		classPrivateAdmin.PATCH("/:class_id", ClassController.Update)
+		classPrivateAdmin.DELETE("/:class_id", ClassController.Delete)
 	}
 
 	// examPrivateAdmin := router.Group("/api/class").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
