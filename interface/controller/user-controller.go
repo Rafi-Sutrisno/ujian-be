@@ -32,6 +32,7 @@ type UserController interface {
 	Me(ctx *gin.Context)
 	GetByUserId(ctx *gin.Context)
 	UpdateEmailMe(ctx *gin.Context)
+	UpdatePassMe(ctx *gin.Context)
 	SendResetPassword(ctx *gin.Context)
 	ResetPassword(ctx *gin.Context)
 	RegisterFile(ctx *gin.Context)
@@ -192,6 +193,27 @@ func (uc *userController) UpdateEmailMe(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+func (uc *userController) UpdatePassMe(ctx *gin.Context) {
+	var req dto.UserUpdatePasswordRequest
+	if err := ctx.ShouldBind(&req); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
+		return
+	}
+
+
+	userId := ctx.MustGet("requester_id").(string)
+	err := uc.userService.UpdatePassMe(ctx.Request.Context(), req, userId)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_UPDATE_USER, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_UPDATE_USER, nil)
+	ctx.JSON(http.StatusOK, res)
+}
+
 func (uc *userController) Delete(ctx *gin.Context) {
 	userId := ctx.Param("id")
 	// userId := ctx.MustGet("user_id").(string)
@@ -241,25 +263,22 @@ func (uc *userController) RegisterFile(ctx *gin.Context) {
 }
 
 func (c *userController) SendResetPassword(ctx *gin.Context) {
-	fmt.Println("masuk controller 1") // <--- add this
 	var req dto.SendResetPasswordRequest
 	if err := ctx.ShouldBind(&req); err != nil {
-		fmt.Println("error binding:", err.Error()) // <--- add this
+		fmt.Println("error binding:", err.Error()) // 
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
-	fmt.Println("masuk controller 2") // <--- add this
 	err := c.userService.SendForgotPasswordEmail(ctx.Request.Context(), req)
 	if err != nil {
-		fmt.Println("error service:", err.Error()) // <--- add this
+		fmt.Println("error service:", err.Error()) //
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_PROSES_REQUEST, err.Error(), nil)
 		ctx.AbortWithStatusJSON(http.StatusBadRequest, res)
 		return
 	}
 
-	fmt.Println("send success") // <--- add this
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SEND_FORGOT_PASSWORD_SUCCESS, nil)
 	ctx.JSON(http.StatusOK, res)
 }

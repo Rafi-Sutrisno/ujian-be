@@ -7,7 +7,6 @@ import (
 	"mods/utils"
 	"net/http"
 	"os"
-	"strings"
 
 	"github.com/gin-gonic/gin"
 )
@@ -52,31 +51,6 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
         return
     }
 
-	ipAddress := ctx.ClientIP()
-    userAgent := ctx.Request.UserAgent()
-	fmt.Println("User-Agent:", userAgent)
-
-	if strings.Contains(userAgent, "SEB") {
-		fmt.Println("Request is from Safe Exam Browser")
-	} else {
-		fmt.Println("Request is NOT from Safe Exam Browser")
-	}
-
-	requestHash := ctx.Request.Header.Get("X-SafeExamBrowser-RequestHash")
-	configKeyHash := ctx.Request.Header.Get("X-Safeexambrowser-Configkeyhash")
-
-	fmt.Println("X-SafeExamBrowser-RequestHash:", requestHash)
-	fmt.Println("X-Safeexambrowser-Configkeyhash:", configKeyHash)
-
-	if requestHash == "" || configKeyHash == "" {
-		fmt.Println("masuk kosong key seb")
-		requestHash = request.BrowserExamKey
-		configKeyHash = request.ConfigKey
-	}
-	fmt.Println("testing print request:")
-	fmt.Println("bek: ", request.BrowserExamKey)
-	fmt.Println("config: ", request.ConfigKey)
-
 	scheme := "http"
 	if ctx.Request.TLS != nil {
 		scheme = "https"
@@ -84,21 +58,31 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
 
-    newSession, sessionID, err := cc.examSessionService.CreateorUpdateSession(ctx.Request.Context(), request, sessionID, userId, ipAddress, userAgent, requestHash, configKeyHash, fullURL)
-    if err != nil {
-        res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_EXAM_SESSION, err.Error(), nil)
-        ctx.JSON(http.StatusBadRequest, res)
-        return
-    }
+    newSession, newSessionID, timeleft, err := cc.examSessionService.CreateorUpdateSession(
+		ctx.Request.Context(),
+		request,
+		sessionID,
+		userId,
+		ctx.ClientIP(),
+		ctx.Request.UserAgent(),
+		ctx, // pass full gin.Context to service
+		fullURL,
+	)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_EXAM_SESSION, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
 
 	isDev := os.Getenv("GIN_MODE") != "release"
 
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:     "session_id",
-		Value:    sessionID,
+		Value:    newSessionID,
 		Path:     "/",
 		Domain:   "localhost",
-		MaxAge:   3600,
+		MaxAge:   int(timeleft),
 		HttpOnly: true,
 		Secure:   !isDev, // secure false in dev
 		SameSite: func() http.SameSite {

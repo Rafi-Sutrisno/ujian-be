@@ -31,9 +31,9 @@ func NewProblemController(ps service.ProblemService) ProblemController {
 }
 
 func (pc *problemController) GetByID(ctx *gin.Context) {
-	id := ctx.Param("id")
+	problem_id := ctx.Param("problem_id")
 	userId := ctx.MustGet("requester_id").(string)
-	result, err := pc.problemService.GetByID(ctx.Request.Context(), id, userId)
+	result, err := pc.problemService.GetByID(ctx.Request.Context(), ctx, problem_id, userId, problem_id)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -46,7 +46,7 @@ func (pc *problemController) GetByID(ctx *gin.Context) {
 func (pc *problemController) GetByExamID(ctx *gin.Context) {
 	examID := ctx.Param("exam_id")
 	userId := ctx.MustGet("requester_id").(string)
-	result, err := pc.problemService.GetByExamID(ctx.Request.Context(), examID, userId)
+	result, err := pc.problemService.GetByExamID(ctx.Request.Context(), ctx, userId, examID)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)

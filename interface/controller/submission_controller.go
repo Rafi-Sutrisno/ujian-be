@@ -35,6 +35,8 @@ func NewSubmissionController(ss service.SubmissionService) SubmissionController 
 
 func  (sc *submissionController) RunCode(ctx *gin.Context) {
 	var req dto.Judge0Request
+    userId := ctx.MustGet("requester_id").(string)
+	examId := ctx.Param("exam_id")
 
 	// Bind JSON body
 	if err := ctx.ShouldBindJSON(&req); err != nil {
@@ -44,7 +46,7 @@ func  (sc *submissionController) RunCode(ctx *gin.Context) {
 	}
 
 	// Call service
-	result, err := sc.submissionService.RunCode(ctx.Request.Context(), req)
+	result, err := sc.submissionService.RunCode(ctx.Request.Context(), ctx, req, userId, examId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -57,6 +59,7 @@ func  (sc *submissionController) RunCode(ctx *gin.Context) {
 func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
 	var req dto.SubmissionRequest
 	userId := ctx.MustGet("requester_id").(string)
+	examId := ctx.Param("exam_id")
 	// Bind JSON body
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
@@ -65,7 +68,7 @@ func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
 	}
 
 	// Call service
-	result, err := sc.submissionService.SubmitCode(ctx.Request.Context(), req, userId)
+	result, err := sc.submissionService.SubmitCode(ctx.Request.Context(), ctx, req, userId, examId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)

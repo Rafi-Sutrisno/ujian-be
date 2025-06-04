@@ -68,7 +68,7 @@ func (uc *userClassController) AssignFile(ctx *gin.Context) {
 		return
 	}
 
-	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_REGISTER_USER, result)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_USER_CLASS, result)
 	ctx.JSON(http.StatusOK, res)
 }
 

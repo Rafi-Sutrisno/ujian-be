@@ -118,7 +118,11 @@ type (
 		Noid       string `json:"noid" form:"noid"`
 	}
 	UserUpdateEmailRequest struct {
-		Email      string `json:"email" form:"email"`
+		Email      string `json:"email" form:"email" binding:"required"`
+	}
+	UserUpdatePasswordRequest struct {
+		OldPassword      string `json:"old_password" form:"old_password" binding:"required"`
+		NewPassword      string `json:"new_password" form:"new_password" binding:"required"`
 	}
 
 	UserUpdateResponse struct {
