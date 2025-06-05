@@ -27,19 +27,20 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExam(ctx context.Conte
 
 	query := `
 		SELECT 
-			s.user_id,
+			u.id AS user_id,
 			u.name AS user_name,
 			u.noid AS user_no_id,
-			COUNT(DISTINCT s.problem_id) AS total_correct,
+			COUNT(DISTINCT CASE WHEN s.status = 'accepted' THEN s.problem_id END) AS total_correct,
 			(
 				SELECT COUNT(*) 
 				FROM exam_problems ep 
 				WHERE ep.exam_id = ?
 			) AS total_problem
-		FROM submissions s
-		JOIN users u ON u.id = s.user_id
-		WHERE s.exam_id = ? AND s.status = 'accepted'
-		GROUP BY s.user_id, u.name, u.noid
+		FROM exam_sesssions es
+		JOIN users u ON es.user_id = u.id
+		LEFT JOIN submissions s ON s.user_id = u.id AND s.exam_id = es.exam_id
+		WHERE es.exam_id = ?
+		GROUP BY u.id, u.name, u.noid
 		ORDER BY u.name;
 	`
 
@@ -55,31 +56,29 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExamandStudent(ctx con
 
 	query := `
 		SELECT 
-			s.user_id,
+			u.id AS user_id,
 			u.name AS user_name,
 			u.noid AS user_no_id,
-			COUNT(DISTINCT s.problem_id) AS total_correct,
+			COUNT(DISTINCT CASE WHEN s.status = 'accepted' THEN s.problem_id END) AS total_correct,
 			(
 				SELECT COUNT(*) 
 				FROM exam_problems ep 
 				WHERE ep.exam_id = ?
 			) AS total_problem
-		FROM submissions s
-		JOIN users u ON u.id = s.user_id
-		WHERE s.exam_id = ? AND s.user_id = ? AND s.status = 'accepted'
-		GROUP BY s.user_id, u.name, u.noid
+		FROM exam_sesssions es
+		JOIN users u ON es.user_id = u.id
+		LEFT JOIN submissions s ON s.user_id = u.id AND s.exam_id = es.exam_id
+		WHERE es.exam_id = ? AND u.id = ?
+		GROUP BY u.id, u.name, u.noid
 		ORDER BY u.name;
 	`
 
-	// examID is passed twice: one for subquery, one for WHERE clause
 	if err := r.db.Raw(query, examID, examID, userID).Scan(&result).Error; err != nil {
 		return dto.ExamUserCorrectDTO{}, err
 	}
 
 	return result, nil
 }
-
-
 
 func (r *submissionRepository) GetByID(ctx context.Context, tx *gorm.DB, id string) (entity.Submission, error) {
 	if tx == nil {
