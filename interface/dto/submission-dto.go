@@ -63,6 +63,9 @@ type (
 		Status     			string      `json:"status"`
 		Time 				string		`json:"time"`
 		Memory				string		`json:"memory"`
+		Problem				ProblemResponse   `json:"problem"`
+		Language			LanguageResponse  `json:"lang"`
+		User				UserResponse  `json:"user"`
 	}
 
 	SubmissionPaginationResponse struct {
@@ -80,5 +83,6 @@ type (
 		UserName     string `json:"user_name"`
 		UserNoID     string `json:"user_no_id"`
 		TotalCorrect int    `json:"total_correct"`
+		TotalProblem int    `json:"total_problem"`
 	}
 )

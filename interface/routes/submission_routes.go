@@ -17,6 +17,7 @@ func SubmissionRoutes(router *gin.Engine, SubmissionController controller.Submis
 		// submissionPrivate.POST("/", SubmissionController.Create)
 		submissionPrivate.GET("/:id", SubmissionController.GetByID)
 		submissionPrivate.GET("/exam/student/:exam_id", SubmissionController.GetByExamIDandUserID)
+		submissionPrivate.GET("/stats/user/exam/:exam_id", SubmissionController.GetCorrectStatsByExamandStudent)
 		// submissionPrivate.GET("/problem/:problem_id", SubmissionController.GetByProblemID)
 		// submissionPrivate.GET("/user/:user_id", SubmissionController.GetByUserID)
 	}

@@ -62,6 +62,16 @@ func (r *authRepository) GetExamSessionBySessionId(ctx context.Context, sessionI
 	return examSession, nil
 }
 
+func (r *authRepository) GetExamSessionByExamIdandUserId(ctx context.Context, examId, userId string) (entity.ExamSesssion, error) {
+
+	var examSession entity.ExamSesssion
+	if err := r.db.WithContext(ctx).Where("exam_id = ? AND user_id = ?", examId, userId).Take(&examSession).Error; err != nil {
+		return entity.ExamSesssion{}, err
+	}
+
+	return examSession, nil
+}
+
 func (r *authRepository) IsExamActive(ctx context.Context, examId string) (bool, int64, error) {
 	var exam entity.Exam
 	if err := r.db.WithContext(ctx).Select("start_time", "end_time").Where("id = ?", examId).First(&exam).Error; err != nil {
@@ -107,7 +117,7 @@ func (r *authRepository) CanStartExam(ctx context.Context, userId, examId string
 		return 0, err
 	}
 	if !active {
-		return 0, errors.New("exam is not active")
+		return 0, errors.New("exam is not active (not in time interval)")
 	}
 	return timeleft, nil
 }
@@ -154,6 +164,36 @@ func (r *authRepository) CanAccessExam(ctx context.Context, ginCtx *gin.Context,
 
 	if err := r.ValidateSEBRequest(ginCtx, ctx, examId); err != nil {
 		return fmt.Errorf("SEB validation failed: %w", err)
+	}
+
+	return nil
+}
+
+func (r *authRepository) CanSeeExamResult(ctx context.Context, userId, examId string) error {
+	inClass, err := r.IsUserInExamClass(ctx, userId, examId)
+	if err != nil {
+		return err
+	}
+	if !inClass {
+		return errors.New("user is not in the exam class")
+	}
+
+	user, err := r.GetUserById(ctx, userId)
+	if err != nil {
+		return err
+	}
+
+	if user.RoleID == 1 {
+		return nil
+	}
+	
+	session, err := r.GetExamSessionByExamIdandUserId(ctx, examId, userId)
+	if err != nil {
+		return err
+	}
+
+	if session.Status != 1{
+		return errors.New("you have not finished this exam")
 	}
 
 	return nil

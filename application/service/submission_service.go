@@ -22,6 +22,7 @@ type SubmissionService interface {
 	StartSubmissionPolling(ctx context.Context)
 	CreateSubmission(ctx context.Context, request dto.SubmissionCreateRequest) (dto.SubmissionResponse, error)
 	GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error)
+	GetCorrectSubmissionStatsByExamandUser(ctx context.Context, examID, userID string) (dto.ExamUserCorrectDTO, error)
 	GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error)
 	GetByExamIDandUserID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
 	GetByExamID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
@@ -240,6 +241,21 @@ func (s *submissionService) GetCorrectSubmissionStatsByExam(ctx context.Context,
 	return results, nil
 }
 
+func (s *submissionService) GetCorrectSubmissionStatsByExamandUser(ctx context.Context, examID, userID string) (dto.ExamUserCorrectDTO, error) {
+	if err := s.authRepo.CanSeeExamResult(ctx, userID, examID); err != nil {
+		return dto.ExamUserCorrectDTO{}, err
+	}
+
+
+	result, err := s.submissionRepo.GetCorrectSubmissionStatsByExamandStudent(ctx, examID, userID)
+	if err != nil {
+		return dto.ExamUserCorrectDTO{}, err
+	}
+
+	fmt.Println("ini hasil query:", result)
+	return result, nil
+}
+
 func (s *submissionService) GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error) {
 	// Get submission by ID from the repository
 	submission, err := s.submissionRepo.GetByID(ctx, nil, id)
@@ -283,6 +299,12 @@ func (s *submissionService) GetByExamIDandUserID(ctx context.Context, examID str
 			Status:        submission.Status,
 			Time:          submission.Time,
 			Memory: 	   submission.Memory,
+			Problem: dto.ProblemResponse{
+				Title: submission.Problem.Title,
+			},
+			Language: dto.LanguageResponse{
+				Name: submission.Language.Name,
+			},
 		})
 	}
 
@@ -310,6 +332,16 @@ func (s *submissionService) GetByExamID(ctx context.Context, examID string, user
 			Status:        submission.Status,
 			Time:          submission.Time,
 			Memory: 	   submission.Memory,
+			Problem: dto.ProblemResponse{
+				Title: submission.Problem.Title,
+			},
+			Language: dto.LanguageResponse{
+				Name: submission.Language.Name,
+			},
+			User: dto.UserResponse{
+				Name: submission.User.Name,
+				Noid: submission.User.Noid,
+			},
 		})
 	}
 
