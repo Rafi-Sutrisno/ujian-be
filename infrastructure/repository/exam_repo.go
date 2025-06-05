@@ -70,6 +70,26 @@ func (ur *examRepository) GetByClassID(ctx context.Context, tx *gorm.DB, classID
 	return exams, nil
 }
 
+func (ur *examRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.Exam, error) {
+	if tx == nil {
+		tx = ur.db
+	}
+
+	var exams []entity.Exam
+	err := tx.WithContext(ctx).
+		Joins("JOIN classes ON classes.id = exams.class_id").
+		Joins("JOIN user_classes ON user_classes.class_id = classes.id").
+		Where("user_classes.user_id = ?", userID).
+		Find(&exams).Error
+
+	if err != nil {
+		return nil, err
+	}
+
+	return exams, nil
+}
+
+
 func (ur *examRepository) GetAllExamWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllExamRepositoryResponse, error) {
 	if tx == nil {
 		tx = ur.db

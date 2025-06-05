@@ -14,6 +14,7 @@ func ExamRoutes(router *gin.Engine, ExamController controller.ExamController, jw
 	{
 		examPrivate.GET("/:exam_id", ExamController.GetExamById)
 		examPrivate.GET("/byclass/:class_id", ExamController.GetByClassID)
+		examPrivate.GET("/byuser", ExamController.GetByUserID)
 	}
 	examPrivateAdmin := router.Group("/api/exam").Use(middleware.Authenticate(jwtService)).Use(middleware.Authorize("admin"))
 	{

@@ -19,10 +19,9 @@ type (
 		GetAllExamWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ExamPaginationResponse, error)
 		GetExamById(ctx context.Context, examId string, userId string) (dto.ExamResponse, error)
 		GetByClassID(ctx context.Context, classID string, userId string) ([]dto.ExamResponse, error)
+		GetByUserID(ctx context.Context,  userId string) ([]dto.ExamResponse, error)
 		Update(ctx context.Context, req dto.ExamUpdateRequest, examId string, userId string) (dto.ExamUpdateResponse, error)
-		Delete(ctx context.Context, examId string, userId string) error
-		
-		
+		Delete(ctx context.Context, examId string, userId string) error	
 	}
 )
 
@@ -113,6 +112,34 @@ func (es *examService) GetByClassID(ctx context.Context, classID string, userId 
 			Duration: exam.Duration.String(),
 			EndTime: exam.EndTime,
 
+		})
+	}
+
+	return responses, nil
+}
+
+func (es *examService) GetByUserID(ctx context.Context, userId string) ([]dto.ExamResponse, error) {
+	exams, err := es.examRepository.GetByUserID(ctx, nil, userId)
+	if err != nil {
+		return nil, dto.ErrGetAllExamsByClassId
+	}
+
+	if len(exams) == 0 {
+		// return empty slice, not nil, to indicate success with no data
+		return []dto.ExamResponse{}, nil
+	}
+
+	var responses []dto.ExamResponse
+	for _, exam := range exams {
+		responses = append(responses, dto.ExamResponse{
+			ID:        exam.ID.String(),
+			ClassID:   exam.ClassID,
+			Name:  exam.Name,
+			ShortName: exam.ShortName,
+			IsPublished: exam.IsPublished,
+			StartTime: exam.StartTime,
+			Duration: exam.Duration.String(),
+			EndTime: exam.EndTime,
 		})
 	}
 

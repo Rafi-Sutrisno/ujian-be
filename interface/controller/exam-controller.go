@@ -18,9 +18,9 @@ type (
 
 	ExamController interface {
 		CreateExam(ctx *gin.Context)
-		
 		GetExamById(ctx *gin.Context)
 		GetByClassID(ctx *gin.Context)
+		GetByUserID(ctx *gin.Context)
 		GetAllExam(ctx *gin.Context)
 		Update(ctx *gin.Context)
 		Delete(ctx *gin.Context)
@@ -72,6 +72,18 @@ func (c *examController) GetByClassID(ctx *gin.Context) {
 	classID := ctx.Param("class_id")
 	userId := ctx.MustGet("requester_id").(string)
 	result, err := c.examService.GetByClassID(ctx.Request.Context(), classID, userId)
+	if err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_EXAM, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_EXAM, result)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (c *examController) GetByUserID(ctx *gin.Context) {
+	userId := ctx.MustGet("requester_id").(string)
+	result, err := c.examService.GetByUserID(ctx.Request.Context(), userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_EXAM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
