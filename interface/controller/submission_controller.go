@@ -53,8 +53,9 @@ func  (sc *submissionController) RunCode(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_RUN_CODE, result)
 
-	ctx.JSON(http.StatusOK, result)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
@@ -75,8 +76,8 @@ func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-
-	ctx.JSON(http.StatusOK, result)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_SUBMISSION, result)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (sc *submissionController) Create(ctx *gin.Context) {
@@ -145,7 +146,7 @@ func (sc *submissionController) GetByID(ctx *gin.Context) {
 func (sc *submissionController) GetByExamIDandUserID(ctx *gin.Context) {
 	examID := ctx.Param("exam_id")
 	userId := ctx.MustGet("requester_id").(string)
-	result, err := sc.submissionService.GetByExamIDandUserID(ctx.Request.Context(), examID, userId)
+	result, err := sc.submissionService.GetByExamIDandUserID(ctx.Request.Context(), ctx, examID, userId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)

@@ -19,6 +19,7 @@ const (
 
 	// Success
 	MESSAGE_SUCCESS_CREATE_SUBMISSION             = "success create submission"
+	MESSAGE_SUCCESS_RUN_CODE             		  = "success run code"
 	MESSAGE_SUCCESS_GET_LIST_SUBMISSION           = "success get list submission"
 	MESSAGE_SUCCESS_GET_SUBMISSION                = "success get submission"
 	MESSAGE_SUCCESS_UPDATE_SUBMISSION             = "success update submission"
