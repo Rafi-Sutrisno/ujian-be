@@ -24,7 +24,7 @@ type SubmissionService interface {
 	GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error)
 	GetCorrectSubmissionStatsByExamandUser(ctx context.Context, examID, userID string) (dto.ExamUserCorrectDTO, error)
 	GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error)
-	GetByExamIDandUserID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
+	GetByExamIDandUserID(ctx context.Context, ginCtx *gin.Context,  examID string, userID string) ([]dto.SubmissionResponse, error)
 	GetByExamID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
 	GetByProblemID(ctx context.Context, problemID string) ([]dto.SubmissionResponse, error)
 	GetByUserID(ctx context.Context, userID string) ([]dto.SubmissionResponse, error)
@@ -278,7 +278,10 @@ func (s *submissionService) GetByID(ctx context.Context, id string) (dto.Submiss
 	return response, nil
 }
 
-func (s *submissionService) GetByExamIDandUserID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error) {
+func (s *submissionService) GetByExamIDandUserID(ctx context.Context, ginCtx *gin.Context,  examID string, userID string) ([]dto.SubmissionResponse, error) {
+	if err := s.authRepo.CanAccessExam(ctx, ginCtx, userID, examID); err != nil {
+		return nil, err
+	}
 	// Get submissions by Exam ID from the repository
 	submissions, err := s.submissionRepo.GetByExamIDandUserID(ctx, nil, examID, userID)
 	if err != nil {

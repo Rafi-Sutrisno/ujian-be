@@ -62,6 +62,10 @@ func (ps *problemService) GetByExamID(ctx context.Context, ginCtx *gin.Context, 
 	// 	return nil, dto_error.ErrAuthorizeFor("this problem")
 	// }
 
+	if err := ps.authRepo.CanAccessProblem(ctx, ginCtx, userId, examID); err != nil {
+		return nil, err
+	}
+
 	problems, err := ps.repo.GetByExamID(ctx, nil, examID)
 	if err != nil {
 		return nil, err
