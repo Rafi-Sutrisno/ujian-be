@@ -8,10 +8,14 @@ type SubmissionRequest struct {
 }
 
 type Judge0SubmissionRequest struct {
-	LanguageID     int    `json:"language_id"`
-	SourceCode     string `json:"source_code"`
-	Stdin          string `json:"stdin"`
-	ExpectedOutput string `json:"expected_output"`
+	LanguageID     int     `json:"language_id"`
+	SourceCode     string  `json:"source_code"`
+	Stdin          string  `json:"stdin"`
+	ExpectedOutput string  `json:"expected_output"`
+	CpuTimeLimit   float64 `json:"cpu_time_limit"`
+	CpuExtraTime   float64 `json:"cpu_extra_time"`
+	WallTimeLimit  float64 `json:"wall_time_limit"`
+	MemoryLimit    int     `json:"memory_limit"`
 }
 
 // type Judge0SubmissionResult struct {

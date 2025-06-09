@@ -131,7 +131,7 @@ func (cr *classRepository) Update(ctx context.Context, tx *gorm.DB, class entity
 		tx = cr.db
 	}
 
-	if err := tx.WithContext(ctx).Save(&class).Error; err != nil {
+	if err := tx.WithContext(ctx).Updates(&class).Error; err != nil {
 		return entity.Class{}, err
 	}
 

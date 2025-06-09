@@ -48,6 +48,8 @@ type (
 		Constraints   string    `json:"constraints" binding:"required"`
 		SampleInput   string    `json:"sample_input" binding:"required"`
 		SampleOutput  string    `json:"sample_output" binding:"required"`
+		CpuTimeLimit  float64 `json:"cpu_time_limit,omitempty"`
+    	MemoryLimit   int     `json:"memory_limit,omitempty"`
 	}
 
 	ProblemResponse struct {
@@ -58,6 +60,8 @@ type (
 		SampleInput   string    `json:"sample_input" `
 		SampleOutput  string    `json:"sample_output" `
 		CreatedAt     string	`json:"created_at" `
+		CpuTimeLimit  float64 `json:"cpu_time_limit"`
+    	MemoryLimit   int     `json:"memory_limit"`
 	}
 
 	ProblemPaginationResponse struct {
@@ -76,6 +80,8 @@ type (
 		Constraints   string    `json:"constraints" form:"constraints"`
 		SampleInput   string    `json:"sample_input" form:"sample_input"`
 		SampleOutput  string    `json:"sample_output" form:"sample_output"`
+		CpuTimeLimit  float64 `json:"cpu_time_limit"`
+		MemoryLimit   int     `json:"memory_limit"`
 	}
 
 	ProblemUpdateResponse struct {

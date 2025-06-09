@@ -30,7 +30,7 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExam(ctx context.Conte
 			u.id AS user_id,
 			u.name AS user_name,
 			u.noid AS user_no_id,
-			COUNT(DISTINCT CASE WHEN s.status = 'accepted' THEN s.problem_id END) AS total_correct,
+			COUNT(DISTINCT CASE WHEN s.status_id = 2 THEN s.problem_id END) AS total_correct,
 			(
 				SELECT COUNT(*) 
 				FROM exam_problems ep 
@@ -59,7 +59,7 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExamandStudent(ctx con
 			u.id AS user_id,
 			u.name AS user_name,
 			u.noid AS user_no_id,
-			COUNT(DISTINCT CASE WHEN s.status = 'accepted' THEN s.problem_id END) AS total_correct,
+			COUNT(DISTINCT CASE WHEN s.status_id = 2 THEN s.problem_id END) AS total_correct,
 			(
 				SELECT COUNT(*) 
 				FROM exam_problems ep 
@@ -100,7 +100,7 @@ func (r *submissionRepository) Update(ctx context.Context, tx *gorm.DB, sub enti
 	}
 
 	err := db.WithContext(ctx).Model(&sub).Updates(map[string]interface{}{
-		"status":  sub.Status,
+		"status_id":  sub.StatusId,
 		"time":    sub.Time,
 		"memory":  sub.Memory,
 	}).Error
@@ -110,7 +110,7 @@ func (r *submissionRepository) Update(ctx context.Context, tx *gorm.DB, sub enti
 
 func (r *submissionRepository) GetPendingSubmissions(ctx context.Context) ([]entity.Submission, error) {
 	var subs []entity.Submission
-	err := r.db.WithContext(ctx).Where("status = ?", "in_queue").Find(&subs).Error
+	err := r.db.WithContext(ctx).Where("status_id = ?", 1).Find(&subs).Error
 	return subs, err
 }
 
@@ -136,7 +136,7 @@ func (r *submissionRepository) GetByExamIDandUserID(ctx context.Context, tx *gor
 	// fmt.Println("ini exam dan user id:", examID, userID)
 
 	var submissions []entity.Submission
-	if err := tx.WithContext(ctx).Where("exam_id = ? AND user_id = ?", examID, userID).Preload("Problem").Preload("Language").Find(&submissions).Error; err != nil {
+	if err := tx.WithContext(ctx).Where("exam_id = ? AND user_id = ?", examID, userID).Preload("Problem").Preload("Language").Preload("Status").Find(&submissions).Error; err != nil {
 		return nil, err
 	}
 	// fmt.Println("ini hasil repo:", submissions)
@@ -150,7 +150,7 @@ func (r *submissionRepository) GetByExamID(ctx context.Context, tx *gorm.DB, exa
 	}
 
 	var submissions []entity.Submission
-	if err := tx.WithContext(ctx).Where("exam_id = ?", examID).Preload("Problem").Preload("Language").Preload("User").Find(&submissions).Error; err != nil {
+	if err := tx.WithContext(ctx).Where("exam_id = ?", examID).Preload("Problem").Preload("Language").Preload("User").Preload("Status").Find(&submissions).Error; err != nil {
 		return nil, err
 	}
 

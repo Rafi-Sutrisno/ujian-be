@@ -58,15 +58,16 @@ type (
 		UserID      		string      `json:"user_id"`
 		ExamID      		string      `json:"exam_id"`
 		ProblemID   		string      `json:"problem_id"`
-		LangID 				string      `json:"lang_id"`
+		LangID 				uint      `json:"lang_id"`
 		Code     			string      `json:"code"`
 		SubmissionTime    	string      `json:"submission_time"`
-		Status     			string      `json:"status"`
+		Status     			uint      `json:"status"`
 		Time 				string		`json:"time"`
 		Memory				string		`json:"memory"`
 		Problem				ProblemResponse   `json:"problem"`
 		Language			LanguageResponse  `json:"lang"`
 		User				UserResponse  `json:"user"`
+		StatusName          string		  `json:"status_name"`
 	}
 
 	SubmissionPaginationResponse struct {

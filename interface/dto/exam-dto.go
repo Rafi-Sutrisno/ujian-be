@@ -76,7 +76,8 @@ type (
 		SEBBrowserKey      	string        	`json:"seb_browser_key"` 
 		SEBConfigKey      	string        	`json:"seb_config_key"`   
 		SEBQuitURL      	string        	`json:"seb_quit_url"`   
-		AllowedLanguages    []LanguageResponse          `json:"allowed_languages"`      
+		AllowedLanguages    []LanguageResponse          `json:"allowed_languages"`  
+		CreatedAt 			string 						`json:"created_at"`    
 	}
 
 

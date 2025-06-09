@@ -2,6 +2,7 @@ package dto
 
 import (
 	"errors"
+	"time"
 )
 
 const (
@@ -45,6 +46,7 @@ type (
 		ExamID     		string     	`json:"exam_id" binding:"required"`
 		ConfigKey       string 		`json:"config_key"`
     	BrowserExamKey  string 		`json:"browser_exam_key"`
+		FEURL			string		`json:"seb_url"`
 	}
 
 	ExamSessionCreateResponse struct {
@@ -60,6 +62,7 @@ type (
 		UserAgent			string 			`json:"user_agent"`
 		Device				string 			`json:"device"`
 		Status              uint			`json:"status"`
+		FinishedAt          time.Time   `json:"finished_at"`
 		User    			*UserResponse 	`json:"user"`
 	}
 	

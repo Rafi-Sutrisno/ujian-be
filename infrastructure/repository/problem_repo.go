@@ -5,6 +5,7 @@ import (
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 
+	"github.com/google/uuid"
 	"gorm.io/gorm"
 )
 
@@ -82,7 +83,17 @@ func (pr *problemRepository) Update(ctx context.Context, tx *gorm.DB, problem en
 		tx = pr.db
 	}
 
-	if err := tx.WithContext(ctx).Save(&problem).Error; err != nil {
+	
+
+	if err := tx.WithContext(ctx).Model(&entity.Problem{}).Where("id = ?", problem.ID).Updates(map[string]interface{}{
+		"title":          problem.Title,
+		"description":    problem.Description,
+		"constraints":    problem.Constraints,
+		"sample_input":   problem.SampleInput,
+		"sample_output":  problem.SampleOutput,
+		"cpu_time_limit": problem.CpuTimeLimit,
+		"memory_limit":   problem.MemoryLimit,
+		}).Error; err != nil {
 		return entity.Problem{}, err
 	}
 
@@ -94,7 +105,8 @@ func (pr *problemRepository) Delete(ctx context.Context, tx *gorm.DB, id string)
 		tx = pr.db
 	}
 
-	if err := tx.WithContext(ctx).Delete(&entity.Problem{}, "id = ?", id).Error; err != nil {
+	problem := entity.Problem{ID: uuid.MustParse(id)}
+	if err := tx.WithContext(ctx).Select("TestCase").Delete(problem).Error; err != nil {
 		return err
 	}
 

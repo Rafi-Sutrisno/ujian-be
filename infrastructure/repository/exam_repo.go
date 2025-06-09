@@ -57,37 +57,49 @@ func (ur *examRepository) GetExamById(ctx context.Context, tx *gorm.DB, examId s
 }
 
 
-func (ur *examRepository) GetByClassID(ctx context.Context, tx *gorm.DB, classID string) ([]entity.Exam, error) {
+func (ur *examRepository) GetByClassID(ctx context.Context, tx *gorm.DB, classID string, check bool) ([]entity.Exam, error) {
 	if tx == nil {
 		tx = ur.db
 	}
 
 	var exams []entity.Exam
-	if err := tx.WithContext(ctx).Where("class_id = ?", classID).Find(&exams).Error; err != nil {
+
+	query := tx.WithContext(ctx).Where("class_id = ?", classID)
+	if check {
+		query = query.Where("is_published = ?", true)
+	}
+
+	if err := query.Find(&exams).Error; err != nil {
 		return nil, err
 	}
 
 	return exams, nil
 }
 
-func (ur *examRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.Exam, error) {
+
+func (ur *examRepository) GetByUserID(ctx context.Context, tx *gorm.DB, userID string, check bool) ([]entity.Exam, error) {
 	if tx == nil {
 		tx = ur.db
 	}
 
 	var exams []entity.Exam
-	err := tx.WithContext(ctx).
+
+	query := tx.WithContext(ctx).
 		Joins("JOIN classes ON classes.id = exams.class_id").
 		Joins("JOIN user_classes ON user_classes.class_id = classes.id").
-		Where("user_classes.user_id = ?", userID).
-		Find(&exams).Error
+		Where("user_classes.user_id = ?", userID)
 
-	if err != nil {
+	if check {
+		query = query.Where("exams.is_published = ?", true)
+	}
+
+	if err := query.Find(&exams).Error; err != nil {
 		return nil, err
 	}
 
 	return exams, nil
 }
+
 
 
 func (ur *examRepository) GetAllExamWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllExamRepositoryResponse, error) {

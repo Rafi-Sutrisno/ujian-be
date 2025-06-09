@@ -76,7 +76,7 @@ func (r *testCaseRepository) Update(ctx context.Context, tx *gorm.DB, testCase e
 		tx = r.db
 	}
 
-	if err := tx.WithContext(ctx).Save(&testCase).Error; err != nil {
+	if err := tx.WithContext(ctx).Updates(&testCase).Error; err != nil {
 		return entity.TestCase{}, err
 	}
 

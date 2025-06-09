@@ -53,6 +53,7 @@ type (
 		ProblemID       string    `json:"problem_id"`
 		InputData       string    `json:"input_data"`
 		ExpectedOutput  string    `json:"expected_output"`
+		CreatedAt 			string 						`json:"created_at"`    
 	}
 
 	TestCasePaginationResponse struct {
