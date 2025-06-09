@@ -12,8 +12,8 @@ type (
 	ExamRepository interface {
 		CreateExam(ctx context.Context, tx *gorm.DB, exam entity.Exam) (entity.Exam, error)
 		GetExamById(ctx context.Context, tx *gorm.DB, examId string) (entity.Exam, error)
-		GetByClassID(ctx context.Context, tx *gorm.DB, classID string) ([]entity.Exam, error)
-		GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.Exam, error)
+		GetByClassID(ctx context.Context, tx *gorm.DB, classID string, check bool) ([]entity.Exam, error)
+		GetByUserID(ctx context.Context, tx *gorm.DB, userID string, check bool) ([]entity.Exam, error)
 		GetAllExamWithPagination(ctx context.Context, tx *gorm.DB, req dto.PaginationRequest) (dto.GetAllExamRepositoryResponse, error)
 		UpdateExam(ctx context.Context, tx *gorm.DB, exam entity.Exam) (entity.Exam, error)
 		DeleteExam(ctx context.Context, tx *gorm.DB, examId string) error

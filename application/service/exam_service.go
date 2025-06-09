@@ -12,6 +12,7 @@ import (
 type (
 	examService struct {
 		examRepository domain.ExamRepository
+		authRepo domain.AuthRepo
 	}
 
 	ExamService interface {
@@ -25,9 +26,10 @@ type (
 	}
 )
 
-func NewExamService(er domain.ExamRepository) ExamService {
+func NewExamService(er domain.ExamRepository, authRepo domain.AuthRepo) ExamService {
 	return &examService{
 		examRepository: er,
+		authRepo: authRepo,
 	}
 }
 
@@ -77,9 +79,19 @@ func (es *examService) CreateExam(ctx context.Context, req dto.ExamCreateRequest
 }
 
 func (es *examService) GetByClassID(ctx context.Context, classID string, userId string) ([]dto.ExamResponse, error) {
+	user, err := es.authRepo.GetUserById(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var check bool
+	if(user.RoleID == 2){
+		check = true
+	}else{
+		check = false
+	}
 	
-	
-	exams, err := es.examRepository.GetByClassID(ctx, nil, classID)
+	exams, err := es.examRepository.GetByClassID(ctx, nil, classID, check)
 	if err != nil {
 		return nil, dto.ErrGetAllExamsByClassId
 	}
@@ -111,7 +123,7 @@ func (es *examService) GetByClassID(ctx context.Context, classID string, userId 
 			StartTime: exam.StartTime,
 			Duration: exam.Duration.String(),
 			EndTime: exam.EndTime,
-
+			CreatedAt: exam.CreatedAt.String(),
 		})
 	}
 
@@ -119,7 +131,19 @@ func (es *examService) GetByClassID(ctx context.Context, classID string, userId 
 }
 
 func (es *examService) GetByUserID(ctx context.Context, userId string) ([]dto.ExamResponse, error) {
-	exams, err := es.examRepository.GetByUserID(ctx, nil, userId)
+	user, err := es.authRepo.GetUserById(ctx, userId)
+	if err != nil {
+		return nil, err
+	}
+
+	var check bool
+	if(user.RoleID == 2){
+		check = true
+	}else{
+		check = false
+	}
+
+	exams, err := es.examRepository.GetByUserID(ctx, nil, userId, check)
 	if err != nil {
 		return nil, dto.ErrGetAllExamsByClassId
 	}
@@ -140,6 +164,7 @@ func (es *examService) GetByUserID(ctx context.Context, userId string) ([]dto.Ex
 			StartTime: exam.StartTime,
 			Duration: exam.Duration.String(),
 			EndTime: exam.EndTime,
+			CreatedAt: exam.CreatedAt.String(),
 		})
 	}
 
@@ -217,6 +242,7 @@ func (us *examService) GetExamById(ctx context.Context, examId string, userId st
 		SEBConfigKey: 		exam.SEBConfigKey,
 		SEBQuitURL:         exam.SEBQuitURL,
 		AllowedLanguages: allowedLangs,
+		CreatedAt: exam.CreatedAt.String(),
 	}, nil
 }
 
