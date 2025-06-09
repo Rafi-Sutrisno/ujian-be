@@ -1,6 +1,10 @@
 package entity
 
-import "github.com/google/uuid"
+import (
+	"time"
+
+	"github.com/google/uuid"
+)
 
 type ExamSesssion struct {
 	ID          		uuid.UUID   `gorm:"type:uuid;primaryKey;default:uuid_generate_v4()" json:"id"`
@@ -11,6 +15,7 @@ type ExamSesssion struct {
 	UserAgent  			string		`gorm:"not null" json:"user_agent"`
 	Device     			string		`gorm:"not null" json:"device"`
 	Status     			uint		`gorm:"not null" json:"status"`
+	FinishedAt          time.Time   `json:"finished_at"`
 	TotalCorrect		uint		`gorm:"not null" json:"total_correct"`
 
 	User      			User    	`gorm:"foreignKey:UserID;constraint:OnUpdate:CASCADE,OnDelete:CASCADE" json:"user"`

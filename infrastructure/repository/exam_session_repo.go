@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
+	"time"
 
 	"gorm.io/gorm"
 )
@@ -121,6 +122,7 @@ func (r *examSessionRepository) FinishSession(ctx context.Context, tx *gorm.DB, 
 		Where("user_id = ? AND exam_id = ?", UserId, ExamId).
 		Updates(map[string]interface{}{
 			"status": 1,
+			"finished_at": time.Now(),
 		}).Error
 
 	if err != nil {
