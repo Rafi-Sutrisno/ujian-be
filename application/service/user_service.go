@@ -250,7 +250,7 @@ func (us *userService) UpdatePassMe(ctx context.Context, req dto.UserUpdatePassw
 
 	checkPassword, err := utils.CheckPassword(user.Password, []byte(req.OldPassword))
 	if err != nil || !checkPassword {
-		return  dto.ErrPasswordNotMatch
+		return  dto.ErrOldPasswordNotMatch
 	}
 
 	NewPassword, err := utils.HashPassword(req.NewPassword)
