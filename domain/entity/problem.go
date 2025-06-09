@@ -11,7 +11,8 @@ type Problem struct {
 	Constraints   string    `json:"constraints"`
 	SampleInput   string    `json:"sample_input"`
 	SampleOutput  string    `json:"sample_output"`
-
+	CpuTimeLimit      float64 `json:"cpu_time_limit,omitempty"`
+    MemoryLimit       int     `json:"memory_limit,omitempty"`
     Timestamp
 
     // Relationships

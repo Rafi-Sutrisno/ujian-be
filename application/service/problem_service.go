@@ -2,11 +2,10 @@ package service
 
 import (
 	"context"
+	"fmt"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
-
-	"github.com/gin-gonic/gin"
 )
 
 type (
@@ -16,8 +15,8 @@ type (
 	}
 
 	ProblemService interface {
-		GetByID(ctx context.Context, ginCtx *gin.Context, id string, userId, problemId string) (dto.ProblemResponse, error)
-		GetByExamID(ctx context.Context, ginCtx *gin.Context, examID string, userId string) ([]dto.ProblemResponse, error)
+		GetByID(ctx context.Context, id string, userId, problemId string) (dto.ProblemResponse, error)
+		GetByExamID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId string, examID string, userId string) ([]dto.ProblemResponse, error)
 		GetAll(ctx context.Context, userId string) ([]dto.ProblemResponse, error)
 		Create(ctx context.Context, req dto.ProblemCreateRequest, userId string) (dto.ProblemResponse, error)
 		Update(ctx context.Context, req dto.ProblemUpdateRequest, id string, userId string) (dto.ProblemUpdateResponse, error)
@@ -32,10 +31,7 @@ func NewProblemService(repo domain.ProblemRepository, authRepo domain.AuthRepo) 
 	}
 }
 
-func (ps *problemService) GetByID(ctx context.Context, ginCtx *gin.Context, id string, userId, problemId string) (dto.ProblemResponse, error) {
-	if err := ps.authRepo.CanAccessProblem(ctx, ginCtx, userId, problemId); err != nil {
-		return dto.ProblemResponse{}, err
-	}
+func (ps *problemService) GetByID(ctx context.Context, id string, userId, problemId string) (dto.ProblemResponse, error) {
 
 	problem, err := ps.repo.GetByID(ctx, nil, id)
 	if err != nil {
@@ -50,10 +46,12 @@ func (ps *problemService) GetByID(ctx context.Context, ginCtx *gin.Context, id s
 		Constraints:  	problem.Constraints,
 		SampleInput:  	problem.SampleInput,
 		SampleOutput: 	problem.SampleOutput,
+		CpuTimeLimit: problem.CpuTimeLimit,
+		MemoryLimit: problem.MemoryLimit,
 	}, nil
 }
 
-func (ps *problemService) GetByExamID(ctx context.Context, ginCtx *gin.Context, userId, examID string) ([]dto.ProblemResponse, error) {
+func (ps *problemService) GetByExamID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examID string) ([]dto.ProblemResponse, error) {
 	// authorized, err := ps.repo.IsUserInExamClass(ctx, nil, userId, examID)
 	// if err != nil {
 	// 	return nil, err
@@ -62,7 +60,7 @@ func (ps *problemService) GetByExamID(ctx context.Context, ginCtx *gin.Context, 
 	// 	return nil, dto_error.ErrAuthorizeFor("this problem")
 	// }
 
-	if err := ps.authRepo.CanAccessProblem(ctx, ginCtx, userId, examID); err != nil {
+	if err := ps.authRepo.CanAccessProblem(ctx, userAgent,requestHash,configKeyHash,fullURL,sessionId, userId, examID); err != nil {
 		return nil, err
 	}
 
@@ -119,6 +117,8 @@ func (ps *problemService) Create(ctx context.Context, req dto.ProblemCreateReque
 		Constraints:  	req.Constraints,
 		SampleInput:  	req.SampleInput,
 		SampleOutput: 	req.SampleOutput,
+		CpuTimeLimit: req.CpuTimeLimit,
+		MemoryLimit: req.MemoryLimit,
 	}
 
 	createdProblem, err := ps.repo.Create(ctx, nil, problem)
@@ -154,13 +154,16 @@ func (ps *problemService) Update(ctx context.Context, req dto.ProblemUpdateReque
 	
 	data := entity.Problem{
 		ID:  			problem.ID,
-		// ExamID: 		problem.ExamID,
 		Title:        	req.Title,
 		Description:  	req.Description,
 		Constraints:  	req.Constraints,
 		SampleInput:  	req.SampleInput,
 		SampleOutput: 	req.SampleOutput,
+		CpuTimeLimit: req.CpuTimeLimit,
+		MemoryLimit: req.MemoryLimit,
 	}
+
+	fmt.Println("ini problem update:", data)
 
 	updatedProblem, err := ps.repo.Update(ctx, nil, data)
 	if err != nil {
@@ -169,7 +172,6 @@ func (ps *problemService) Update(ctx context.Context, req dto.ProblemUpdateReque
 
 	return dto.ProblemUpdateResponse{
 		ID:      updatedProblem.ID.String(),
-		// ExamID:  updatedProblem.ExamID,
 		Title:        	req.Title,
 		Description:  	req.Description,
 		Constraints:  	req.Constraints,
