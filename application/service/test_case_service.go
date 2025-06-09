@@ -55,6 +55,7 @@ func (ts *testCaseService) GetByProblemID(ctx context.Context, problemID, userId
 			ProblemID:     testCase.ProblemID,
 			InputData:     testCase.InputData,
 			ExpectedOutput: testCase.ExpectedOutput,
+			CreatedAt: testCase.CreatedAt.String(),
 		})
 	}
 
