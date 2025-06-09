@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"mods/application/service"
 	"mods/interface/dto"
 	"mods/utils"
@@ -33,7 +34,7 @@ func NewProblemController(ps service.ProblemService) ProblemController {
 func (pc *problemController) GetByID(ctx *gin.Context) {
 	problem_id := ctx.Param("problem_id")
 	userId := ctx.MustGet("requester_id").(string)
-	result, err := pc.problemService.GetByID(ctx.Request.Context(), ctx, problem_id, userId, problem_id)
+	result, err := pc.problemService.GetByID(ctx.Request.Context(), problem_id, userId, problem_id)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -46,7 +47,28 @@ func (pc *problemController) GetByID(ctx *gin.Context) {
 func (pc *problemController) GetByExamID(ctx *gin.Context) {
 	examID := ctx.Param("exam_id")
 	userId := ctx.MustGet("requester_id").(string)
-	result, err := pc.problemService.GetByExamID(ctx.Request.Context(), ctx, userId, examID)
+
+	
+	userAgent := ctx.Request.UserAgent()
+	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
+	configKeyHash := ctx.GetHeader("X-Safeexambrowser-Configkeyhash")
+
+	scheme := "http"
+	if ctx.Request.TLS != nil {
+		scheme = "https"
+	}
+	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
+	fmt.Println("ini full url: ", fullURL)
+
+	sessionID, err := ctx.Cookie("session_id")
+	if err != nil {
+		fmt.Println("Tidak ada cookie session_id, lanjutkan tanpa session")
+		sessionID = ""
+	} else {
+		fmt.Println("ini session id dari cookie:", sessionID)
+	}
+
+	result, err := pc.problemService.GetByExamID(ctx.Request.Context(), userAgent,requestHash, configKeyHash, fullURL, sessionID, userId, examID)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)

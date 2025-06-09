@@ -8,12 +8,9 @@ import (
 	"fmt"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
-	"mods/infrastructure/auth"
 	"mods/interface/dto"
 	"strings"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 type (
@@ -30,7 +27,7 @@ type (
 			userId string,
 			ipAddress string,
 			userAgent string,
-			ginCtx *gin.Context, // new param
+			requestHash, configKeyHash,
 			fullURL string,
 		) (dto.ExamSessionCreateResponse, string, int64, error)
 		GetBySessionID(ctx context.Context, sessionID string) (*dto.ExamSessionGetResponse, error)
@@ -54,24 +51,12 @@ func (s *examSessionService) CreateorUpdateSession(
 	userId string,
 	ipAddress string,
 	userAgent string,
-	ginCtx *gin.Context, // new param
+	requestHash, configKeyHash,
 	fullURL string,
 ) (dto.ExamSessionCreateResponse, string, int64, error) {
-	timeleft, err := s.authRepo.CanStartExam(ctx, userId, req.ExamID);
+	timeleft, err := s.authRepo.CanStartExam(ctx, userAgent, requestHash, configKeyHash, fullURL, userId, req.ExamID);
 	if  err != nil {
 		return dto.ExamSessionCreateResponse{},"", 0, err
-	}
-
-	exam, err := s.examSessionRepository.GetSEBkey(ctx, nil, req.ExamID)
-	if err != nil {
-		return dto.ExamSessionCreateResponse{}, "", 0, dto.ErrExamNotFound
-	}
-
-	if exam.IsSEBRestricted {
-		err := auth.ValidateSEBRequest(ginCtx, exam.SEBBrowserKey, exam.SEBConfigKey, exam.IsSEBRestricted)
-		if err != nil {
-			return dto.ExamSessionCreateResponse{}, "", 0, err
-		}
 	}
 	
 
@@ -193,6 +178,7 @@ func (s *examSessionService) GetByExamID(ctx context.Context, examId string) ([]
 			UserAgent: session.UserAgent,
 			Device: session.Device,
 			Status: session.Status,
+			FinishedAt: session.FinishedAt,
 			User: &dto.UserResponse{
 				ID:       	session.User.ID.String(),
 				Name: 		session.User.Name,

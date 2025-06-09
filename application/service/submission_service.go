@@ -12,19 +12,16 @@ import (
 	"strconv"
 	"strings"
 	"time"
-
-	"github.com/gin-gonic/gin"
 )
 
 type SubmissionService interface {
-	RunCode(ctx context.Context, ginCtx *gin.Context, req dto.Judge0Request, userId, examId string) (dto.Judge0Response, error)
-	SubmitCode(ctx context.Context, ginCtx *gin.Context, req dto.SubmissionRequest, userId, examId string) (dto.SubmissionResponse, error)
+	RunCode(ctx context.Context, req dto.Judge0Request, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examId string) (dto.Judge0Response, error)
+	SubmitCode(ctx context.Context, req dto.SubmissionRequest, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examId string) (dto.SubmissionResponse, error)
 	StartSubmissionPolling(ctx context.Context)
-	CreateSubmission(ctx context.Context, request dto.SubmissionCreateRequest) (dto.SubmissionResponse, error)
 	GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error)
 	GetCorrectSubmissionStatsByExamandUser(ctx context.Context, examID, userID string) (dto.ExamUserCorrectDTO, error)
 	GetByID(ctx context.Context, id string) (dto.SubmissionResponse, error)
-	GetByExamIDandUserID(ctx context.Context, ginCtx *gin.Context,  examID string, userID string) ([]dto.SubmissionResponse, error)
+	GetByExamIDandUserID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId, userID, examID string, ) ([]dto.SubmissionResponse, error)
 	GetByExamID(ctx context.Context, examID string, userID string) ([]dto.SubmissionResponse, error)
 	GetByProblemID(ctx context.Context, problemID string) ([]dto.SubmissionResponse, error)
 	GetByUserID(ctx context.Context, userID string) ([]dto.SubmissionResponse, error)
@@ -33,28 +30,55 @@ type SubmissionService interface {
 type submissionService struct {
 	submissionRepo domain.SubmissionRepository
 	testcaseRepo domain.TestCaseRepository
+	langRepo domain.LanguageRepository
+	problemRepo domain.ProblemRepository
 	authRepo domain.AuthRepo
 }
 
-func NewSubmissionService(submissionRepo domain.SubmissionRepository, testcaseRepo domain.TestCaseRepository, authRepo domain.AuthRepo) SubmissionService {
+func NewSubmissionService(submissionRepo domain.SubmissionRepository, testcaseRepo domain.TestCaseRepository, langRepo domain.LanguageRepository, problemRepo domain.ProblemRepository, authRepo domain.AuthRepo) SubmissionService {
 	return &submissionService{
 		submissionRepo: submissionRepo,
 		testcaseRepo: testcaseRepo,
+		langRepo: langRepo,
+		problemRepo: problemRepo,
 		authRepo: authRepo,
 	}
 }
 
-func (s *submissionService) RunCode(ctx context.Context, ginCtx *gin.Context, req dto.Judge0Request, userId, examId string) (dto.Judge0Response, error){
-	if err := s.authRepo.CanAccessExam(ctx, ginCtx, userId, examId); err != nil {
+func (s *submissionService) RunCode(ctx context.Context, req dto.Judge0Request, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examId string) (dto.Judge0Response, error){
+	if err := s.authRepo.CanAccessExam(ctx, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examId); err != nil {
 		return dto.Judge0Response{}, err
 	}
+	lang, err := s.langRepo.GetByID(ctx, nil, uint(req.LanguageID))
+	if err != nil{
+		return dto.Judge0Response{}, err
+	}
+	u, err := strconv.ParseInt(lang.Code, 10, 0) 
+	if err != nil {
+		return dto.Judge0Response{}, err
+	}
+
+	req.LanguageID = int(u)
 
 	return judge0.SubmitToJudge0(req)
 }
 
-func (s *submissionService) SubmitCode(ctx context.Context, ginCtx *gin.Context, req dto.SubmissionRequest, userId, examId string) (dto.SubmissionResponse, error) {
-	if err := s.authRepo.CanAccessExam(ctx, ginCtx, userId, examId); err != nil {
+func (s *submissionService) SubmitCode(ctx context.Context, req dto.SubmissionRequest, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examId string) (dto.SubmissionResponse, error) {
+	if err := s.authRepo.CanAccessExam(ctx, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examId); err != nil {
 		return dto.SubmissionResponse{}, err
+	}
+	problem, err := s.problemRepo.GetByID(ctx, nil, req.ProblemID)
+	if err != nil {
+		return dto.SubmissionResponse{}, err
+	}
+
+	cpuLimit := problem.CpuTimeLimit
+	if cpuLimit == 0 {
+		cpuLimit = 2.0
+	}
+	memoryLimit := problem.MemoryLimit
+	if memoryLimit == 0 {
+		memoryLimit = 128 * 1024
 	}
 
 	testCases, err := s.testcaseRepo.GetByProblemID(ctx, nil, req.ProblemID)
@@ -62,13 +86,27 @@ func (s *submissionService) SubmitCode(ctx context.Context, ginCtx *gin.Context,
 		return dto.SubmissionResponse{}, err
 	}
 
+	lang, err := s.langRepo.GetByID(ctx, nil, uint(req.LanguageID))
+	if err != nil{
+		return dto.SubmissionResponse{}, err
+	}
+	
+	u, err := strconv.ParseInt(lang.Code, 10, 0) 
+	if err != nil {
+		return dto.SubmissionResponse{}, err
+	}
+
 	var submissions []dto.Judge0SubmissionRequest
 	for _, tc := range testCases {
 		submissions = append(submissions, dto.Judge0SubmissionRequest{
-			LanguageID:     req.LanguageID,
+			LanguageID:     int(u),
 			SourceCode:     base64.StdEncoding.EncodeToString([]byte(req.SourceCode)),
 			Stdin:          base64.StdEncoding.EncodeToString([]byte(tc.InputData + "\n")),
 			ExpectedOutput: base64.StdEncoding.EncodeToString([]byte(tc.ExpectedOutput + "\n")),
+			CpuTimeLimit:   cpuLimit,
+			CpuExtraTime:   0.5,
+			WallTimeLimit:  cpuLimit + 2,
+			MemoryLimit:    memoryLimit,
 		})
 	}
 
@@ -83,15 +121,16 @@ func (s *submissionService) SubmitCode(ctx context.Context, ginCtx *gin.Context,
 		tokenList = append(tokenList, item.Token)
 	}
 	tokenStr := strings.Join(tokenList, ",")
+	fmt.Println("ini lang:", uint(req.LanguageID))
 
 	submission := entity.Submission{
 		UserID:         userId,
 		ExamID:         req.ExamID,
 		ProblemID:      req.ProblemID,
 		Code:           base64.StdEncoding.EncodeToString([]byte(req.SourceCode)),
-		LangID:         "1",
+		LangID:         uint(req.LanguageID),
 		SubmissionTime: time.Now().Format(time.RFC3339),
-		Status:         "in_queue",
+		StatusId:         1,
 		Judge0Token:    tokenStr,
 		Time:           "",
 		Memory:         "",
@@ -104,7 +143,7 @@ func (s *submissionService) SubmitCode(ctx context.Context, ginCtx *gin.Context,
 
 	return dto.SubmissionResponse{
 		ID:     created.ID.String(),
-		Status: created.Status,
+		Status: created.StatusId,
 	}, nil
 }
 
@@ -144,50 +183,63 @@ func (s *submissionService) pollPendingSubmissions(ctx context.Context) {
 		allDone := true
 		maxTime := float64(0)
 		maxMemory := 0
-		status := "accepted"
+		finalStatus := 8 // default to "unknown/unset"
 
 		for _, res := range batchResp.Submissions {
-			if res.Status.ID <= 2 { // In queue or Processing
+			if res.Status.ID <= 2 {
 				allDone = false
 				break
 			}
 
-			// Convert string to float64
-			timeVal, err := strconv.ParseFloat(res.Time, 64)
-			if err != nil {
-				log.Printf("poll error: invalid time format for submission %s: %v", submission.ID, err)
-				continue
+			// Map Judge0 status to your custom status ID
+			switch res.Status.ID {
+			case 3: // Accepted
+				if finalStatus > 2 {
+					finalStatus = 2
+				}
+			case 4: // Wrong Answer
+				if finalStatus > 3 {
+					finalStatus = 3
+				}
+			case 6: // Compilation Error
+				finalStatus = 4
+			case 11: // Runtime Error (NZEC)
+				if finalStatus > 5 {
+					finalStatus = 5
+				}
+			case 5: // Time Limit Exceeded
+				if finalStatus > 6 {
+					finalStatus = 6
+				}
+			case 7: // Memory Limit Exceeded (optional Judge0 status)
+				if finalStatus > 7 {
+					finalStatus = 7
+				}
+			case 13: // Internal Error
+				finalStatus = 8
 			}
 
-			if timeVal > maxTime {
-				maxTime = timeVal
+			// Parse time
+			if res.Time != "" {
+				timeVal, err := strconv.ParseFloat(res.Time, 64)
+				if err != nil {
+					log.Printf("poll error: invalid time format for submission %s: %v", submission.ID, err)
+				} else if timeVal > maxTime {
+					maxTime = timeVal
+				}
 			}
+
+			// Parse memory
 			if res.Memory > maxMemory {
 				maxMemory = res.Memory
-			}
-			switch res.Status.ID {
-			case 6:
-				status = "wrong_answer"
-			case 11:
-				status = "compilation_error"
-			case 4:
-				status = "wrong_answer"
-			case 13:
-				status = "runtime_error"
-			case 5:
-				status = "time_limit_exceeded"
-			// You can keep adding more status codes if needed
-			default:
-				fmt.Println("masuk else data res status:", res.Status)
 			}
 		}
 
 		if allDone {
-			fmt.Println("ini last status", status)
-			submission.Status = status
+			submission.StatusId = uint(finalStatus)
 			submission.Time = fmt.Sprintf("%.2f", maxTime)
 			submission.Memory = fmt.Sprintf("%d", maxMemory)
-			fmt.Println("ini last submission", submission)
+			log.Println("Submission final result:", submission)
 
 			if _, err := s.submissionRepo.Update(ctx, nil, submission); err != nil {
 				log.Printf("poll error: failed to update submission %s: %v", submission.ID, err)
@@ -197,38 +249,6 @@ func (s *submissionService) pollPendingSubmissions(ctx context.Context) {
 }
 
 
-func (s *submissionService) CreateSubmission(ctx context.Context, request dto.SubmissionCreateRequest) (dto.SubmissionResponse, error) {
-	// Convert the request to the entity
-	submission := entity.Submission{
-		UserID:      request.UserID,
-		ExamID:      request.ExamID,
-		ProblemID:   request.ProblemID,
-		LangID:      request.LangID,
-		Code:        request.Code,
-		SubmissionTime: time.Now().Format(time.RFC3339), // Set current time as submission time
-		Status:      "accepted", // Default status to "accepted"
-	}
-
-	// Save to the database
-	submitted, err := s.submissionRepo.Create(ctx, nil, submission)
-	if err != nil {
-		return dto.SubmissionResponse{}, err
-	}
-
-	// Map the created submission entity to the response DTO
-	response := dto.SubmissionResponse{
-		ID:            submitted.ID.String(),
-		UserID:        submitted.UserID,
-		ExamID:        submitted.ExamID,
-		ProblemID:     submitted.ProblemID,
-		LangID:        submitted.LangID,
-		Code:          submitted.Code,
-		SubmissionTime: submitted.SubmissionTime,
-		Status:        submitted.Status,
-	}
-
-	return response, nil
-}
 
 func (s *submissionService) GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error) {
 	// var results []dto.ExamUserCorrectDTO
@@ -272,14 +292,14 @@ func (s *submissionService) GetByID(ctx context.Context, id string) (dto.Submiss
 		LangID:        submission.LangID,
 		Code:          submission.Code,
 		SubmissionTime: submission.SubmissionTime,
-		Status:        submission.Status,
+		Status:        submission.StatusId,
 	}
 
 	return response, nil
 }
 
-func (s *submissionService) GetByExamIDandUserID(ctx context.Context, ginCtx *gin.Context,  examID string, userID string) ([]dto.SubmissionResponse, error) {
-	if err := s.authRepo.CanAccessExam(ctx, ginCtx, userID, examID); err != nil {
+func (s *submissionService) GetByExamIDandUserID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId, userID, examID string) ([]dto.SubmissionResponse, error) {
+	if err := s.authRepo.CanAccessExam(ctx, userAgent, requestHash, configKeyHash, fullURL, sessionId, userID, examID); err != nil {
 		return nil, err
 	}
 	// Get submissions by Exam ID from the repository
@@ -299,7 +319,8 @@ func (s *submissionService) GetByExamIDandUserID(ctx context.Context, ginCtx *gi
 			LangID:        submission.LangID,
 			Code:          submission.Code,
 			SubmissionTime: submission.SubmissionTime,
-			Status:        submission.Status,
+			Status:        submission.StatusId,
+			StatusName: submission.Status.Name,
 			Time:          submission.Time,
 			Memory: 	   submission.Memory,
 			Problem: dto.ProblemResponse{
@@ -332,7 +353,8 @@ func (s *submissionService) GetByExamID(ctx context.Context, examID string, user
 			LangID:        submission.LangID,
 			Code:          submission.Code,
 			SubmissionTime: submission.SubmissionTime,
-			Status:        submission.Status,
+			Status:        submission.StatusId,
+			StatusName: submission.Status.Name,
 			Time:          submission.Time,
 			Memory: 	   submission.Memory,
 			Problem: dto.ProblemResponse{
@@ -369,7 +391,7 @@ func (s *submissionService) GetByProblemID(ctx context.Context, problemID string
 			LangID:        submission.LangID,
 			Code:          submission.Code,
 			SubmissionTime: submission.SubmissionTime,
-			Status:        submission.Status,
+			Status:        submission.StatusId,
 		})
 	}
 
@@ -394,7 +416,7 @@ func (s *submissionService) GetByUserID(ctx context.Context, userID string) ([]d
 			LangID:        submission.LangID,
 			Code:          submission.Code,
 			SubmissionTime: submission.SubmissionTime,
-			Status:        submission.Status,
+			Status:        submission.StatusId,
 		})
 	}
 

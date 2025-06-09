@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"mods/application/service"
 	"mods/interface/dto"
 	"mods/utils"
@@ -17,7 +18,6 @@ type (
 	SubmissionController interface {
 		RunCode(ctx *gin.Context)
 		SubmitCode(ctx *gin.Context)
-		Create(ctx *gin.Context)
 		GetCorrectStatsByExam(ctx *gin.Context)
 		GetCorrectStatsByExamandStudent(ctx *gin.Context)
 		GetByID(ctx *gin.Context)
@@ -46,8 +46,27 @@ func  (sc *submissionController) RunCode(ctx *gin.Context) {
 		return
 	}
 
+	sessionID, err := ctx.Cookie("session_id")
+	if err != nil {
+		fmt.Println("Tidak ada cookie session_id, lanjutkan tanpa session")
+		sessionID = ""
+	} else {
+		fmt.Println("ini session id dari cookie:", sessionID)
+	}
+
+	userAgent := ctx.Request.UserAgent()
+	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
+	configKeyHash := ctx.GetHeader("X-Safeexambrowser-Configkeyhash")
+
+	scheme := "http"
+	if ctx.Request.TLS != nil {
+		scheme = "https"
+	}
+	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
+	fmt.Println("ini full url: ", fullURL)
+
 	// Call service
-	result, err := sc.submissionService.RunCode(ctx.Request.Context(), ctx, req, userId, examId)
+	result, err := sc.submissionService.RunCode(ctx.Request.Context(), req, userAgent,requestHash,configKeyHash, fullURL,  sessionID,userId, examId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -69,8 +88,27 @@ func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
 		return
 	}
 
+	sessionID, err := ctx.Cookie("session_id")
+	if err != nil {
+		fmt.Println("Tidak ada cookie session_id, lanjutkan tanpa session")
+		sessionID = ""
+	} else {
+		fmt.Println("ini session id dari cookie:", sessionID)
+	}
+
+	userAgent := ctx.Request.UserAgent()
+	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
+	configKeyHash := ctx.GetHeader("X-Safeexambrowser-Configkeyhash")
+
+	scheme := "http"
+	if ctx.Request.TLS != nil {
+		scheme = "https"
+	}
+	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
+	fmt.Println("ini full url: ", fullURL)
+
 	// Call service
-	result, err := sc.submissionService.SubmitCode(ctx.Request.Context(), ctx, req, userId, examId)
+	result, err := sc.submissionService.SubmitCode(ctx.Request.Context(),req, userAgent,requestHash,configKeyHash, fullURL,  sessionID,  userId, examId)
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
@@ -78,25 +116,6 @@ func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
 	}
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_SUBMISSION, result)
 	ctx.JSON(http.StatusOK, res)
-}
-
-func (sc *submissionController) Create(ctx *gin.Context) {
-	var req dto.SubmissionCreateRequest
-	if err := ctx.ShouldBindJSON(&req); err != nil {
-		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
-		ctx.JSON(http.StatusBadRequest, res)
-		return
-	}
-
-	result, err := sc.submissionService.CreateSubmission(ctx.Request.Context(), req)
-	if err != nil {
-		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_CREATE_SUBMISSION, err.Error(), nil)
-		ctx.JSON(http.StatusBadRequest, res)
-		return
-	}
-
-	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_SUBMISSION, result)
-	ctx.JSON(http.StatusCreated, res)
 }
 
 func (sc *submissionController) GetCorrectStatsByExam(ctx *gin.Context) {
@@ -146,7 +165,28 @@ func (sc *submissionController) GetByID(ctx *gin.Context) {
 func (sc *submissionController) GetByExamIDandUserID(ctx *gin.Context) {
 	examID := ctx.Param("exam_id")
 	userId := ctx.MustGet("requester_id").(string)
-	result, err := sc.submissionService.GetByExamIDandUserID(ctx.Request.Context(), ctx, examID, userId)
+
+	sessionID, err := ctx.Cookie("session_id")
+	if err != nil {
+		fmt.Println("Tidak ada cookie session_id, lanjutkan tanpa session")
+		sessionID = ""
+	} else {
+		fmt.Println("ini session id dari cookie:", sessionID)
+	}
+
+	userAgent := ctx.Request.UserAgent()
+	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
+	configKeyHash := ctx.GetHeader("X-Safeexambrowser-Configkeyhash")
+
+	scheme := "http"
+	if ctx.Request.TLS != nil {
+		scheme = "https"
+	}
+	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
+	fmt.Println("ini full url: ", fullURL)
+
+	
+	result, err := sc.submissionService.GetByExamIDandUserID(ctx.Request.Context(), userAgent,requestHash,configKeyHash, fullURL, sessionID,userId, examID )
 	if err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_SUBMISSION, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)

@@ -1,6 +1,8 @@
 package controller
 
 import (
+	"crypto/sha256"
+	"encoding/hex"
 	"fmt"
 	"mods/application/service"
 	"mods/interface/dto"
@@ -31,8 +33,6 @@ func NewExamSessionController(es service.ExamSessionService) ExamSessionControll
 	}
 }
 
-
-
 func (cc *examSessionController) CreateSession(ctx *gin.Context) {
     var request dto.ExamSessionCreateRequest
     userId := ctx.MustGet("requester_id").(string)
@@ -44,12 +44,23 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 		fmt.Println("ini session id dari cookie:", sessionID)
 	}
 
+	userAgent := ctx.Request.UserAgent()
+	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
+	configKeyHash := ctx.GetHeader("X-Safeexambrowser-Configkeyhash")
     
     if err := ctx.ShouldBind(&request); err != nil {
         res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
         ctx.JSON(http.StatusBadRequest, res)
         return
     }
+	fmt.Println("ini fe url:", request.FEURL)
+	fmt.Println("ini requesthash dari body:", request.BrowserExamKey)
+	fmt.Println("ini requesthash dari header:", requestHash)
+	fmt.Println("ini confighash dari body:", request.ConfigKey)
+	fmt.Println("ini confighash dari header:", configKeyHash)
+
+	fmt.Println(validateSEBHash(request.FEURL, "fc7289e2e6e68444bc89d0b1ad2b70a20cabd2a93c1f4a0d7ae0fd4d64dd7cf5", request.BrowserExamKey))
+	fmt.Println(validateSEBHash(request.FEURL, "53adc488d10da166352a79712136414ae286a0dd28fe01147598f9b9fa561bd1", request.ConfigKey))
 
 	scheme := "http"
 	if ctx.Request.TLS != nil {
@@ -64,8 +75,7 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 		sessionID,
 		userId,
 		ctx.ClientIP(),
-		ctx.Request.UserAgent(),
-		ctx, // pass full gin.Context to service
+		userAgent,requestHash,configKeyHash,
 		fullURL,
 	)
 	if err != nil {
@@ -161,3 +171,18 @@ func (cc *examSessionController) DeleteByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
+func  validateSEBHash(url string, key string, recvHash string) bool {
+
+    hasher := sha256.New()
+
+	hasher.Write([]byte(key))
+	hasher.Write([]byte(url))
+    
+    finalHash := hasher.Sum(nil)
+    hashHex := hex.EncodeToString(finalHash)
+
+    fmt.Println("Controller-BEK/ConfigKey: Expected Hash:", hashHex)
+    fmt.Println("Controller-BEK/ConfigKey: Received Hash:", recvHash)
+
+    return hashHex == recvHash
+}
