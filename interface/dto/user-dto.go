@@ -50,6 +50,7 @@ var (
 	ErrDeleteUser             = errors.New("failed to delete user")
 	ErrDeniedAccess           = errors.New("denied access")
 	ErrPasswordNotMatch       = errors.New("password not match")
+	ErrOldPasswordNotMatch       = errors.New("wrong password: old password not match")
 	ErrEmailOrPassword        = errors.New("wrong email or password")
 	ErrAccountNotVerified     = errors.New("account not verified")
 	ErrTokenInvalid           = errors.New("token invalid")
