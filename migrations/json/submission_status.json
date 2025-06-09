@@ -1,0 +1,26 @@
+[
+  {
+    "name": "in_queue"
+  },
+  {
+    "name": "accepted"
+  },
+  {
+    "name": "wrong answer"
+  },
+  {
+    "name": "compilation_error"
+  },
+  {
+    "name": "runtime_error"
+  },
+  {
+    "name": "time_limit_exceeded"
+  },
+  {
+    "name": "memory_limit_exceeded"
+  },
+  {
+    "name": "unknown/unset"
+  }
+]
