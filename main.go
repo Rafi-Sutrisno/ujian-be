@@ -53,6 +53,7 @@ func main() {
 		examSessionRepository domain.ExamSessionRepository = repository.NewExamSessionRepository(db)
 		examProblemRepository domain.ExamProblemRepository = repository.NewExamProblemRepository(db)
 		languageRepository    domain.LanguageRepository    = repository.NewLanguageRepository(db)
+		userDraftRepository    domain.UserDraftRepository    = repository.NewUserDraftRepository(db)
 	
 		// Service
 		userService        service.UserService        = service.NewUserService(userRepository, jwtService)
@@ -66,6 +67,7 @@ func main() {
 		examSessionService  service.ExamSessionService  = service.NewExamSessionService(examSessionRepository, authRepository)
 		examProblemService  service.ExamProblemService  = service.NewExamProblemService(examProblemRepository)
 		languageService     service.LanguageService     = service.NewLanguageService(languageRepository)
+		userDraftService     service.UserDraftService     = service.NewUserDraftService(userDraftRepository)
 	
 		// Controller
 		userController        controller.UserController        = controller.NewUserController(userService)
@@ -79,6 +81,7 @@ func main() {
 		examSessionController  controller.ExamSessionController  = controller.NewExamSessionController(examSessionService)
 		examProblemController  controller.ExamProblemController  = controller.NewExamProblemController(examProblemService)
 		languageController     controller.LanguageController     = controller.NewLanguageController(languageService)
+		userDraftController   controller.UserDraftController     = controller.NewUserDraftController(userDraftService)
 	)
 	
 	go submissionService.StartSubmissionPolling(context.Background())
@@ -99,6 +102,7 @@ func main() {
 	routes.ExamSessionRoutes(server, examSessionController, jwtService)
 	routes.ExamProblemRoutes(server, examProblemController, jwtService)
 	routes.LanguageRoutes(server, languageController, jwtService)
+	routes.UserDraftRoutes(server, userDraftController, jwtService)
 
 	// routes.UserExamRoutes(server, userExamController, jwtService)
 
