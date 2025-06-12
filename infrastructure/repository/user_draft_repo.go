@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"fmt"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 
@@ -30,16 +31,31 @@ func (udr *userDraftRepository) Create(ctx context.Context, tx *gorm.DB, userDra
 	return userDraft, nil
 }
 
-func (udr *userDraftRepository) GetByIdentifiers(ctx context.Context, userID, examID, problemID, language string) (entity.UserCodeDraft, error) {
-	var draft entity.UserCodeDraft
+func (udr *userDraftRepository) Update(ctx context.Context, tx *gorm.DB, draft entity.UserCodeDraft) (entity.UserCodeDraft, error) {
+	if tx == nil {
+		tx = udr.db
+	}
 
-	err := udr.db.WithContext(ctx).
-		Where("user_id = ? AND exam_id = ? AND problem_id = ? AND language = ?", userID, examID, problemID, language).
-		First(&draft).Error
-
-	if err != nil {
+	if err := tx.WithContext(ctx).Save(&draft).Error; err != nil {
 		return entity.UserCodeDraft{}, err
 	}
 
 	return draft, nil
 }
+
+
+func (udr *userDraftRepository) GetByIdentifiers(ctx context.Context, userID, examID, problemID, language string) (entity.UserCodeDraft, error) {
+	var draft entity.UserCodeDraft
+
+	err := udr.db.WithContext(ctx).
+		Where("user_id = ? AND exam_id = ? AND problem_id = ? AND language = ?", userID, examID, problemID, language).
+		First(&draft).Error // <-- this was missing
+
+	if err != nil {
+		return entity.UserCodeDraft{}, err
+	}
+	fmt.Println("ini draft dari db:", draft)
+
+	return draft, nil
+}
+

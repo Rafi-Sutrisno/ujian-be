@@ -11,7 +11,7 @@ import (
 func UserDraftRoutes(router *gin.Engine, UserDraftController controller.UserDraftController, jwtService service.JWTService) {
 	userPrivate := router.Group("/api/user/draft").Use(middleware.Authenticate(jwtService))
 	{
-		userPrivate.GET("/", UserDraftController.GetDraft)
-		userPrivate.POST("/", UserDraftController.SaveDraft)
+		userPrivate.POST("/load", UserDraftController.GetDraft)
+		userPrivate.POST("/save", UserDraftController.SaveDraft)
 	}
 }

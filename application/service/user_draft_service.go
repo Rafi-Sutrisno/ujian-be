@@ -2,6 +2,7 @@ package service
 
 import (
 	"context"
+	"log"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
@@ -32,18 +33,33 @@ func (s *userDraftService) SaveDraft(ctx context.Context, req dto.UserCodeDraftR
 		Language:  req.Language,
 		Code:      req.Code,
 	}
-
-	// Optional: Check if it exists -> update, otherwise create
+    log.Println("mark 0")
 	existing, err := s.repo.GetByIdentifiers(ctx, req.UserID, req.ExamID, req.ProblemID, req.Language)
+	log.Println("mark 1")
 	if err == nil {
-		draft.ID = existing.ID // Preserve ID if exists
+		log.Println("mark 2")
+		// Record exists, so update it
+		draft.ID = existing.ID
+		updated, err := s.repo.Update(ctx, nil, draft)
+		if err != nil {
+			return dto.UserCodeDraftResponse{}, err
+		}
+		return dto.UserCodeDraftResponse{
+			ID:        updated.ID.String(),
+			UserID:    updated.UserID,
+			ExamID:    updated.ExamID,
+			ProblemID: updated.ProblemID,
+			Language:  updated.Language,
+			Code:      updated.Code,
+		}, nil
 	}
-
+	log.Println("mark 3")
+	// If not found, create new
 	created, err := s.repo.Create(ctx, nil, draft)
 	if err != nil {
 		return dto.UserCodeDraftResponse{}, err
 	}
-
+    log.Println("mark 4")
 	return dto.UserCodeDraftResponse{
 		ID:        created.ID.String(),
 		UserID:    created.UserID,
@@ -53,6 +69,7 @@ func (s *userDraftService) SaveDraft(ctx context.Context, req dto.UserCodeDraftR
 		Code:      created.Code,
 	}, nil
 }
+
 
 func (s *userDraftService) GetDraft(ctx context.Context, userID, examID, problemID, language string) (dto.UserCodeDraftResponse, error) {
 	draft, err := s.repo.GetByIdentifiers(ctx, userID, examID, problemID, language)
