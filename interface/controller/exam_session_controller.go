@@ -22,6 +22,7 @@ type (
 		CheckSession(ctx *gin.Context)
 		CreateSession(ctx *gin.Context)
         GetByExamID(ctx *gin.Context)
+		GetBySessionID(ctx *gin.Context)
 		FinishSession(ctx *gin.Context)
 		DeleteByID(ctx *gin.Context)
 	}
@@ -139,6 +140,25 @@ func (cc *examSessionController) GetByExamID(ctx *gin.Context) {
 	}
 
 	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_EXAM_SESSION, sessions)
+	ctx.JSON(http.StatusOK, res)
+}
+
+func (cc *examSessionController) GetBySessionID(ctx *gin.Context) {
+	sessionID, err := ctx.Cookie("session_id")
+	if err != nil || sessionID == "" {
+		res := utils.BuildResponseFailed("Session not found", "No session_id cookie provided", nil)
+		ctx.JSON(http.StatusUnauthorized, res)
+		return
+	}
+
+	session, err := cc.examSessionService.GetBySessionID(ctx.Request.Context(), sessionID)
+	if err != nil {
+		res := utils.BuildResponseFailed("Invalid session", err.Error(), nil)
+		ctx.JSON(http.StatusUnauthorized, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess("Session is valid", session)
 	ctx.JSON(http.StatusOK, res)
 }
 
