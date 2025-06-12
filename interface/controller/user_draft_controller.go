@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"fmt"
 	"mods/application/service"
 	"mods/interface/dto"
 	"mods/utils"
@@ -29,6 +30,7 @@ func NewUserDraftController(s service.UserDraftService) UserDraftController {
 func (c *userDraftController) SaveDraft(ctx *gin.Context) {
 	var req dto.UserCodeDraftRequest
 	userId := ctx.MustGet("requester_id").(string)
+	fmt.Println("masuk controller")
 
 	if err := ctx.ShouldBindJSON(&req); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
@@ -50,18 +52,26 @@ func (c *userDraftController) SaveDraft(ctx *gin.Context) {
 }
 
 func (c *userDraftController) GetDraft(ctx *gin.Context) {
+	var req dto.UserCodeDraftRequest
 	userId := ctx.MustGet("requester_id").(string)
-	examId := ctx.Query("exam_id")
-	problemId := ctx.Query("problem_id")
-	language := ctx.Query("language")
 
-	if examId == "" || problemId == "" || language == "" {
+	if err := ctx.ShouldBindJSON(&req); err != nil {
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	req.UserID = userId
+
+	if req.ExamID == "" || req.ProblemID == "" || req.Language == "" {
 		res := utils.BuildResponseFailed("Missing required query parameters", "", nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
 
-	draft, err := c.service.GetDraft(ctx.Request.Context(), userId, examId, problemId, language)
+	fmt.Println("ini req get draft:", req)
+
+	draft, err := c.service.GetDraft(ctx.Request.Context(), userId, req.ExamID, req.ProblemID, req.Language)
 	if err != nil {
 		res := utils.BuildResponseFailed("Failed to retrieve draft", err.Error(), nil)
 		ctx.JSON(http.StatusNotFound, res)
