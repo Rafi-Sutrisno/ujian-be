@@ -2,6 +2,7 @@ package dto
 
 import (
 	"errors"
+	"time"
 
 	"mods/domain/entity"
 )
@@ -86,5 +87,7 @@ type (
 		UserNoID     string `json:"user_no_id"`
 		TotalCorrect int    `json:"total_correct"`
 		TotalProblem int    `json:"total_problem"`
+		Status       uint    `json:"status"`
+		FinishedAt   time.Time   `json:"finished_at"`
 	}
 )

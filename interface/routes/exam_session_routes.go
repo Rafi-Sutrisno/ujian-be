@@ -9,13 +9,9 @@ import (
 )
 
 func ExamSessionRoutes(router *gin.Engine, ExamSessionController controller.ExamSessionController, jwtService service.JWTService) {
-
-	examSessionCookie := router.Group("/api/exam_session")
-	{
-		examSessionCookie.GET("/check_session", ExamSessionController.CheckSession)
-	}
 	examSessionPrivate := router.Group("/api/exam_session").Use(middleware.Authenticate(jwtService))
 	{
+		examSessionPrivate.GET("/check_session", ExamSessionController.CheckSession)
 		examSessionPrivate.POST("/start_exam", ExamSessionController.CreateSession)
 		examSessionPrivate.POST("/finish_exam/:exam_id", ExamSessionController.FinishSession)
 	}

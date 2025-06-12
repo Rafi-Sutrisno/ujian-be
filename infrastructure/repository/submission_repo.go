@@ -35,12 +35,14 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExam(ctx context.Conte
 				SELECT COUNT(*) 
 				FROM exam_problems ep 
 				WHERE ep.exam_id = ?
-			) AS total_problem
+			) AS total_problem,
+			es.status AS status,
+			es.finished_at AS finished_at
 		FROM exam_sesssions es
 		JOIN users u ON es.user_id = u.id
 		LEFT JOIN submissions s ON s.user_id = u.id AND s.exam_id = es.exam_id
 		WHERE es.exam_id = ?
-		GROUP BY u.id, u.name, u.noid
+		GROUP BY u.id, u.name, u.noid, es.status, es.finished_at
 		ORDER BY u.name;
 	`
 
@@ -50,6 +52,7 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExam(ctx context.Conte
 
 	return results, nil
 }
+
 
 func (r *submissionRepository) GetCorrectSubmissionStatsByExamandStudent(ctx context.Context, examID, userID string) (dto.ExamUserCorrectDTO, error) {
 	var result dto.ExamUserCorrectDTO
