@@ -152,12 +152,6 @@ func (r *authRepository) CanAccessExam(ctx context.Context, userAgent,requestHas
 		return errors.New("exam is not active")
 	}
 
-	// sessionID, err := ginCtx.Cookie("session_id")
-	// if err != nil {
-	// 	return errors.New("you don't have session id to access the exam")
-	// }
-	// fmt.Println("ini session id dari cookie:", sessionID)
-
 	hasSession, err := r.HasExamSession(ctx, examId, sessionID)
 	if err != nil {
 		fmt.Println("ini error:", err)
@@ -215,12 +209,6 @@ func (r *authRepository) CanAccessProblem(ctx context.Context,userAgent,requestH
 		return nil
 	}
 
-	// sessionID, err := ginCtx.Cookie("session_id")
-	// if err != nil {
-	// 	return errors.New("you don't have session id to access the problem")
-	// }
-	// fmt.Println("ini session id dari cookie:", sessionID)
-
     examSession, err := r.GetExamSessionBySessionId(ctx, sessionID)
 	if err != nil {
 		return err
@@ -234,8 +222,6 @@ func (r *authRepository) CanAccessProblem(ctx context.Context,userAgent,requestH
 		return errors.New("user is not in the exam class")
 	}
 
-	
-	
 	active, _, err := r.IsExamActive(ctx, examSession.ExamID)
 	if err != nil {
 		return err
@@ -243,8 +229,6 @@ func (r *authRepository) CanAccessProblem(ctx context.Context,userAgent,requestH
 	if !active {
 		return errors.New("exam is not active")
 	}
-
-	
 
 	hasSession, err := r.HasExamSession(ctx, examSession.ExamID, sessionID)
 	if err != nil {
@@ -268,32 +252,8 @@ func (r *authRepository) ValidateSEBRequest(ctx context.Context, userAgent,reque
 	}
 	
 	if !exam.IsSEBRestricted {
-		return nil // No SEB restrictions
+		return nil
 	}
-
-	// userAgent := GinCtx.Request.UserAgent()
-	// requestHash := GinCtx.GetHeader("X-SafeExamBrowser-RequestHash")
-	// configKeyHash := GinCtx.GetHeader("X-Safeexambrowser-Configkeyhash")
-
-	// scheme := "http"
-	// if GinCtx.Request.TLS != nil {
-	// 	scheme = "https"
-	// }
-	// fullURL := fmt.Sprintf("%s://%s%s", scheme, GinCtx.Request.Host, GinCtx.Request.RequestURI)
-
-	// If not in header, fall back to request body (already parsed in controller)
-	// var body struct {
-	// 	BrowserExamKey string `json:"browser_exam_key"`
-	// 	ConfigKey      string `json:"config_key"`
-	// }
-	// if err := GinCtx.ShouldBind(&body); err == nil {
-	// 	if requestHash == "" {
-	// 		requestHash = body.BrowserExamKey
-	// 	}
-	// 	if configKeyHash == "" {
-	// 		configKeyHash = body.ConfigKey
-	// 	}
-	// }
 
 	// Validate based on provided keys
 	if exam.SEBBrowserKey != "" {
