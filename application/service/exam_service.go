@@ -2,7 +2,6 @@ package service
 
 import (
 	"context"
-	"fmt"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
@@ -205,6 +204,18 @@ func (us *examService) GetAllExamWithPagination(ctx context.Context, req dto.Pag
 }
 
 func (us *examService) GetExamById(ctx context.Context, examId string, userId string) (dto.ExamResponse, error) {
+	user, err := us.authRepo.GetUserById(ctx, userId)
+	if err != nil {
+		return  dto.ExamResponse{}, err
+	}
+
+	var check bool
+	if(user.RoleID == 2){
+		check = true
+	}else{
+		check = false
+	}
+
 	exists, err := us.examRepository.IsUserInExamClass(ctx, nil, userId, examId)
 	if err != nil {
 		return  dto.ExamResponse{},err
@@ -238,12 +249,19 @@ func (us *examService) GetExamById(ctx context.Context, examId string, userId st
 		Duration: 		exam.Duration.String(),
 		EndTime: 		exam.EndTime,
 		IsSEBRestricted:    exam.IsSEBRestricted,
-		SEBBrowserKey: 		exam.SEBBrowserKey,
-		SEBConfigKey: 		exam.SEBConfigKey,
-		SEBQuitURL:         exam.SEBQuitURL,
+		SEBBrowserKey:   ifThenElse(check, "", exam.SEBBrowserKey),
+	    SEBConfigKey:    ifThenElse(check, "", exam.SEBConfigKey),
+	    SEBQuitURL:      exam.SEBQuitURL,
 		AllowedLanguages: allowedLangs,
 		CreatedAt: exam.CreatedAt.String(),
 	}, nil
+}
+
+func ifThenElse(condition bool, a, b string) string {
+	if condition {
+		return a
+	}
+	return b
 }
 
 func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, examId string, userId string) (dto.ExamUpdateResponse, error) {
@@ -260,6 +278,7 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 	if err != nil {
 		return dto.ExamUpdateResponse{}, dto.ErrExamNotFound
 	}
+	// fmt.Println("ini req update exam:", req)
 
 	data := entity.Exam{
 		ID:         		exam.ID,
@@ -276,7 +295,7 @@ func (us *examService) Update(ctx context.Context, req dto.ExamUpdateRequest, ex
 		SEBQuitURL:         req.SEBQuitURL,
 	}
 
-	fmt.Println("ini exam update:", data)
+	// fmt.Println("ini exam update:", data)
 
 	examUpdate, err := us.examRepository.UpdateExam(ctx, nil, data)
 	if err != nil {
