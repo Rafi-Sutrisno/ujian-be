@@ -162,6 +162,7 @@ func (ur *examRepository) UpdateExam(ctx context.Context, tx *gorm.DB, exam enti
 		"is_seb_restricted": exam.IsSEBRestricted,
 		"seb_browser_key":   exam.SEBBrowserKey,
 		"seb_config_key":    exam.SEBConfigKey,
+		"seb_quit_url":      exam.SEBQuitURL,
 	}).Error; err != nil {
 		return entity.Exam{}, err
 	}
