@@ -184,6 +184,7 @@ func (s *examSessionService) GetByExamID(ctx context.Context, examId string) ([]
 				Name: 		session.User.Name,
 				Noid:     	session.User.Noid,
 			},
+			CreatedAt: session.CreatedAt.String(),
 		}
 		responses = append(responses, res)
 	}
