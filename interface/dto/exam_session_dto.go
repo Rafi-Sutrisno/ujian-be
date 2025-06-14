@@ -64,6 +64,7 @@ type (
 		Status              uint			`json:"status"`
 		FinishedAt          time.Time   `json:"finished_at"`
 		User    			*UserResponse 	`json:"user"`
+		CreatedAt 			string 						`json:"created_at"` 
 	}
 	
 )
