@@ -128,7 +128,7 @@ func (sc *submissionController) GetCorrectStatsByExam(ctx *gin.Context) {
 		return
 	}
 
-	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_SUBMISSION, stats)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_STATISTICS, stats)
 	ctx.JSON(http.StatusOK, res)
 }
 
