@@ -13,6 +13,7 @@ import (
 	"mods/interface/middleware"
 	"mods/interface/routes"
 	"os"
+	"time"
 
 	"github.com/gin-gonic/gin"
 	"gorm.io/gorm"
@@ -26,6 +27,14 @@ func args(db *gorm.DB) bool {
 	}
 
 	return true
+}
+
+func init() {
+	loc, err := time.LoadLocation("Asia/Jakarta")
+	if err != nil {
+		panic(err)
+	}
+	time.Local = loc
 }
 
 func main() {
