@@ -2,6 +2,7 @@ package dto
 
 import (
 	"errors"
+	"mime/multipart"
 	"mods/domain/entity"
 	"time"
 )
@@ -61,6 +62,30 @@ type (
 		SEBBrowserKey      	string        	`json:"seb_browser_key"` 
 		SEBConfigKey      	string        	`json:"seb_config_key"` 
 		SEBQuitURL      	string        	`json:"seb_quit_url"`   
+	}
+
+	ExamYamlRequest struct {
+		ClassID          string    `yaml:"class_id"`
+		Name             string    `yaml:"name"`
+		ShortName        string    `yaml:"short_name"`
+		IsPublished      bool      `yaml:"is_published"`
+		StartTime        time.Time `yaml:"start_time"`
+		DurationStr      string    `yaml:"duration"`
+		IsSEBRestricted  bool      `yaml:"is_seb_restricted"`
+		SEBBrowserKey    string    `yaml:"seb_browser_key"`
+		SEBConfigKey     string    `yaml:"seb_config_key"`
+		SEBQuitURL       string    `yaml:"seb_quit_url"`
+		Problems         []struct {
+			Title string `yaml:"problem_title"`
+		} `yaml:"problems"`
+		Languages []struct {
+			Name string `yaml:"name"`
+		} `yaml:"languages"`
+	}
+
+
+	ExamFileUploadRequest struct {
+		File *multipart.FileHeader `form:"file" binding:"required"`
 	}
 
 	ExamResponse struct {

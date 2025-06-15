@@ -20,6 +20,7 @@ func ExamRoutes(router *gin.Engine, ExamController controller.ExamController, jw
 	{
 		examPrivateAdmin.PATCH("/:exam_id", ExamController.Update)
 		examPrivateAdmin.POST("/", ExamController.CreateExam)
+		examPrivateAdmin.POST("/yaml/:class_id", ExamController.UploadExamFromYaml)
 		examPrivateAdmin.GET("/all", ExamController.GetAllExam)
 		examPrivateAdmin.DELETE("/:exam_id", ExamController.Delete)
 	}

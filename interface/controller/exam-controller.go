@@ -17,6 +17,7 @@ type (
 	}
 
 	ExamController interface {
+		UploadExamFromYaml(ctx *gin.Context)
 		CreateExam(ctx *gin.Context)
 		GetExamById(ctx *gin.Context)
 		GetByClassID(ctx *gin.Context)
@@ -31,6 +32,36 @@ func NewExamController(es service.ExamService) ExamController {
 	return &examController{
 		examService: es,
 	}
+}
+
+func (c *examController) UploadExamFromYaml(ctx *gin.Context) {
+	classID := ctx.Param("class_id")
+	userId := ctx.MustGet("requester_id").(string)
+
+	var req dto.ExamFileUploadRequest
+	if err := ctx.ShouldBind(&req); err != nil {
+		res := utils.BuildResponseFailed("Failed to upload exam", "Invalid file", nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	file, err := req.File.Open()
+	if err != nil {
+		res := utils.BuildResponseFailed("Failed to upload exam", "Unable to open the uploaded file", nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+	defer file.Close()
+
+	resp, err := c.examService.UploadExamFromYaml(ctx.Request.Context(), classID, file, userId)
+	if err != nil {
+		res := utils.BuildResponseFailed("Failed to upload exam", err.Error(), nil)
+		ctx.JSON(http.StatusBadRequest, res)
+		return
+	}
+
+	res := utils.BuildResponseSuccess("Exam uploaded successfully", resp)
+	ctx.JSON(http.StatusOK, res)
 }
 
 func (ec *examController)CreateExam(ctx *gin.Context){

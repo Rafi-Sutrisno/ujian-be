@@ -2,20 +2,30 @@ package service
 
 import (
 	"context"
+	"fmt"
+	"io"
+	"mime/multipart"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
 	dto_error "mods/interface/dto/error"
+	"time"
+
+	"gopkg.in/yaml.v3"
 )
 
 type (
 	examService struct {
 		examRepository domain.ExamRepository
+		problemRepo domain.ProblemRepository
+		examProblemRepo domain.ExamProblemRepository
+		examLangRepo domain.ExamLangRepository
 		authRepo domain.AuthRepo
 	}
 
 	ExamService interface {
 		CreateExam(ctx context.Context, req dto.ExamCreateRequest, userId string) (dto.ExamResponse, error)
+		UploadExamFromYaml(ctx context.Context, classID string, file multipart.File, userId string) (dto.ExamResponse, error)
 		GetAllExamWithPagination(ctx context.Context, req dto.PaginationRequest) (dto.ExamPaginationResponse, error)
 		GetExamById(ctx context.Context, examId string, userId string) (dto.ExamResponse, error)
 		GetByClassID(ctx context.Context, classID string, userId string) ([]dto.ExamResponse, error)
@@ -25,13 +35,122 @@ type (
 	}
 )
 
-func NewExamService(er domain.ExamRepository, authRepo domain.AuthRepo) ExamService {
+func NewExamService(er domain.ExamRepository,pr domain.ProblemRepository, epr domain.ExamProblemRepository, elr domain.ExamLangRepository, authRepo domain.AuthRepo) ExamService {
 	return &examService{
 		examRepository: er,
+		problemRepo: pr,
+		examProblemRepo: epr,
+		examLangRepo: elr,
 		authRepo: authRepo,
 	}
 }
 
+
+
+func (es *examService) UploadExamFromYaml(ctx context.Context, classID string, file multipart.File, userId string) (dto.ExamResponse, error) {
+	// decode file
+	var yamlReq dto.ExamYamlRequest
+	data, err := io.ReadAll(file)
+	if err != nil {
+		return dto.ExamResponse{}, err
+	}
+	err = yaml.Unmarshal(data, &yamlReq)
+	if err != nil {
+		return dto.ExamResponse{}, err
+	}
+
+	// prepare exam data
+	duration, err := time.ParseDuration(yamlReq.DurationStr)
+	if err != nil {
+		return dto.ExamResponse{}, err
+	}
+
+	// Validate required fields manually
+	if yamlReq.Name == "" ||
+		yamlReq.ShortName == "" ||
+		yamlReq.DurationStr == "" ||
+		yamlReq.StartTime.IsZero() ||
+		len(yamlReq.Problems) == 0 ||
+		len(yamlReq.Languages) == 0 {
+		return dto.ExamResponse{}, fmt.Errorf("required fields missing in YAML")
+	}
+
+
+	examReq := dto.ExamCreateRequest{
+		ClassID:         classID, // from URL now
+		Name:            yamlReq.Name,
+		ShortName:       yamlReq.ShortName,
+		IsPublished:     yamlReq.IsPublished,
+		StartTime:       yamlReq.StartTime,
+		DurationStr:     yamlReq.DurationStr,
+		Duration:        duration,
+		IsSEBRestricted: yamlReq.IsSEBRestricted,
+		SEBBrowserKey:   yamlReq.SEBBrowserKey,
+		SEBConfigKey:    yamlReq.SEBConfigKey,
+		SEBQuitURL:      yamlReq.SEBQuitURL,
+	}
+
+	// create exam
+	examResp, err := es.CreateExam(ctx, examReq, userId)
+	if err != nil {
+		return dto.ExamResponse{}, err
+	}
+
+	// for each problem title in YAML, get its ID
+	var problemReqs []dto.ExamProblemCreateRequest
+	for _, p := range yamlReq.Problems {
+		prob, err := es.problemRepo.GetByTitle(ctx, nil, p.Title)
+		if err != nil {
+			return dto.ExamResponse{}, fmt.Errorf("problem with title '%s' not found", p.Title)
+		}
+		problemReqs = append(problemReqs, dto.ExamProblemCreateRequest{
+			ExamID:    examResp.ID,
+			ProblemID: prob.ID.String(),
+		})
+	}
+
+	// assign problems
+	err = es.examProblemRepo.CreateMany(ctx, nil, mapToEntity(problemReqs))
+	if err != nil {
+		return dto.ExamResponse{}, err
+	}
+
+	langMap := map[string]uint{
+	"C":   1,
+	"C++": 2,
+	"C#":  3,
+	}
+
+	var examLangs []entity.ExamLang
+	for _, lang := range yamlReq.Languages {
+		id, ok := langMap[lang.Name]
+		if !ok {
+			return dto.ExamResponse{}, fmt.Errorf("language '%s' not supported", lang.Name)
+		}
+		examLangs = append(examLangs, entity.ExamLang{
+			ExamID: examResp.ID,
+			LangID: id,
+		})
+	}
+
+	// save to database
+	if err := es.examLangRepo.CreateMany(ctx, nil, examLangs); err != nil {
+		return dto.ExamResponse{}, err
+	}
+
+	return examResp, nil
+}
+
+func mapToEntity(reqs []dto.ExamProblemCreateRequest) []entity.ExamProblem {
+	var eps []entity.ExamProblem
+	for _, r := range reqs {
+		eps = append(eps, entity.ExamProblem{
+			ExamID:    r.ExamID,
+			ProblemID: r.ProblemID,
+		})
+	}
+	return eps
+}
 
 
 

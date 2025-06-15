@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"errors"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 
@@ -18,6 +19,23 @@ func NewProblemRepository(db *gorm.DB) domain.ProblemRepository {
 	return &problemRepository{
 		db: db,
 	}
+}
+
+func (r *problemRepository) GetByTitle(ctx context.Context, tx *gorm.DB, title string) (entity.Problem, error) {
+	db := r.db
+	if tx != nil {
+		db = tx
+	}
+
+	var problem entity.Problem
+	if err := db.WithContext(ctx).Where("title = ?", title).First(&problem).Error; err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			return entity.Problem{}, err
+		}
+		return entity.Problem{}, err
+	}
+
+	return problem, nil
 }
 
 func (pr *problemRepository) GetByID(ctx context.Context, tx *gorm.DB, id string) (entity.Problem, error) {

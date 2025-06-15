@@ -6,6 +6,8 @@ import (
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
+
+	"github.com/google/uuid"
 )
 
 type (
@@ -109,6 +111,12 @@ func (ps *problemService) GetAll(ctx context.Context, userId string) ([]dto.Prob
 }
 
 func (ps *problemService) Create(ctx context.Context, req dto.ProblemCreateRequest, userId string) (dto.ProblemResponse, error) {
+
+	existingProblem, err := ps.repo.GetByTitle(ctx, nil, req.Title)
+	if err == nil && existingProblem.ID != uuid.Nil {
+		// Found a problem with same title
+		return dto.ProblemResponse{}, fmt.Errorf("problem with title '%s' already exists", req.Title)
+	}
 
 	problem := entity.Problem{
 		// ExamID:  req.ExamID,
