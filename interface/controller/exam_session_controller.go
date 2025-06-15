@@ -86,7 +86,7 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	}
 
 
-	isDev := os.Getenv("GIN_MODE") != "release"
+	isDev := os.Getenv("GIN_MODE") != "production"
 
 	http.SetCookie(ctx.Writer, &http.Cookie{
 		Name:     "session_id",
