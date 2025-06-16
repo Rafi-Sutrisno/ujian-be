@@ -51,6 +51,16 @@ type Judge0Status struct {
 	Description string `json:"description"`
 }
 
+type CombinedRequestRun struct {
+	Judge0Request
+	ExamSessionCreateRequest
+}
+
+type CombinedRequestSubmit struct {
+	SubmissionRequest
+	ExamSessionCreateRequest
+}
+
 type Judge0Request struct {
 	LanguageID int    `json:"language_id"`
 	SourceCode string `json:"source_code"`

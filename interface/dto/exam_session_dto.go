@@ -43,7 +43,7 @@ var (
 type (
 
 	ExamSessionCreateRequest struct {
-		ExamID     		string     	`json:"exam_id" binding:"required"`
+		ExamID     		string     	`json:"exam_id"`
 		ConfigKey       string 		`json:"config_key"`
     	BrowserExamKey  string 		`json:"browser_exam_key"`
 		FEURL			string		`json:"seb_url"`

@@ -47,7 +47,13 @@ func (pc *problemController) GetByID(ctx *gin.Context) {
 func (pc *problemController) GetByExamID(ctx *gin.Context) {
 	examID := ctx.Param("exam_id")
 	userId := ctx.MustGet("requester_id").(string)
+    var request dto.ExamSessionCreateRequest
 
+	if err := ctx.ShouldBind(&request); err != nil {
+        res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+        ctx.JSON(http.StatusBadRequest, res)
+        return
+    }
 	
 	userAgent := ctx.Request.UserAgent()
 	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
@@ -59,6 +65,12 @@ func (pc *problemController) GetByExamID(ctx *gin.Context) {
 	}
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
+
+	if(requestHash == ""){
+		requestHash=request.BrowserExamKey
+		configKeyHash=request.ConfigKey
+		fullURL=request.FEURL
+	}
 
 	sessionID, err := ctx.Cookie("session_id")
 	if err != nil {

@@ -35,16 +35,17 @@ func NewSubmissionController(ss service.SubmissionService) SubmissionController 
 }
 
 func  (sc *submissionController) RunCode(ctx *gin.Context) {
-	var req dto.Judge0Request
-    userId := ctx.MustGet("requester_id").(string)
-	examId := ctx.Param("exam_id")
-
-	// Bind JSON body
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+	var combinedReq dto.CombinedRequestRun
+		userId := ctx.MustGet("requester_id").(string)
+		examId := ctx.Param("exam_id")
+	if err := ctx.ShouldBindJSON(&combinedReq); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
+
+	req := combinedReq.Judge0Request
+	request := combinedReq.ExamSessionCreateRequest
 
 	sessionID, err := ctx.Cookie("session_id")
 	if err != nil {
@@ -64,6 +65,12 @@ func  (sc *submissionController) RunCode(ctx *gin.Context) {
 	}
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
+
+	if(requestHash == ""){
+		requestHash=request.BrowserExamKey
+		configKeyHash=request.ConfigKey
+		fullURL=request.FEURL
+	}
 
 	// Call service
 	result, err := sc.submissionService.RunCode(ctx.Request.Context(), req, userAgent,requestHash,configKeyHash, fullURL,  sessionID,userId, examId)
@@ -78,15 +85,18 @@ func  (sc *submissionController) RunCode(ctx *gin.Context) {
 }
 
 func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
-	var req dto.SubmissionRequest
+	var combinedReq dto.CombinedRequestSubmit
 	userId := ctx.MustGet("requester_id").(string)
 	examId := ctx.Param("exam_id")
-	// Bind JSON body
-	if err := ctx.ShouldBindJSON(&req); err != nil {
+
+	if err := ctx.ShouldBindJSON(&combinedReq); err != nil {
 		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
+
+	req := combinedReq.SubmissionRequest
+	request := combinedReq.ExamSessionCreateRequest
 
 	sessionID, err := ctx.Cookie("session_id")
 	if err != nil {
@@ -107,6 +117,12 @@ func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
 
+	if(requestHash == ""){
+		requestHash=request.BrowserExamKey
+		configKeyHash=request.ConfigKey
+		fullURL=request.FEURL
+	}
+	
 	// Call service
 	result, err := sc.submissionService.SubmitCode(ctx.Request.Context(),req, userAgent,requestHash,configKeyHash, fullURL,  sessionID,  userId, examId)
 	if err != nil {
@@ -163,8 +179,15 @@ func (sc *submissionController) GetByID(ctx *gin.Context) {
 }
 
 func (sc *submissionController) GetByExamIDandUserID(ctx *gin.Context) {
+	var request dto.ExamSessionCreateRequest
 	examID := ctx.Param("exam_id")
 	userId := ctx.MustGet("requester_id").(string)
+
+	if err := ctx.ShouldBind(&request); err != nil {
+        res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_DATA_FROM_BODY, err.Error(), nil)
+        ctx.JSON(http.StatusBadRequest, res)
+        return
+    }
 
 	sessionID, err := ctx.Cookie("session_id")
 	if err != nil {
@@ -184,6 +207,12 @@ func (sc *submissionController) GetByExamIDandUserID(ctx *gin.Context) {
 	}
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
+
+	if(requestHash == ""){
+		requestHash=request.BrowserExamKey
+		configKeyHash=request.ConfigKey
+		fullURL=request.FEURL
+	}
 
 	
 	result, err := sc.submissionService.GetByExamIDandUserID(ctx.Request.Context(), userAgent,requestHash,configKeyHash, fullURL, sessionID,userId, examID )

@@ -1,8 +1,6 @@
 package controller
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
 	"mods/application/service"
 	"mods/interface/dto"
@@ -44,6 +42,9 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	} else {
 		fmt.Println("ini session id dari cookie:", sessionID)
 	}
+	for key, values := range ctx.Request.Header {
+		fmt.Printf("Header %s: %s\n", key, values)
+	}
 
 	userAgent := ctx.Request.UserAgent()
 	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
@@ -60,8 +61,10 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	fmt.Println("ini confighash dari body:", request.ConfigKey)
 	fmt.Println("ini confighash dari header:", configKeyHash)
 
-	fmt.Println(validateSEBHash(request.FEURL, "fc7289e2e6e68444bc89d0b1ad2b70a20cabd2a93c1f4a0d7ae0fd4d64dd7cf5", request.BrowserExamKey))
-	fmt.Println(validateSEBHash(request.FEURL, "53adc488d10da166352a79712136414ae286a0dd28fe01147598f9b9fa561bd1", request.ConfigKey))
+	// fmt.Println(validateSEBHash(request.FEURL, "fc7289e2e6e68444bc89d0b1ad2b70a20cabd2a93c1f4a0d7ae0fd4d64dd7cf5", request.BrowserExamKey))
+	// fmt.Println(validateSEBHash(request.FEURL, "53adc488d10da166352a79712136414ae286a0dd28fe01147598f9b9fa561bd1", request.ConfigKey))
+
+	
 
 	scheme := "http"
 	if ctx.Request.TLS != nil {
@@ -69,6 +72,14 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	}
 	fullURL := fmt.Sprintf("%s://%s%s", scheme, ctx.Request.Host, ctx.Request.RequestURI)
 	fmt.Println("ini full url: ", fullURL)
+
+	if(requestHash == ""){
+		requestHash=request.BrowserExamKey
+		configKeyHash=request.ConfigKey
+		fullURL=request.FEURL
+	}
+
+	fmt.Println("ini final key url:", requestHash, configKeyHash, fullURL)
 
     newSession, newSessionID, timeleft, err := cc.examSessionService.CreateorUpdateSession(
 		ctx.Request.Context(),
@@ -191,18 +202,18 @@ func (cc *examSessionController) DeleteByID(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, res)
 }
 
-func  validateSEBHash(url string, key string, recvHash string) bool {
+// func  validateSEBHash(url string, key string, recvHash string) bool {
 
-    hasher := sha256.New()
+//     hasher := sha256.New()
 
-	hasher.Write([]byte(key))
-	hasher.Write([]byte(url))
+// 	hasher.Write([]byte(key))
+// 	hasher.Write([]byte(url))
     
-    finalHash := hasher.Sum(nil)
-    hashHex := hex.EncodeToString(finalHash)
+//     finalHash := hasher.Sum(nil)
+//     hashHex := hex.EncodeToString(finalHash)
 
-    fmt.Println("Controller-BEK/ConfigKey: Expected Hash:", hashHex)
-    fmt.Println("Controller-BEK/ConfigKey: Received Hash:", recvHash)
+//     fmt.Println("Controller-BEK/ConfigKey: Expected Hash:", hashHex)
+//     fmt.Println("Controller-BEK/ConfigKey: Received Hash:", recvHash)
 
-    return hashHex == recvHash
-}
+//     return hashHex == recvHash
+// }
