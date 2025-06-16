@@ -12,6 +12,7 @@ import (
 	domainrepo "mods/domain/repository"
 	"mods/interface/dto"
 	"os"
+	"regexp"
 	"strings"
 	"time"
 
@@ -61,6 +62,7 @@ func (us *userService) Register(ctx context.Context, req dto.UserCreateRequest) 
 		return dto.UserResponse{}, dto.ErrNoidAlreadyExists
 	}
 
+	fmt.Println("ini user create req:", req)
 
 	user := entity.User{
 		Username:   req.Username,
@@ -331,6 +333,37 @@ func (us *userService) RegisterUsersFromYAML(ctx context.Context, fileHeader *mu
             })
             continue
         }
+		// Validate email format
+		emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+		if !emailRegex.MatchString(user.Email) {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Invalid email format",
+			})
+			continue
+		}
+
+		// Check password length
+		if len(user.Password) < 8 {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Password must be at least 8 characters",
+			})
+			continue
+		}
+
+		// Check NOID contains only digits
+		if matched := regexp.MustCompile(`^\d+$`).MatchString(user.Noid); !matched {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "NOID must contain only numbers",
+			})
+			continue
+		}
+	
 		_, flag, _ := us.userDomain.CheckNoid(ctx, nil, user.Noid)
 		if flag {
 			failedUsers = append(failedUsers, dto.FailedUserResponse{
@@ -429,6 +462,37 @@ func (us *userService) RegisterUsersFromCSV(ctx context.Context, fileHeader *mul
 				Noid:   user.Noid,
 				Email:  user.Email,
 				Reason: "Missing required fields",
+			})
+			continue
+		}
+
+		// Validate email format
+		emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+		if !emailRegex.MatchString(user.Email) {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Invalid email format",
+			})
+			continue
+		}
+
+		// Check password length
+		if len(user.Password) < 8 {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Password must be at least 8 characters",
+			})
+			continue
+		}
+
+		// Check NOID contains only digits
+		if matched := regexp.MustCompile(`^\d+$`).MatchString(user.Noid); !matched {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "NOID must contain only numbers",
 			})
 			continue
 		}

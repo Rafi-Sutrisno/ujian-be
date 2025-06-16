@@ -9,6 +9,7 @@ import (
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
+	"regexp"
 	"strings"
 
 	"gopkg.in/yaml.v3"
@@ -127,6 +128,38 @@ func (ucs *userClassService) AssignUsersFromYAML(ctx context.Context, class_id s
 		}
 
 		fmt.Println("belum ada user: ", user)
+
+		// Validate email format
+		emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+		if !emailRegex.MatchString(user.Email) {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Invalid email format",
+			})
+			continue
+		}
+
+		// Check password length
+		if len(user.Password) < 8 {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Password must be at least 8 characters",
+			})
+			continue
+		}
+
+		// Check NOID contains only digits
+		if matched := regexp.MustCompile(`^\d+$`).MatchString(user.Noid); !matched {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "NOID must contain only numbers",
+			})
+			continue
+		}
+		
 		req := entity.User{
 			Username: user.Username,
 			Name:     user.Name,
@@ -280,6 +313,37 @@ func (ucs *userClassService) AssignUsersFromCSV(ctx context.Context, class_id st
 
 		
 		fmt.Println("belum ada user: ", user)
+		// Validate email format
+		emailRegex := regexp.MustCompile(`^[a-zA-Z0-9._%%+\-]+@[a-zA-Z0-9.\-]+\.[a-zA-Z]{2,}$`)
+		if !emailRegex.MatchString(user.Email) {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Invalid email format",
+			})
+			continue
+		}
+
+		// Check password length
+		if len(user.Password) < 8 {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "Password must be at least 8 characters",
+			})
+			continue
+		}
+
+		// Check NOID contains only digits
+		if matched := regexp.MustCompile(`^\d+$`).MatchString(user.Noid); !matched {
+			failedUsers = append(failedUsers, dto.FailedUserResponse{
+				Noid:   user.Noid,
+				Email:  user.Email,
+				Reason: "NOID must contain only numbers",
+			})
+			continue
+		}
+		
 		req := entity.User{
 			Username: user.Username,
 			Name:     user.Name,
