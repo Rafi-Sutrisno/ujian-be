@@ -6,7 +6,6 @@ import (
 	"mods/interface/dto"
 	"mods/utils"
 	"net/http"
-	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -97,23 +96,25 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	}
 
 
-	isDev := os.Getenv("GIN_MODE") != "production"
+	// isDev := os.Getenv("GIN_MODE") != "production"
 
-	http.SetCookie(ctx.Writer, &http.Cookie{
-		Name:     "session_id",
-		Value:    newSessionID,
-		Path:     "/",
-		Domain:   "localhost",
-		MaxAge:   int(timeleft),
-		HttpOnly: true,
-		Secure:   !isDev, // secure false in dev
-		SameSite: func() http.SameSite {
-			if isDev {
-				return http.SameSiteLaxMode
-			}
-			return http.SameSiteNoneMode
-		}(),
-	})
+	fmt.Println("ini time left:", int(timeleft), newSessionID)
+
+	// http.SetCookie(ctx.Writer, &http.Cookie{
+	// 	Name:     "session_id",
+	// 	Value:    newSessionID,
+	// 	Path:     "/",
+	// 	Domain:   "34.128.84.215",
+	// 	MaxAge:   int(timeleft),
+	// 	HttpOnly: true,
+	// 	Secure:   !isDev, // secure false in dev
+	// 	SameSite: func() http.SameSite {
+	// 		if isDev {
+	// 			return http.SameSiteLaxMode
+	// 		}
+	// 		return http.SameSiteNoneMode
+	// 	}(),
+	// })
 
     res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_CREATE_EXAM_SESSION, newSession)
     ctx.JSON(http.StatusCreated, res)
@@ -122,6 +123,7 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 
 func (cc *examSessionController) CheckSession(ctx *gin.Context) {
 	sessionID, err := ctx.Cookie("session_id")
+	fmt.Println("ini session id check:", sessionID)
 	if err != nil || sessionID == "" {
 		res := utils.BuildResponseFailed("Session not found", "No session_id cookie provided", nil)
 		ctx.JSON(http.StatusUnauthorized, res)

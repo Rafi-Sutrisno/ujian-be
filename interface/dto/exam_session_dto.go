@@ -52,6 +52,8 @@ type (
 	ExamSessionCreateResponse struct {
 		UserID          	string        	`json:"user_id"`
 		ExamID     			string     		`json:"exam_id"`
+		SessionID			string		    `json:"session_id"`
+		TimeLeft            int				`json:"time_left"`
 	}
 
 	ExamSessionGetResponse struct {

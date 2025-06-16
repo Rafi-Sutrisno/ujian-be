@@ -103,6 +103,8 @@ func (s *examSessionService) CreateorUpdateSession(
 		return dto.ExamSessionCreateResponse{
 			UserID:          userId,
 			ExamID: 		req.ExamID,
+			SessionID:      sessionID,
+			TimeLeft:       int(timeleft),
 		}, sessionID, timeleft, nil
 	}else {
 		sessionID, err := generateRandomToken(32) // generate a 32-byte random token
@@ -134,6 +136,8 @@ func (s *examSessionService) CreateorUpdateSession(
 		return dto.ExamSessionCreateResponse{
 			UserID:          userId,
 			ExamID: 		req.ExamID,
+			SessionID:      sessionID,
+			TimeLeft:       int(timeleft),
 		}, sessionID, timeleft, nil
 	}
 }
