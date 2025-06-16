@@ -12,7 +12,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		origin := c.Request.Header.Get("Origin")
 		// fmt.Println("Origin:", origin)
 		allowedOrigins := map[string]bool{
-			"https://your-frontend.com": true, // Change to your actual frontend domain
+			"https://34.128.84.215": true, // Change to your actual frontend domain
 			"http://localhost:3000":     true, // Allow local dev
 		}
 
@@ -25,7 +25,6 @@ func CORSMiddleware() gin.HandlerFunc {
 		c.Header("Access-Control-Allow-Methods", "POST,HEAD,PATCH, OPTIONS, GET, PUT, DELETE")
 
 		if c.Request.Method == http.MethodOptions {
-			// fmt.Println("masuk sini") //here
 			c.AbortWithStatus(204)
 			return
 		}

@@ -96,7 +96,7 @@ func  (sc *submissionController) SubmitCode(ctx *gin.Context) {
 	}
 
 	req := combinedReq.SubmissionRequest
-	request := combinedReq.ExamSessionCreateRequest
+	request := combinedReq.ExamSessionRequest
 
 	sessionID, err := ctx.Cookie("session_id")
 	if err != nil {

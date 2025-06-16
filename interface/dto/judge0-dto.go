@@ -58,7 +58,13 @@ type CombinedRequestRun struct {
 
 type CombinedRequestSubmit struct {
 	SubmissionRequest
-	ExamSessionCreateRequest
+	ExamSessionRequest
+}
+
+type ExamSessionRequest struct {
+	ConfigKey      string `json:"config_key"`
+	BrowserExamKey string `json:"browser_exam_key"`
+	FEURL          string `json:"seb_url"`
 }
 
 type Judge0Request struct {
