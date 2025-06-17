@@ -148,7 +148,7 @@ func (s *submissionService) SubmitCode(ctx context.Context, req dto.SubmissionRe
 }
 
 func (s *submissionService) StartSubmissionPolling(ctx context.Context) {
-	ticker := time.NewTicker(60 * time.Second) 
+	ticker := time.NewTicker(20 * time.Second) 
 	go func() {
 		for {
 			select {
