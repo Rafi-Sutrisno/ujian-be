@@ -30,29 +30,26 @@ func NewExamProblemService(repo domain.ExamProblemRepository) ExamProblemService
 }
 
 func (ucs *examProblemService) CreateMany(ctx context.Context, reqs []dto.ExamProblemCreateRequest, userId string) error {
+	// Cek apakah user punya akses ke exam
 	exists, err := ucs.repo.IsUserInExam(ctx, nil, userId, reqs[0].ExamID)
-	if err != nil {
+	if err != nil || !exists {
 		return dto_error.ErrAuthorizeFor("this exam")
 	}
 
-	if !exists {
-		return dto_error.ErrAuthorizeFor("this exam")
-	}
-	
-	var examProblems []entity.ExamProblem
 	for _, req := range reqs {
-		examProblems = append(examProblems, entity.ExamProblem{
-			ExamID: 	req.ExamID,
-			ProblemID: 	req.ProblemID,
-		})
-	}
-
-	if err := ucs.repo.CreateMany(ctx, nil, examProblems); err != nil {
-		return dto.ErrCreateExamProblem
+		examProblem := entity.ExamProblem{
+			ExamID:    req.ExamID,
+			ProblemID: req.ProblemID,
+		}
+		_, err := ucs.repo.Create(ctx, nil, examProblem)
+		if err != nil {
+			return dto.ErrCreateExamProblem
+		}
 	}
 
 	return nil
 }
+
 
 func (ucs *examProblemService) GetByExamID(ctx context.Context, examID string, userId string) ([]dto.ExamProblemResponse, error) {
 	exists, err := ucs.repo.IsUserInExam(ctx, nil, userId, examID)
@@ -81,6 +78,7 @@ func (ucs *examProblemService) GetByExamID(ctx context.Context, examID string, u
 			ExamID: 	uc.ExamID,
 			ProblemID: 	uc.ProblemID,
 			Problem: 	problem,
+			CreatedAt: uc.CreatedAt.String(),
 		})
 	}
 

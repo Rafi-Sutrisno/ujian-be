@@ -179,11 +179,43 @@ func (s *submissionService) pollPendingSubmissions(ctx context.Context) {
 			continue
 		}
 
-		// check if all results are done
 		allDone := true
 		maxTime := float64(0)
 		maxMemory := 0
-		finalStatus := 8 // default to "unknown/unset"
+
+		statusPriority := map[int]int{
+			13: 0,  // Internal Error
+			14: 0,  // Exec Format Error
+			6:  1,  // Compilation Error
+			7:  2,  // Runtime Error (SIGSEGV)
+			8:  2,  // Runtime Error (SIGXFSZ)
+			9:  2,  // Runtime Error (SIGFPE)
+			10: 2,  // Runtime Error (SIGABRT)
+			11: 2,  // Runtime Error (NZEC)
+			12: 2,  // Runtime Error (Other)
+			5:  3,  // Time Limit Exceeded
+			4:  4,  // Wrong Answer
+			3:  5,  // Accepted
+		}
+
+
+		statusMapping := map[int]uint{
+			3: 2, // Accepted
+			4: 3, // Wrong Answer
+			5: 6, // Time Limit Exceeded
+			6: 4, // Compilation Error
+			7: 5, // Runtime Error
+			8: 5,
+			9: 5,
+			10: 5,
+			11: 5,
+			12: 5,
+			13: 8, // Internal Error
+			14: 8, // Exec Format Error
+		}
+
+		currentPriority := 10
+		finalStatus := uint(8)
 
 		for _, res := range batchResp.Submissions {
 			if res.Status.ID <= 2 {
@@ -191,35 +223,13 @@ func (s *submissionService) pollPendingSubmissions(ctx context.Context) {
 				break
 			}
 
-			// Map Judge0 status to your custom status ID
-			switch res.Status.ID {
-			case 3: // Accepted
-				if finalStatus > 2 {
-					finalStatus = 2
+			if p, ok := statusPriority[res.Status.ID]; ok && p < currentPriority {
+				currentPriority = p
+				if sId, ok := statusMapping[res.Status.ID]; ok {
+					finalStatus = sId
 				}
-			case 4: // Wrong Answer
-				if finalStatus > 3 {
-					finalStatus = 3
-				}
-			case 6: // Compilation Error
-				finalStatus = 4
-			case 11: // Runtime Error (NZEC)
-				if finalStatus > 5 {
-					finalStatus = 5
-				}
-			case 5: // Time Limit Exceeded
-				if finalStatus > 6 {
-					finalStatus = 6
-				}
-			case 7: // Memory Limit Exceeded (optional Judge0 status)
-				if finalStatus > 7 {
-					finalStatus = 7
-				}
-			case 13: // Internal Error
-				finalStatus = 8
 			}
 
-			// Parse time
 			if res.Time != "" {
 				timeVal, err := strconv.ParseFloat(res.Time, 64)
 				if err != nil {
@@ -229,14 +239,13 @@ func (s *submissionService) pollPendingSubmissions(ctx context.Context) {
 				}
 			}
 
-			// Parse memory
 			if res.Memory > maxMemory {
 				maxMemory = res.Memory
 			}
 		}
 
 		if allDone {
-			submission.StatusId = uint(finalStatus)
+			submission.StatusId = finalStatus
 			submission.Time = fmt.Sprintf("%.2f", maxTime)
 			submission.Memory = fmt.Sprintf("%d", maxMemory)
 			log.Println("Submission final result:", submission)
@@ -247,8 +256,6 @@ func (s *submissionService) pollPendingSubmissions(ctx context.Context) {
 		}
 	}
 }
-
-
 
 func (s *submissionService) GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error) {
 	// var results []dto.ExamUserCorrectDTO

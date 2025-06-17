@@ -36,11 +36,11 @@ func (ucc *examProblemController) GetByExamID(ctx *gin.Context) {
 	userID := ctx.MustGet("requester_id").(string)
 	result, err := ucc.service.GetByExamID(ctx.Request.Context(),examID, userID)
 	if err != nil {
-		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_USER_CLASS, err.Error(), nil)
+		res := utils.BuildResponseFailed(dto.MESSAGE_FAILED_GET_LIST_EXAM_PROBLEM, err.Error(), nil)
 		ctx.JSON(http.StatusBadRequest, res)
 		return
 	}
-	res := utils.BuildResponseSuccess(dto.MESSAGE_SUCCESS_GET_LIST_USER_CLASS, result)
+	res := utils.BuildResponseSuccess(dto.MESSAGE_FAILED_GET_LIST_EXAM_PROBLEM, result)
 	ctx.JSON(http.StatusOK, res)
 }
 

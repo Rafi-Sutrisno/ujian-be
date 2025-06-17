@@ -66,21 +66,21 @@ func (ps *problemService) GetByExamID(ctx context.Context, userAgent, requestHas
 		return nil, err
 	}
 
-	problems, err := ps.repo.GetByExamID(ctx, nil, examID)
+	examProblems, err := ps.repo.GetByExamID(ctx, nil, examID)
 	if err != nil {
 		return nil, err
 	}
 
 	var responses []dto.ProblemResponse
-	for _, problem := range problems {
+	for _, ep := range examProblems {
 		responses = append(responses, dto.ProblemResponse{
-			ID:      		problem.ID.String(),
-			// ExamID:  		problem.ExamID,
-			Title:        	problem.Title,
-			Description:  	problem.Description,
-			Constraints:  	problem.Constraints,
-			SampleInput:  	problem.SampleInput,
-			SampleOutput: 	problem.SampleOutput,
+			ID:           ep.Problem.ID.String(),
+			Title:        ep.Problem.Title,
+			Description:  ep.Problem.Description,
+			Constraints:  ep.Problem.Constraints,
+			SampleInput:  ep.Problem.SampleInput,
+			SampleOutput: ep.Problem.SampleOutput,
+			CreatedAt:    ep.CreatedAt.String(), // ini dari ExamProblem
 		})
 	}
 

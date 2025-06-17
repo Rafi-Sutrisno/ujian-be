@@ -53,6 +53,7 @@ type (
 		ExamID  string `json:"exam_id" `
 		ProblemID string `json:"problem_id" `
 		Problem    *ProblemResponse `json:"problem"`
+		CreatedAt 			string 						`json:"created_at"`  
 		Exam    *ExamResponse `json:"exam"`
 	}
 )
