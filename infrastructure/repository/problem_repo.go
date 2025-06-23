@@ -81,6 +81,7 @@ func (pr *problemRepository) GetByExamIDStudent(ctx context.Context, tx *gorm.DB
 		SELECT 
 			ep.exam_id,
 			ep.problem_id,
+			ep.created_at,
 			p.id, p.title, p.description, p.constraints, p.sample_input, p.sample_output, 
 			p.cpu_time_limit, p.memory_limit,
 			CASE 
@@ -97,6 +98,7 @@ func (pr *problemRepository) GetByExamIDStudent(ctx context.Context, tx *gorm.DB
 		FROM exam_problems ep
 		JOIN problems p ON p.id = ep.problem_id
 		WHERE ep.exam_id = ?
+		ORDER BY ep.created_at
 	`
 
 	err := tx.Raw(rawSQL, examID).Scan(&results).Error
