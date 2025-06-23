@@ -41,9 +41,9 @@ func (cc *examSessionController) CreateSession(ctx *gin.Context) {
 	} else {
 		fmt.Println("ini session id dari cookie:", sessionID)
 	}
-	for key, values := range ctx.Request.Header {
-		fmt.Printf("Header %s: %s\n", key, values)
-	}
+	// for key, values := range ctx.Request.Header {
+	// 	fmt.Printf("Header %s: %s\n", key, values)
+	// }
 
 	userAgent := ctx.Request.UserAgent()
 	requestHash := ctx.GetHeader("X-SafeExamBrowser-RequestHash")
