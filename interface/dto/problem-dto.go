@@ -92,4 +92,16 @@ type (
 		SampleInput   string    `json:"sample_input" `
 		SampleOutput  string    `json:"sample_output" `
 	}
+
+	ProblemWithStatusResponse struct {
+	ID           string `json:"id"`
+	Title        string `json:"title"`
+	Description  string `json:"description"`
+	Constraints  string `json:"constraints"`
+	SampleInput  string `json:"sample_input"`
+	SampleOutput string `json:"sample_output"`
+	CreatedAt    string `json:"created_at"`
+	Status       string `json:"status"` // accepted, wrong answer, ""
+}
+
 )

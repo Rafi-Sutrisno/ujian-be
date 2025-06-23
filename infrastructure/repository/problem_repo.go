@@ -5,6 +5,7 @@ import (
 	"errors"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
+	"mods/interface/dto"
 
 	"github.com/google/uuid"
 	"gorm.io/gorm"
@@ -69,7 +70,42 @@ func (pr *problemRepository) GetByExamID(ctx context.Context, tx *gorm.DB, examI
 	return examProblems, nil
 }
 
+func (pr *problemRepository) GetByExamIDStudent(ctx context.Context, tx *gorm.DB, examID string) ([]dto.ProblemWithStatusResponse, error) {
+	if tx == nil {
+		tx = pr.db
+	}
 
+	var results []dto.ProblemWithStatusResponse
+
+	rawSQL := `
+		SELECT 
+			ep.exam_id,
+			ep.problem_id,
+			p.id, p.title, p.description, p.constraints, p.sample_input, p.sample_output, 
+			p.cpu_time_limit, p.memory_limit,
+			CASE 
+				WHEN EXISTS (
+					SELECT 1 FROM submissions s 
+					WHERE s.problem_id = ep.problem_id AND s.exam_id = ep.exam_id AND s.status_id = 2
+				) THEN 'accepted'
+				WHEN EXISTS (
+					SELECT 1 FROM submissions s 
+					WHERE s.problem_id = ep.problem_id AND s.exam_id = ep.exam_id AND s.status_id NOT IN (1,2)
+				) THEN 'wrong answer'
+				ELSE ''
+			END as status
+		FROM exam_problems ep
+		JOIN problems p ON p.id = ep.problem_id
+		WHERE ep.exam_id = ?
+	`
+
+	err := tx.Raw(rawSQL, examID).Scan(&results).Error
+	if err != nil {
+		return nil, err
+	}
+
+	return results, nil
+}
 
 func (pr *problemRepository) GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Problem, error) {
 	if tx == nil {

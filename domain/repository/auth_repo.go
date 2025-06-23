@@ -12,7 +12,7 @@ type AuthRepo interface {
 	CanStartExam(ctx context.Context, userAgent,requestHash, configKeyHash, fullURL, userId, examId string) (int64, error)
 	CanAccessExam(ctx context.Context, userAgent,requestHash, configKeyHash, fullURL, sessionID, userId, examId string) error
 	CanSeeExamResult(ctx context.Context,  userId, examId string) error
-	CanAccessProblem(ctx context.Context,userAgent,requestHash, configKeyHash, fullURL, sessionID, userId, problemId string) error
+	CanAccessProblem(ctx context.Context,userAgent,requestHash, configKeyHash, fullURL, sessionID, userId, problemId string) (bool ,error)
 	// ValidateSEBRequest(ginCtx *gin.Context, ctx context.Context, examId string) error
 	GetUserById(ctx context.Context, userId string) (entity.User, error)
 }

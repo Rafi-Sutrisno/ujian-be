@@ -18,7 +18,7 @@ type (
 
 	ProblemService interface {
 		GetByID(ctx context.Context, id string, userId, problemId string) (dto.ProblemResponse, error)
-		GetByExamID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId string, examID string, userId string) ([]dto.ProblemResponse, error)
+		GetByExamID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId string, examID string, userId string) ([]dto.ProblemWithStatusResponse, error)
 		GetAll(ctx context.Context, userId string) ([]dto.ProblemResponse, error)
 		Create(ctx context.Context, req dto.ProblemCreateRequest, userId string) (dto.ProblemResponse, error)
 		Update(ctx context.Context, req dto.ProblemUpdateRequest, id string, userId string) (dto.ProblemUpdateResponse, error)
@@ -53,7 +53,7 @@ func (ps *problemService) GetByID(ctx context.Context, id string, userId, proble
 	}, nil
 }
 
-func (ps *problemService) GetByExamID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examID string) ([]dto.ProblemResponse, error) {
+func (ps *problemService) GetByExamID(ctx context.Context, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examID string) ([]dto.ProblemWithStatusResponse, error) {
 	// authorized, err := ps.repo.IsUserInExamClass(ctx, nil, userId, examID)
 	// if err != nil {
 	// 	return nil, err
@@ -62,27 +62,41 @@ func (ps *problemService) GetByExamID(ctx context.Context, userAgent, requestHas
 	// 	return nil, dto_error.ErrAuthorizeFor("this problem")
 	// }
 
-	if err := ps.authRepo.CanAccessProblem(ctx, userAgent,requestHash,configKeyHash,fullURL,sessionId, userId, examID); err != nil {
-		return nil, err
-	}
-
-	examProblems, err := ps.repo.GetByExamID(ctx, nil, examID)
+	check, err := ps.authRepo.CanAccessProblem(ctx, userAgent, requestHash, configKeyHash, fullURL, sessionId, userId, examID)
 	if err != nil {
 		return nil, err
 	}
 
-	var responses []dto.ProblemResponse
-	for _, ep := range examProblems {
-		responses = append(responses, dto.ProblemResponse{
-			ID:           ep.Problem.ID.String(),
-			Title:        ep.Problem.Title,
-			Description:  ep.Problem.Description,
-			Constraints:  ep.Problem.Constraints,
-			SampleInput:  ep.Problem.SampleInput,
-			SampleOutput: ep.Problem.SampleOutput,
-			CreatedAt:    ep.CreatedAt.String(), // ini dari ExamProblem
-		})
+
+	var responses []dto.ProblemWithStatusResponse
+	if check {
+		examProblems, err := ps.repo.GetByExamIDStudent(ctx, nil, examID)
+		if err != nil {
+			return nil, err
+		}
+		responses = examProblems
+	} else {
+		examProblems, err := ps.repo.GetByExamID(ctx, nil, examID)
+		if err != nil {
+			return nil, err
+		}
+
+		
+		for _, ep := range examProblems {
+			responses = append(responses, dto.ProblemWithStatusResponse{
+				ID:           ep.Problem.ID.String(),
+				Title:        ep.Problem.Title,
+				Description:  ep.Problem.Description,
+				Constraints:  ep.Problem.Constraints,
+				SampleInput:  ep.Problem.SampleInput,
+				SampleOutput: ep.Problem.SampleOutput,
+				CreatedAt:    ep.CreatedAt.String(), // ini dari ExamProblem
+			})
+		}
 	}
+
+
+	
 
 	return responses, nil
 }

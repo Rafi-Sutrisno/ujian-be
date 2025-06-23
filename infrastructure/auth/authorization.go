@@ -199,50 +199,50 @@ func (r *authRepository) CanSeeExamResult(ctx context.Context, userId, examId st
 	return nil
 }
 
-func (r *authRepository) CanAccessProblem(ctx context.Context,userAgent,requestHash, configKeyHash, fullURL, sessionID, userId, problemId string) error {
+func (r *authRepository) CanAccessProblem(ctx context.Context,userAgent,requestHash, configKeyHash, fullURL, sessionID, userId, problemId string) (bool, error) {
 	user, err := r.GetUserById(ctx, userId)
 	if err != nil {
-		return err
+		return false, err
 	}
 
 	if user.RoleID == 1 {
-		return nil
+		return false, nil
 	}
 
     examSession, err := r.GetExamSessionBySessionId(ctx, sessionID)
 	if err != nil {
-		return err
+		return true, err
 	}
 
 	inClass, err := r.IsUserInExamClass(ctx, userId, examSession.ExamID)
 	if err != nil {
-		return err
+		return true, err
 	}
 	if !inClass {
-		return errors.New("user is not in the exam class")
+		return true, errors.New("user is not in the exam class")
 	}
 
 	active, _, err := r.IsExamActive(ctx, examSession.ExamID)
 	if err != nil {
-		return err
+		return true, err
 	}
 	if !active {
-		return errors.New("exam is not active")
+		return true, errors.New("exam is not active")
 	}
 
 	hasSession, err := r.HasExamSession(ctx, examSession.ExamID, sessionID)
 	if err != nil {
-		return err
+		return true, err
 	}
 	if !hasSession {
-		return errors.New("you don't have access to exam")
+		return true, errors.New("you don't have access to exam")
 	}
 
 	if err := r.ValidateSEBRequest( ctx,userAgent,requestHash, configKeyHash, fullURL, examSession.ExamID); err != nil {
-		return fmt.Errorf("SEB validation failed: %w", err)
+		return true, fmt.Errorf("SEB validation failed: %w", err)
 	}
 
-	return nil
+	return true, nil
 }
 
 func (r *authRepository) ValidateSEBRequest(ctx context.Context, userAgent,requestHash, configKeyHash, fullURL, examId string) error {
