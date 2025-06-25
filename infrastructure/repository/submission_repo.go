@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"math"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
@@ -26,25 +27,37 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExam(ctx context.Conte
 	var results []dto.ExamUserCorrectDTO
 
 	query := `
-		SELECT 
-			u.id AS user_id,
-			u.name AS user_name,
-			u.noid AS user_no_id,
-			COUNT(DISTINCT CASE WHEN s.status_id = 2 THEN s.problem_id END) AS total_correct,
-			(
-				SELECT COUNT(*) 
-				FROM exam_problems ep 
-				WHERE ep.exam_id = ?
-			) AS total_problem,
-			es.status AS status,
-			es.finished_at AS finished_at
-		FROM exam_sesssions es
-		JOIN users u ON es.user_id = u.id
-		LEFT JOIN submissions s ON s.user_id = u.id AND s.exam_id = es.exam_id
-		WHERE es.exam_id = ?
-		GROUP BY u.id, u.name, u.noid, es.status, es.finished_at
-		ORDER BY u.name;
-	`
+			SELECT 
+				u.id AS user_id,
+				u.name AS user_name,
+				u.noid AS user_no_id,
+				COUNT(DISTINCT CASE WHEN s.status_id = 2 THEN s.problem_id END) AS total_correct,
+				(
+					SELECT COUNT(*) 
+					FROM exam_problems ep 
+					WHERE ep.exam_id = ?
+				) AS total_problem,
+				es.status AS status,
+				es.finished_at AS finished_at,
+
+				string_agg(DISTINCT CASE 
+					WHEN s.status_id = 2 THEN p.title 
+				END, ',') AS accepted_problems
+
+			FROM exam_sesssions es
+			JOIN users u ON es.user_id = u.id
+			JOIN exam_problems ep ON ep.exam_id = es.exam_id
+			LEFT JOIN problems p ON ep.problem_id = p.id
+			LEFT JOIN submissions s 
+				ON s.user_id = u.id 
+				AND s.exam_id = es.exam_id 
+				AND s.problem_id = ep.problem_id
+			LEFT JOIN problems p2 ON ep.problem_id = p2.id -- for no_submission fallback title
+			WHERE es.exam_id = ?
+			GROUP BY u.id, u.name, u.noid, es.status, es.finished_at
+			ORDER BY u.name;
+		`
+
 
 	if err := r.db.Raw(query, examID, examID).Scan(&results).Error; err != nil {
 		return nil, err
@@ -52,7 +65,6 @@ func (r *submissionRepository) GetCorrectSubmissionStatsByExam(ctx context.Conte
 
 	return results, nil
 }
-
 
 func (r *submissionRepository) GetCorrectSubmissionStatsByExamandStudent(ctx context.Context, examID, userID string) (dto.ExamUserCorrectDTO, error) {
 	var result dto.ExamUserCorrectDTO
@@ -159,6 +171,53 @@ func (r *submissionRepository) GetByExamID(ctx context.Context, tx *gorm.DB, exa
 
 	return submissions, nil
 }
+
+func (r *submissionRepository) GetByExamIDPaginate(ctx context.Context, tx *gorm.DB, examID string, req dto.PaginationRequest) (dto.GetAllSubmissionRepositoryResponse, error) {
+	if tx == nil {
+		tx = r.db
+	}
+
+	var submissions []entity.Submission
+	var count int64
+
+	// Set default values if not provided
+	if req.PerPage == 0 {
+		req.PerPage = 10
+	}
+	if req.Page == 0 {
+		req.Page = 1
+	}
+
+	query := tx.WithContext(ctx).Model(&entity.Submission{}).Where("exam_id = ?", examID)
+
+	// Count total records
+	if err := query.Count(&count).Error; err != nil {
+		return dto.GetAllSubmissionRepositoryResponse{}, err
+	}
+
+	// Fetch paginated data with preload
+	if err := query.Preload("Problem").
+		Preload("Language").
+		Preload("User").
+		Preload("Status").
+		Scopes(Paginate(req.Page, req.PerPage)).
+		Find(&submissions).Error; err != nil {
+		return dto.GetAllSubmissionRepositoryResponse{}, err
+	}
+
+	totalPage := int64(math.Ceil(float64(count) / float64(req.PerPage)))
+
+	return dto.GetAllSubmissionRepositoryResponse{
+		Submission: submissions,
+		PaginationResponse: dto.PaginationResponse{
+			Page:    req.Page,
+			PerPage: req.PerPage,
+			Count:   count,
+			MaxPage: totalPage,
+		},
+	}, nil
+}
+
 
 func (r *submissionRepository) GetByProblemID(ctx context.Context, tx *gorm.DB, problemID string) ([]entity.Submission, error) {
 	if tx == nil {

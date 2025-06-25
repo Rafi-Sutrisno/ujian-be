@@ -83,12 +83,17 @@ type (
 	}
 
 	ExamUserCorrectDTO struct {
-		UserID       string `json:"user_id"`
-		UserName     string `json:"user_name"`
-		UserNoID     string `json:"user_no_id"`
-		TotalCorrect int    `json:"total_correct"`
-		TotalProblem int    `json:"total_problem"`
-		Status       uint    `json:"status"`
-		FinishedAt   time.Time   `json:"finished_at"`
+		UserID       string    `json:"user_id"`
+		UserName     string    `json:"user_name"`
+		UserNoID     string    `json:"user_no_id"`
+		TotalCorrect int       `json:"total_correct"`
+		TotalProblem int       `json:"total_problem"`
+		Status       uint      `json:"status"`
+		FinishedAt   time.Time `json:"finished_at"`
+
+		AcceptedProblems       string `json:"accepted_problems"`       // comma-separated
+		WrongProblems          string `json:"wrong_problems"`          // comma-separated
+		NoSubmissionProblems   string `json:"no_submission_problems"`  // comma-separated
 	}
+
 )

@@ -13,6 +13,7 @@ type SubmissionRepository interface {
 	GetByUserID(ctx context.Context, tx *gorm.DB, userID string) ([]entity.Submission, error)
 	GetByExamIDandUserID(ctx context.Context, tx *gorm.DB, examID string, userID string) ([]entity.Submission, error)
 	GetByExamID(ctx context.Context, tx *gorm.DB, examID string) ([]entity.Submission, error)
+	GetByExamIDPaginate(ctx context.Context, tx *gorm.DB, examID string, req dto.PaginationRequest) (dto.GetAllSubmissionRepositoryResponse, error)
 	GetPendingSubmissions(ctx context.Context) ([]entity.Submission, error)
 	Update(ctx context.Context, tx *gorm.DB, sub entity.Submission) (entity.Submission, error)
 	GetCorrectSubmissionStatsByExam(ctx context.Context, examID string) ([]dto.ExamUserCorrectDTO, error)
