@@ -11,7 +11,7 @@ import (
 type ProblemRepository interface {
 	GetByID(ctx context.Context, tx *gorm.DB, id string) (entity.Problem, error)
 	GetByExamID(ctx context.Context, tx *gorm.DB, examID string) ([]entity.ExamProblem, error)
-	GetByExamIDStudent(ctx context.Context, tx *gorm.DB, examID string) ([]dto.ProblemWithStatusResponse, error)
+	GetByExamIDStudent(ctx context.Context, tx *gorm.DB, examID string, userID string) ([]dto.ProblemWithStatusResponse, error)
 	GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Problem, error)
 	Create(ctx context.Context, tx *gorm.DB, problem entity.Problem) (entity.Problem, error)
 	Update(ctx context.Context, tx *gorm.DB, problem entity.Problem) (entity.Problem, error)

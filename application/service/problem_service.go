@@ -70,7 +70,7 @@ func (ps *problemService) GetByExamID(ctx context.Context, userAgent, requestHas
 
 	var responses []dto.ProblemWithStatusResponse
 	if check {
-		examProblems, err := ps.repo.GetByExamIDStudent(ctx, nil, examID)
+		examProblems, err := ps.repo.GetByExamIDStudent(ctx, nil, examID, userId)
 		if err != nil {
 			return nil, err
 		}

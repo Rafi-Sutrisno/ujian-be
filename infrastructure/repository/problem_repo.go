@@ -70,7 +70,7 @@ func (pr *problemRepository) GetByExamID(ctx context.Context, tx *gorm.DB, examI
 	return examProblems, nil
 }
 
-func (pr *problemRepository) GetByExamIDStudent(ctx context.Context, tx *gorm.DB, examID string) ([]dto.ProblemWithStatusResponse, error) {
+func (pr *problemRepository) GetByExamIDStudent(ctx context.Context, tx *gorm.DB, examID string, userID string) ([]dto.ProblemWithStatusResponse, error) {
 	if tx == nil {
 		tx = pr.db
 	}
@@ -87,11 +87,24 @@ func (pr *problemRepository) GetByExamIDStudent(ctx context.Context, tx *gorm.DB
 			CASE 
 				WHEN EXISTS (
 					SELECT 1 FROM submissions s 
-					WHERE s.problem_id = ep.problem_id AND s.exam_id = ep.exam_id AND s.status_id = 2
+					WHERE s.problem_id = ep.problem_id 
+					  AND s.exam_id = ep.exam_id 
+					  AND s.user_id = ? 
+					  AND s.status_id = 1
+				) THEN 'in queue'
+				WHEN EXISTS (
+					SELECT 1 FROM submissions s 
+					WHERE s.problem_id = ep.problem_id 
+					  AND s.exam_id = ep.exam_id 
+					  AND s.user_id = ? 
+					  AND s.status_id = 2
 				) THEN 'accepted'
 				WHEN EXISTS (
 					SELECT 1 FROM submissions s 
-					WHERE s.problem_id = ep.problem_id AND s.exam_id = ep.exam_id AND s.status_id NOT IN (1,2)
+					WHERE s.problem_id = ep.problem_id 
+					  AND s.exam_id = ep.exam_id 
+					  AND s.user_id = ? 
+					  AND s.status_id NOT IN (1, 2)
 				) THEN 'wrong answer'
 				ELSE ''
 			END as status
@@ -101,13 +114,14 @@ func (pr *problemRepository) GetByExamIDStudent(ctx context.Context, tx *gorm.DB
 		ORDER BY ep.created_at
 	`
 
-	err := tx.Raw(rawSQL, examID).Scan(&results).Error
+	err := tx.Raw(rawSQL, userID, userID, userID, examID).Scan(&results).Error
 	if err != nil {
 		return nil, err
 	}
 
 	return results, nil
 }
+
 
 func (pr *problemRepository) GetAll(ctx context.Context, tx *gorm.DB) ([]entity.Problem, error) {
 	if tx == nil {
