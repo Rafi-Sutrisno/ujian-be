@@ -21,6 +21,7 @@ func TestCaseRoutes(router *gin.Engine, TestCaseController controller.TestCaseCo
 	{
 		testCasePrivateAdmin.GET("/", TestCaseController.GetAll)
 		testCasePrivateAdmin.POST("/", TestCaseController.Create)
+		testCasePrivateAdmin.POST("/file/:problem_id", TestCaseController.UploadZip)
 		testCasePrivateAdmin.PATCH("/:id", TestCaseController.Update)
 		testCasePrivateAdmin.DELETE("/:id", TestCaseController.Delete)
 	}

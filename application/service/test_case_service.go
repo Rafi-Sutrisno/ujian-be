@@ -1,10 +1,14 @@
 package service
 
 import (
+	"archive/zip"
 	"context"
+	"io"
 	"mods/domain/entity"
 	domain "mods/domain/repository"
 	"mods/interface/dto"
+	"path/filepath"
+	"strings"
 )
 
 type (
@@ -17,6 +21,7 @@ type (
 		GetByProblemID(ctx context.Context, problemID string, userId string) ([]dto.TestCaseResponse, error)
 		GetAll(ctx context.Context) ([]dto.TestCaseResponse, error)
 		Create(ctx context.Context, req dto.TestCaseCreateRequest, userId string) (dto.TestCaseResponse, error)
+		CreateFromZip(ctx context.Context, zipPath, problemID, userId string) (int, error) 
 		Update(ctx context.Context, req dto.TestCaseUpdateRequest, id string, userId string) (dto.TestCaseUpdateResponse, error)
 		Delete(ctx context.Context, id string, userId string) error
 	}
@@ -100,6 +105,56 @@ func (ts *testCaseService) Create(ctx context.Context, req dto.TestCaseCreateReq
 		ExpectedOutput: createdTestCase.ExpectedOutput,
 	}, nil
 }
+
+func (ts *testCaseService) CreateFromZip(ctx context.Context, zipPath, problemID, userId string) (int, error) {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return 0, err
+	}
+	defer r.Close()
+
+	inputs := map[string]string{}
+	outputs := map[string]string{}
+
+	// Extract files and separate .in/.out
+	for _, f := range r.File {
+		rc, err := f.Open()
+		if err != nil {
+			return 0, err
+		}
+		content, _ := io.ReadAll(rc)
+		rc.Close()
+
+		name := strings.TrimSuffix(f.Name, filepath.Ext(f.Name))
+		if strings.HasSuffix(f.Name, ".in") {
+			inputs[name] = string(content)
+		} else if strings.HasSuffix(f.Name, ".out") {
+			outputs[name] = string(content)
+		}
+	}
+
+	// Match and insert test cases
+	count := 0
+	for name, inData := range inputs {
+		outData, exists := outputs[name]
+		if !exists {
+			continue // skip unmatched
+		}
+		tc := entity.TestCase{
+			ProblemID:      problemID,
+			InputData:      inData,
+			ExpectedOutput: outData,
+		}
+		_, err := ts.repo.Create(ctx, nil, tc)
+		if err != nil {
+			return count, err // or continue if partial success is okay
+		}
+		count++
+	}
+
+	return count, nil
+}
+
 
 func (ts *testCaseService) Update(ctx context.Context, req dto.TestCaseUpdateRequest, id string, userId string) (dto.TestCaseUpdateResponse, error) {
 	testCase, err := ts.repo.GetByID(ctx, nil, id)
