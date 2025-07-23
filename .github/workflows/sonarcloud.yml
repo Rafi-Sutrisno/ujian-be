@@ -1,0 +1,32 @@
+name: SonarCloud
+
+on:
+  push:
+    branches:
+      - main # Ganti jika branch utamamu bukan 'main'
+  pull_request:
+    types: [opened, synchronize, reopened]
+
+jobs:
+  build:
+    name: Build and analyze on SonarCloud
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up JDK 17 # Sesuaikan dengan kebutuhanmu
+        uses: actions/setup-java@v4
+        with:
+          java-version: "17"
+          distribution: "temurin"
+      - name: Cache SonarCloud packages
+        uses: actions/cache@v4
+        with:
+          path: ~/.sonar/cache
+          key: ${{ runner.os }}-sonar
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@v2
+        with:
+          organization: rafi-sutrisno
+          projectKey: Rafi-Sutrisno_ujian-be
+          token: ${{ secrets.SONAR_TOKEN }}
