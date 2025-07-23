@@ -3,30 +3,35 @@ name: SonarCloud
 on:
   push:
     branches:
-      - main # Ganti jika branch utamamu bukan 'main'
+      - main
   pull_request:
     types: [opened, synchronize, reopened]
 
 jobs:
-  build:
-    name: Build and analyze on SonarCloud
+  sonarcloud:
+    name: SonarCloud
     runs-on: ubuntu-latest
 
     steps:
-      - uses: actions/checkout@v4
-      - name: Set up JDK 17 # Sesuaikan dengan kebutuhanmu
-        uses: actions/setup-java@v4
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
         with:
-          java-version: "17"
-          distribution: "temurin"
-      - name: Cache SonarCloud packages
-        uses: actions/cache@v4
-        with:
-          path: ~/.sonar/cache
-          key: ${{ runner.os }}-sonar
+          node-version: "18"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run tests (optional)
+        run: npm run test
+
       - name: SonarCloud Scan
         uses: SonarSource/sonarcloud-github-action@v2
+        env:
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
         with:
-          organization: rafi-sutrisno
-          projectKey: Rafi-Sutrisno_ujian-be
-          token: ${{ secrets.SONAR_TOKEN }}
+          args: >
+            -Dsonar.projectKey=Rafi-Sutrisno_ujian-be
+            -Dsonar.organization=rafi-sutrisno
