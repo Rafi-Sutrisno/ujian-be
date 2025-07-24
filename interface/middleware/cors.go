@@ -2,6 +2,7 @@ package middleware
 
 import (
 	"net/http"
+	"os"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,7 +13,7 @@ func CORSMiddleware() gin.HandlerFunc {
 		origin := c.Request.Header.Get("Origin")
 		// fmt.Println("Origin:", origin)
 		allowedOrigins := map[string]bool{
-			"https://34.128.84.215": true, // Change to your actual frontend domain
+			os.Getenv("FRONTEND_ORIGIN"): true, // Change to your actual frontend domain
 			"http://localhost:3000":     true, // Allow local dev
 		}
 
